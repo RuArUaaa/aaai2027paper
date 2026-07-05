@@ -340,15 +340,15 @@ if [ "$USE_REEL" = 1 ]; then
   case "$PKG" in
     apt)
       SUDO=""; [ "${EUID:-$(id -u)}" -ne 0 ] && SUDO="sudo"
-      ${SUDO} apt-get update -y
-      ${SUDO} apt-get install -y --no-install-recommends "${REEL_APT[@]}"
+      ${SUDO} apt-get update -y || warn "apt-get update failed — continuing"
+      ${SUDO} apt-get install -y --no-install-recommends "${REEL_APT[@]}" || warn "native tools (poppler-utils/libreoffice/ffmpeg) failed to install — Reel features degrade; install manually if needed"
       ;;
     brew)
-      brew install poppler ffmpeg
+      brew install poppler ffmpeg || warn "poppler/ffmpeg via brew failed — Reel features may degrade"
       brew install --cask libreoffice || warn "libreoffice cask failed — install manually if you need it"
       ;;
-    dnf)    sudo dnf install -y poppler-utils libreoffice ffmpeg ;;
-    pacman) sudo pacman -S --noconfirm poppler libreoffice-fresh ffmpeg ;;
+    dnf)    sudo dnf install -y poppler-utils libreoffice ffmpeg || warn "native tools failed — Reel features degrade; install manually if needed" ;;
+    pacman) sudo pacman -S --noconfirm poppler libreoffice-fresh ffmpeg || warn "native tools failed — Reel features degrade; install manually if needed" ;;
     *)      warn "no known package manager — install these manually: ${REEL_APT[*]}" ;;
   esac
 
