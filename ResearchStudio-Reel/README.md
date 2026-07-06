@@ -4,17 +4,23 @@
 
 **ResearchStudio** streamlines the final steps of a research project — the materials a paper needs *after* the writing is done. Drop in one PDF and get back the artifacts that turn a paper into a conference submission and a public release: a structured asset bundle, a print-ready poster, a narrated walkthrough video, a bilingual blog post ready for an editor, and an interactive reel viewer.
 
-<!-- Hero strip: two demos, stacked one per row. Top: a real Paper2Poster build. Bottom: the Paper2Reel interactive reel walkthrough. -->
-<p align="center">
-  <a href="https://raw.githubusercontent.com/ai-nuts/Storage/main/ResearchStudio/ResearchStudio-Reel/docs/examples/latent_diffusion_landscape/poster.pdf"><img src="https://raw.githubusercontent.com/ai-nuts/Storage/main/ResearchStudio/ResearchStudio-Reel/docs/figures/poster_demo.gif" alt="Paper2Poster — building a conference poster from one PDF" width="60%"></a>
-  <br>
-  <sub><b>Paper2Poster</b> — building a poster from one PDF.</sub>
-</p>
-<p align="center">
-  <img src="https://raw.githubusercontent.com/ai-nuts/Storage/main/ResearchStudio/ResearchStudio-Reel/docs/figures/reel_demo.gif" alt="Paper2Reel — interactive reel feature demo" width="60%">
-  <br>
-  <sub><b>Paper2Reel</b> — presenting an interactive reel.</sub>
-</p>
+<!-- Hero strip: two demos side by side. Left: the Paper2Reel interactive reel walkthrough. Right: a real Paper2Poster build. -->
+<table align="center">
+<tr>
+<td align="center" valign="top" width="49%">
+<img src="https://raw.githubusercontent.com/ai-nuts/Storage/main/ResearchStudio/ResearchStudio-Reel/docs/figures/reel_demo.gif" alt="Paper2Reel — interactive reel feature demo" width="100%">
+</td>
+<td align="center" valign="top" width="50%">
+<a href="https://raw.githubusercontent.com/ai-nuts/Storage/main/ResearchStudio/ResearchStudio-Reel/docs/examples/latent_diffusion_landscape/poster.png" target="_blank" rel="noopener"><img src="https://raw.githubusercontent.com/ai-nuts/Storage/main/ResearchStudio/ResearchStudio-Reel/docs/figures/poster_demo.gif" alt="Paper2Poster — building a conference poster from one PDF" width="100%"></a>
+</td>
+</tr>
+
+<tr>
+<td align="center" valign="top"><sub><b>Paper2Reel</b> — presenting an interactive reel.</sub></td>
+<td align="center" valign="top"><sub><b>Paper2Poster</b> — building a poster from one PDF.</sub></td>
+</tr>
+
+</table>
 
 ---
 
