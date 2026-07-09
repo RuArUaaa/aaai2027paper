@@ -850,6 +850,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("pdf")
     ap.add_argument("--outdir", required=True)
+    ap.add_argument("--no-figures", action="store_true",
+                    help="skip figure extraction (write text.txt + captions.json only). "
+                         "Use when source_figures.py already supplied the original figures.")
     args = ap.parse_args()
 
     pdf = Path(args.pdf).resolve()
@@ -889,6 +892,10 @@ def main():
         print(f"    arXiv: {metadata['arxiv_id']}")
     if metadata.get("doi"):
         print(f"    DOI: {metadata['doi']}")
+
+    if args.no_figures:
+        print("Skipping figure extraction (--no-figures; original figures supplied by source_figures.py).")
+        return
 
     print("Extracting figures...")
     figdir = layout.figures_dir(outdir, create=True)

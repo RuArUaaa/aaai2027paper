@@ -46,16 +46,19 @@
   .titlebar .contact sup { font-size: 0.62em; vertical-align: super; line-height: 0; }
   .titlebar .contact { display: none; }
 
-  /* RIGHT marks: conference chip + institution logos SIDE BY SIDE (horizontal),
-     so the right zone reads as a wide strip next to the left title — not a thin
-     stacked column (which left the right looking empty). */
+  /* RIGHT marks: conference chip STACKED ABOVE the institution logos, so the
+     logo zone gets the FULL height of the right column (which stretches to the
+     title). That tall 2D box lets fit_logos pack the marks into MULTIPLE rows
+     and grow them to fill -- a single short strip could only fit one tiny row. */
   .titlebar .right-marks {
     display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 28pt;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-start;
+    gap: 24pt;
+    min-height: 0;
   }
+  .titlebar .right-marks > .chip.conf { flex: 0 0 auto; }   /* venue stays compact on top */
   .titlebar .chip {
     background: var(--tb-chip-bg, #ffffff);
     border-radius: 8pt;
@@ -64,7 +67,12 @@
     justify-content: center;
     box-shadow: var(--tb-chip-shadow, 0 2px 8px rgba(0, 0, 0, 0.18));
   }
-  .titlebar .chip.conf { height: 156pt; padding: 12pt 24pt; min-width: 5em; }
+  .titlebar .chip.conf { max-height: 156pt; padding: 12pt 24pt; min-width: 5em; }
+  /* An EMPTY venue chip (no conf logo AND no venue text -- common for preprints)
+     must NOT reserve space, or it steals the top half of the header and squashes
+     the institution logos into the lower (author) band. Collapse it so the
+     logo-grid below spans the FULL header height. */
+  .titlebar .chip.conf:not(:has(img[src]:not([src=""]):not([src*="{{"]))):not(:has(.vtext:not(:empty))) { display: none !important; }
   .titlebar .chip.conf img { height: 128pt; width: auto; max-width: 420pt; object-fit: contain; display: block; }
   /* Venue TEXT fallback (assets/logos/_venue.png often absent -> VENUE_LOGO=""). */
   .titlebar .chip.conf img[src=""],
@@ -80,6 +88,9 @@
   }
   .titlebar .chip.conf:not(:has(img[src]:not([src=""]):not([src*="{{"]))) .vtext { display: inline; }
   .titlebar .logo-grid {
+    flex: 1 1 auto;              /* fill the right column's remaining height -> tall
+                                   multi-row box for fit_logos (below the venue chip) */
+    min-height: 0;
     display: flex;
     flex-wrap: wrap;
     align-items: center;

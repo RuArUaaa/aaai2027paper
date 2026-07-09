@@ -15,13 +15,16 @@
   .section[data-section="scan-to-read"] .scan-chips h2 { font-size: 40pt; line-height: 1.05; color: var(--accent); text-align: center; }
   .section[data-section="scan-to-read"] .scan-chips .scan-chip-card { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 44pt; min-height: 0; background: var(--accent-soft); border: 2pt solid var(--accent); border-radius: 18pt; padding: 24pt 38pt; }
   .section[data-section="scan-to-read"] .scan-chips .tq { display: flex; flex-direction: column; align-items: center; gap: 12pt; min-height: 0; }
-  .section[data-section="scan-to-read"] .scan-chips .scan-chip { background: var(--accent); color: #fff; border-radius: 999pt; padding: 5pt 24pt; font-size: 26pt; font-weight: 700; line-height: 1.2; }
+  .section[data-section="scan-to-read"] .scan-chips .scan-chip { background: var(--accent); color: var(--accent-ink, #fff); border-radius: 999pt; padding: 5pt 24pt; font-size: 26pt; font-weight: 700; line-height: 1.2; }
   .section[data-section="scan-to-read"] .scan-chips .qr-img { height: 250pt; max-height: 100%; width: auto; }
 
   /* --- shared scan polish (posterskill-inspired: QR card depth + accent caption pill) --- */
   .section[data-section="scan-to-read"] .qr-img { border-radius: 13pt !important; box-shadow: 0 4pt 16pt rgba(0,0,0,0.15); border-color: rgba(0,0,0,0.06); padding: 10pt !important; }
   .section[data-section="scan-to-read"] .tq { gap: 12pt !important; }
-  .section[data-section="scan-to-read"] .tq span { background: var(--accent-soft); color: var(--accent) !important; font-weight: 800 !important; padding: 4pt 17pt; border-radius: 999pt; letter-spacing: 0.02em; }
+  /* :not(.scan-chip) — the chip label IS a .tq span and already has white text
+     on the accent pill; without the guard this !important accent color made it
+     accent-on-accent (invisible). Applies only to non-chip caption spans. */
+  .section[data-section="scan-to-read"] .tq span:not(.scan-chip) { background: var(--accent-soft); color: var(--accent) !important; font-weight: 800 !important; padding: 4pt 17pt; border-radius: 999pt; letter-spacing: 0.02em; }
 </style>
 <div class="section" data-section="scan-to-read">
   <div class="scan-qr scan-chips">

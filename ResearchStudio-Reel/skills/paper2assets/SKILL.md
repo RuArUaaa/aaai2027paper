@@ -45,15 +45,17 @@ Deliverables reference assets with **root-relative** `src` paths -- `assets/figu
 `manifest.json`'s `"files"` map records every meta / figure path (root-relative) plus a `"layout": "v2-assets"` marker, so a consumer can locate inputs and tell a new bundle from a legacy flat one without re-walking the tree.
 
 ```
-   paper.pdf
+   paper.pdf  (+ arXiv id / provided image links)
      │
-     ▼  scripts/extract_pdf.py   → assets/meta/{text.txt, captions.json, figures.json} + assets/figures/*.png
+     ▼  FIGURES — priority: source_figures.py (arXiv source / provided links) → clean assets/figures/*.png + figures.json
+     │           └─ fallback only: extract_pdf.py crops from the rendered PDF
+     ▼  scripts/extract_pdf.py   → assets/meta/{text.txt, captions.json} (+ figures.json only on the crop fallback; use --no-figures on the source path)
      │
      ▼  Step 3 (model-driven)    → assets/meta/metadata.json
      │
      ▼  Step 4 (model-driven)    → assets/meta/paper_spec.md  (9 canonical sections)
      │
-     ▼  scripts/crop_figure.py   → cleaned assets/figures/*.png (+ .bak backups, assets/meta/figures.json updated)
+     ▼  scripts/crop_figure.py   → cleaned assets/figures/*.png  (CROP FALLBACK ONLY — skipped when source_figures.py supplied the originals)
      │
      ▼  scripts/fetch_logos.py   → assets/logos/<slug>.{png,svg}
      ▼  scripts/fetch_conf_logo.py → assets/logos/_venue.png  (conference mark; best-effort, skips on miss)
@@ -145,10 +147,16 @@ Writes:
 - `assets/meta/figures.json` — `[{file, width, height, page, layout}, ...]` per extracted figure raster.
 - `assets/figures/<page>_figure<n>.png` — raster crop at zoom=6 (~432 dpi). The extractor uses a column-aware boundary heuristic + 50 px symmetric padding around the detected figure region so subsequent Step 5 cleanup has room to work.
 
-**Are the figures already supplied? (check FIRST)** Before relying on PDF extraction, check whether the input already carries the paper's **original** figure files — e.g. an arxiv **source bundle** (`<id>.tar.gz` / a `source/` dir with `*.pdf` / `*.eps` / `*.png` / `*.jpg` graphics), or figures the user attached directly. If so, the PDF figure-extraction loop **and all of Step 5** are skipped — source graphics are already clean (no baked caption strips, no column-text bleed). Still run `pdftotext` for `text.txt` + caption detection for `captions.json` (those come from the PDF, not the graphics), but **reorganize the supplied figures into our format** instead of cropping from the PDF:
-  - Rasterize each to PNG — vector `*.pdf`/`*.eps` via `pdftoppm -r 432 -png` (or `magick -density 432`); keep figures that are already raster. Name them `assets/figures/<page>_figure<n>.png` (use the figure's own number; `page` from its caption if known, else sequential order).
-  - Build `assets/meta/figures.json` `[{file, width, height, page, layout}]` from the rasters — read each PNG's *actual* width/height; `layout` = `"full"` unless the source tells you the column placement.
-  - Skip `extract_pdf.py`'s figure crop **and** Step 5; pick up at Step 3.
+**Figures — choose the source by priority (DO THIS; it is the biggest time/token saver).** The paper's ORIGINAL figure graphics are already clean (no baked caption strips, no column-text bleed) and skip the whole Step 5 crop loop (~6 min + heavy tokens). `scripts/source_figures.py` fetches them and writes `assets/figures/*.png` + `figures.json` in seconds:
+
+1. **Provided image links (FIRST):** the user attached/linked figure images →
+   `python ~/.claude/skills/paper2assets/scripts/source_figures.py --images <url|path> … --outdir <outdir>`
+2. **arXiv (RECOMMENDED):** the paper is on arXiv →
+   `python ~/.claude/skills/paper2assets/scripts/source_figures.py --arxiv <id|url> --outdir <outdir>`
+   (downloads `arxiv.org/e-print/<id>`, parses the `.tex` figure order + captions, rasterizes each graphic).
+3. **Backup (ONLY if 1 & 2 don't apply, or `source_figures.py` exits non-zero):** the PDF crop path below — full `extract_pdf.py` (with figures) **+ Step 5 `crop_figure.py`**.
+
+**If `source_figures.py` succeeded (exit 0):** run `extract_pdf.py <pdf> --outdir <outdir> --no-figures` (text.txt + captions.json ONLY) and **SKIP Step 5 (`crop_figure.py`) entirely** — the source graphics are already clean. **Otherwise** run the full `extract_pdf.py <pdf> --outdir <outdir>` (with figures) and do Step 5.
 
 **Appendix figures — skipped by DEFAULT.** Process **main-body figures only**. From `text.txt`, find where the appendix / supplementary material begins (the first `Appendix` / `Supplementary` heading, or `A.` / `B.` / `S1`… content after `References`) and note its `\f`-delimited page. **Drop every figure on or after that page** — delete the PNGs from `figures/` and their rows from `figures.json` *before* Step 5, so neither the cleaning loop nor any downstream renderer sees them. **Override only when the user explicitly asks** — e.g. "include the appendix figures" or naming a specific supplementary figure.
 
@@ -235,7 +243,9 @@ Section-by-section guidance:
 
 `Audio script` subfields are full-sentence spoken paragraphs (3–6 sentences each) suitable for TTS. They are part of the spec because audio narration of *any* downstream rendering should be derivable from this single source.
 
-### Step 5 — Clean ALL figure images (mandatory, runs on every extracted figure)
+### Step 5 — Clean ALL figure images (mandatory on the crop path — SKIPPED when source figures were used)
+
+> **Skip this entire step** if Step 2 sourced the ORIGINAL figures via `source_figures.py` (arXiv source bundle or provided image links) — those graphics are already clean. Step 5 runs ONLY on the crop-path fallback (figures cropped from the rendered PDF).
 
 Step 2 produces raw figure rasters that often carry:
 - A 1–10 px **chrome residue** at the top edge (the bottom of a page rule line / banner / running title that the extractor's column-aware boundary couldn't perfectly avoid).

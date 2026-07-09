@@ -38,6 +38,7 @@ if _THIS_DIR not in sys.path:
     sys.path.insert(0, _THIS_DIR)
 
 from utils import canvas as _canvas  # noqa: E402
+from utils import autofit as _autofit  # noqa: E402
 from utils import column_pack as _pack  # noqa: E402
 from utils import deliverables as _deliverables  # noqa: E402
 from utils import polish as _polish  # noqa: E402
@@ -104,6 +105,16 @@ def build_parser() -> argparse.ArgumentParser:
         help="zero the persistent .fill_budget.json counter before measuring "
              "(use for a genuine fresh re-render of the same poster_dir).",
     )
+    ps.add_argument(
+        "--with-polish", action="store_true",
+        help="also run the visual-polish pass (figure fill, orphans, "
+             "space-between, mid-wide structure) on the SAME rendered page -- "
+             "ONE browser launch per round instead of two. Advisory by "
+             "default; with --strict the polish warnings also gate the exit "
+             "(matching the staged-fill 'every section FULL and zero "
+             "FIG/NARROW' condition). Prefer this over a separate `polish` "
+             "call inside the fill loop.",
+    )
     ps.set_defaults(func=_slack.cmd_slack)
 
     # --- pack -----------------------------------------------------------
@@ -157,7 +168,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="hard timeout for MathJax typeset (default 15000)",
     )
     ppl.add_argument(
-        "--fig-min-ratio", type=float, default=float(os.environ.get("POSTER_FIG_MIN_RATIO", "0.90")),
+        "--fig-min-ratio", type=float, default=_polish.DEFAULT_FIG_MIN_RATIO,
         help="every card figure must occupy >= this fraction of its "
              "card (section) on at least one axis -- width OR height -- "
              "regardless of aspect ratio (default 0.90); figures fill "
@@ -175,12 +186,14 @@ def build_parser() -> argparse.ArgumentParser:
     ppl.add_argument("--square-min-ratio", type=float, default=0.80,
                      help=argparse.SUPPRESS)
     ppl.add_argument(
-        "--max-space-between-fill", type=float, default=0.05,
+        "--max-space-between-fill", type=float,
+        default=_polish.DEFAULT_MAX_SPACE_BETWEEN_FILL,
         help="warn if a space-between column has an inter-card gap "
              "exceeding this fraction of column height (default 0.05)",
     )
     ppl.add_argument(
-        "--max-card-trailing", type=float, default=0.05,
+        "--max-card-trailing", type=float,
+        default=_polish.DEFAULT_MAX_CARD_TRAILING,
         help="warn (CARD/TRAILING) if a card leaves more than this "
              "fraction of its height blank below the last line "
              "(default 0.05); catches a flex-stretched card padded "
@@ -189,7 +202,8 @@ def build_parser() -> argparse.ArgumentParser:
              "looser hides 5-9% trailing voids the eye still sees",
     )
     ppl.add_argument(
-        "--max-widow-fraction", type=float, default=0.20,
+        "--max-widow-fraction", type=float,
+        default=_polish.DEFAULT_MAX_WIDOW_FRACTION,
         help="warn (WIDOW) when a multi-line <p>/<li> has its last "
              "line fill less than this fraction of element width "
              "(default 0.20); catches paragraphs where the trailing "
@@ -233,6 +247,35 @@ def build_parser() -> argparse.ArgumentParser:
              "rotation (most posters should NOT need this)",
     )
     pv.set_defaults(func=_verify_final.cmd_verify_final)
+
+    # --- autofit --------------------------------------------------------
+    pa = sub.add_parser(
+        "autofit",
+        help="deterministically close continuous-lever (row-gap) fill gaps "
+             "WITHOUT LLM rounds: grow each under-filled non-figure section's "
+             "inner row-gaps by the slack report's needPx (bounded by the "
+             "column's capacitySlack + the section's padding ceiling), bake "
+             "into poster.html (gate-visible), and report what still needs "
+             "LLM edits. Run it before `slack --with-polish` each fill round.",
+    )
+    pa.add_argument("html", help="path to poster.html (mutated in place)")
+    pa.add_argument(
+        "--canvas", type=_canvas.parse_canvas_arg, default=None,
+        help="override canvas (default: parse @page from HTML)",
+    )
+    pa.add_argument(
+        "--max-passes", type=int, default=3,
+        help="max deterministic measure->grow->bake passes (default 3)",
+    )
+    pa.add_argument(
+        "--settle-ms", type=int, default=500,
+        help="extra wait after MathJax + fonts settle (default 500)",
+    )
+    pa.add_argument(
+        "--mathjax-timeout-ms", type=int, default=15000,
+        help="hard timeout for MathJax typeset (default 15000)",
+    )
+    pa.set_defaults(func=_autofit.cmd_autofit)
 
     # --- deliverables ---------------------------------------------------
     # Mandatory final gate: assert all 4 artifacts are on disk before the

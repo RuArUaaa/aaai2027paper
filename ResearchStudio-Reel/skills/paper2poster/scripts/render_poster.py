@@ -147,6 +147,26 @@ def _bake_scan_suppress_into_html(html_path: Path) -> None:
     html_path.write_text(txt, encoding="utf-8")
 
 
+def _autopack_header_logos(html_path: Path) -> None:
+    """Step 5.9 auto-run: pack the header institution logos so they FILL their
+    zone (multi-row, grown to fit) instead of one tiny row. This is a manual
+    step in the docs that the agent routinely skips, so run it here right before
+    rendering. Soft: any failure just leaves the raw logos and never blocks the
+    render (best-effort, like the render-time expand pass)."""
+    import subprocess
+    fit = Path(__file__).resolve().parent.parent / "references" / "fit_logos.py"
+    if not fit.exists():
+        return
+    try:
+        r = subprocess.run([sys.executable, str(fit), "--poster", str(html_path)],
+                           capture_output=True, text=True, timeout=180)
+        for line in (r.stdout or "").splitlines():
+            if "baked" in line or "fit_logos" in line:
+                print(f"[render_preview] {line.strip()}")
+    except Exception as e:                       # noqa: BLE001 -- soft, never block render
+        _eprint(f"[render_preview] fit_logos auto-pack skipped ({e})")
+
+
 def main() -> int:
     args = build_parser().parse_args()
 
@@ -156,6 +176,7 @@ def main() -> int:
         return 2
 
     _sync_bundled_fonts(html_path)
+    _autopack_header_logos(html_path)   # Step 5.9, auto-run so it's never skipped
 
     pdf_path = (
         Path(args.pdf) if args.pdf

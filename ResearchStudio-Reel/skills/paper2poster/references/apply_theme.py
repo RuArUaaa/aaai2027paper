@@ -67,6 +67,23 @@ THEMES: dict[str, dict[str, str]] = {
 ROLES = ("accent-soft", "accent", "play-highlight-blue")
 
 
+def _ink(accent_hex: str) -> str:
+    """Readable text color for text placed ON the accent: light ink for a dark
+    accent, dark ink for a light accent (WCAG relative luminance). So an accent
+    pill's label stays legible whatever theme (even a light custom accent) is
+    applied — not a hard-coded white that vanishes on a pale accent."""
+    h = accent_hex.lstrip("#")
+    if len(h) == 3:
+        h = "".join(c * 2 for c in h)
+    try:
+        r, g, b = (int(h[i:i + 2], 16) / 255 for i in (0, 2, 4))
+    except Exception:
+        return "#ffffff"
+    lin = lambda c: c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
+    L = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
+    return "#ffffff" if L < 0.4 else "#141414"
+
+
 def _rand_pick_list(opts: list[str], seed: str) -> str:
     """Deterministically pick one of ``opts`` keyed by ``seed`` (SHA-256).
     Mirrors compose_poster.py's sampler so themes spread reproducibly across a
@@ -106,6 +123,18 @@ def recolor(src: str, theme: dict[str, str]) -> tuple[str, list[tuple[str, str, 
             continue
         out = pat.sub(rf"\g<1>{new_hex}", out, count=1)
         changes.append((role, old_hex, new_hex))
+    # Adaptive on-accent text color, derived from the resolved accent luminance,
+    # injected right after the :root --accent declaration (idempotent). Used by
+    # accent pills (e.g. the scan-to-read Paper/Code chips) via var(--accent-ink).
+    ink = _ink(theme["accent"])
+    if re.search(r"--accent-ink:\s*#[0-9a-fA-F]{3,8}", out, re.I):
+        out = re.sub(r"(--accent-ink:\s*)#[0-9a-fA-F]{3,8}",
+                     rf"\g<1>{ink}", out, count=1, flags=re.I)
+    else:
+        m = re.search(r"--accent:\s*#[0-9a-fA-F]{3,8};?", out, re.I)
+        if m:
+            out = out[:m.end()] + f"\n  --accent-ink: {ink};" + out[m.end():]
+    changes.append(("accent-ink", "", ink))
     return out, changes
 
 

@@ -96,6 +96,8 @@ from pathlib import Path
 from typing import Any
 
 from . import canvas as _canvas
+from . import polish as _polish
+from . import preflight as _preflight
 from . import render as _render
 from .cli_common import eprint as _eprint, import_playwright
 from .textutil import ascii_safe
@@ -625,6 +627,30 @@ def cmd_slack(args: argparse.Namespace) -> int:
 
         _render.inject_class_fallback_roles(page)
         cols = page.evaluate(_SLACK_JS)
+        # ①.3 merge — run the visual-polish measurement on the SAME rendered
+        # page instead of launching a second browser for `polish`. Pure
+        # read-only DOM reads, so slack's numbers above are unaffected. If the
+        # poster lacks polish's required measure-role markup, skip (don't fail
+        # the slack run — --with-polish is an opt-in convenience).
+        polish_collected = None
+        if getattr(args, "with_polish", False):
+            _missing_roles = [
+                r for r in ("poster", "card", "column")
+                if _preflight.has_required_roles_in_html(html_path).get(r, 0) == 0
+            ]
+            if _missing_roles:
+                _eprint(
+                    "[slack] --with-polish: skipping polish pass, poster is "
+                    f"missing measure-role markup {_missing_roles}"
+                )
+            else:
+                try:
+                    polish_collected = _polish.collect_polish_data(page)
+                except Exception as _pe:  # never let polish break the fill gate
+                    _eprint(
+                        f"[slack] --with-polish: polish measurement failed, "
+                        f"skipped ({_pe})"
+                    )
         browser.close()
 
     if not cols:
@@ -1003,6 +1029,31 @@ def cmd_slack(args: argparse.Namespace) -> int:
             "  compaction -- you cannot reset it by forgetting. Exit code is 3."
         )
 
+    def _finish_ok() -> int:
+        """Non-breaker success exit. In ``--with-polish`` mode, also emit the
+        polish gates on the SHARED render and fold their result: the merged
+        command exits non-zero if EITHER the fill gate (slack ``--strict``) or
+        a polish gate (under the same ``--strict``) fails -- matching the
+        staged-fill exit condition 'every section FULL and zero FIG/NARROW'.
+        Without ``--strict`` polish is advisory (prints warnings, exit stays
+        0), exactly as a standalone ``polish`` run."""
+        if polish_collected is None:
+            return 0
+        _pargs = _polish.default_polish_args()
+        _pargs.strict = bool(getattr(args, "strict", False))
+        if getattr(args, "json", False):
+            # Keep stdout pure JSON (this branch pipes to another tool): run
+            # the gates for the exit code only, swallowing their human output.
+            import contextlib
+            import io
+            with contextlib.redirect_stdout(io.StringIO()):
+                _prc = _polish.report_polish(polish_collected, _pargs, html_path)
+        else:
+            print()
+            print("=== POLISH (same render pass -- --with-polish) ===")
+            _prc = _polish.report_polish(polish_collected, _pargs, html_path)
+        return 1 if _prc != 0 else 0
+
     if args.json_out:
         Path(args.json_out).write_text(
             json.dumps({**report, "editTargets": edit_targets}, indent=2), encoding="utf-8"
@@ -1033,7 +1084,7 @@ def cmd_slack(args: argparse.Namespace) -> int:
                 + "; ".join(msg_parts)
             )
             return 1
-        return 0
+        return _finish_ok()
 
     # Pretty-print: per-section verdicts are the main event. Column
     # slackRatio is still shown for continuity with old output, but the
@@ -1137,6 +1188,12 @@ def cmd_slack(args: argparse.Namespace) -> int:
             "=== EDIT TARGETS (verbatim source of each off-band section -- edit "
             "these directly; do NOT re-Read poster.html) ==="
         )
+        print(
+            "    You MAY apply ONE edit per INDEPENDENT column this round -- "
+            "columns don't cross-reflow except via width nudges, which stay "
+            "OUT of the loop. Keep multiple edits to the SAME column one at a "
+            "time so each rollback decision stays unambiguous."
+        )
         for sid in not_full:
             blk = edit_targets.get(sid)
             if blk:
@@ -1163,4 +1220,4 @@ def cmd_slack(args: argparse.Namespace) -> int:
             "[slack] FAIL -- --strict: " + "; ".join(msg_parts)
         )
         return 1
-    return 0
+    return _finish_ok()

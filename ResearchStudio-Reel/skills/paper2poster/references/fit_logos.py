@@ -142,8 +142,14 @@ _ZONES_JS = r"""(sels)=>{const out=[];
     // re-bake would then only ever fit ONE row. Remember the ORIGINAL available height on
     // the first bake and reuse it, so re-running fit_logos re-packs against the real header
     // space (e.g. 8 logos -> 2 rows) instead of the shrunken strip.
-    const h0=z.getAttribute('data-lf-h0'); let H=r.height;
-    if(h0){ H=+h0; } else { z.setAttribute('data-lf-h0', String(r.height)); }
+    // The zone's TRUE available height = the largest we've ever seen. On a re-bake
+    // the zone collapses to packed-content height (so trust the cached pre-bake
+    // height); when the TEMPLATE grew the zone (e.g. v4 stacked layout), the fresh
+    // box is taller than a stale cache -> trust the fresh box. max() is correct both
+    // ways and self-heals a stale data-lf-h0 from an older layout.
+    const h0=z.getAttribute('data-lf-h0');
+    let H = h0 ? Math.max(r.height, +h0) : r.height;
+    z.setAttribute('data-lf-h0', String(H));
     const isQR=(im)=>!!im.closest('.qr-tile, .qr-block, .qr') || /assets\/qr\//.test(im.getAttribute('src')||'');
     const imgs=[...z.querySelectorAll('img')].filter(im=>im.getAttribute('src')&&!im.src.includes('{{'));
     const logos=imgs.filter(im=>!isQR(im));
@@ -289,6 +295,9 @@ def bake(poster_path, max_rows=3, pad_frac=0.06):
     with sync_playwright() as p:
         br = p.chromium.launch(executable_path=p.chromium.executable_path, args=["--no-sandbox"])
         pg = br.new_page(viewport={"width": 5760, "height": 3456}, device_scale_factor=1)
+        pg.emulate_media(media="print")   # match render_poster.py's layout: the header/logo
+                                          # zone sizes differently under screen vs print media,
+                                          # so measure the SAME layout the final PDF/PNG uses.
         pg.goto(poster.as_uri()); pg.wait_for_timeout(600)
         # Venue inject: if the venue logo file exists on disk but the header isn't showing
         # it (the <img> was left empty, or its onerror="this.remove()" already fired on the

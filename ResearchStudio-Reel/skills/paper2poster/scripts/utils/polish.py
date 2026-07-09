@@ -29,6 +29,7 @@ poster has no ``[data-measure-role]`` markup at all — a polish PASS on
 from __future__ import annotations
 
 import argparse
+import os
 import re
 from pathlib import Path
 
@@ -37,6 +38,18 @@ from . import preflight as _preflight
 from . import render as _render
 from .cli_common import eprint as _eprint, import_playwright
 from .textutil import ascii_safe
+
+# Gate thresholds at their CLI defaults. Kept here (not just in the argparse
+# `default=`) so callers without a polish arg namespace -- e.g.
+# `check_poster.py slack --with-polish`, which runs the polish gates on the
+# SAME rendered page instead of launching a second browser -- can reuse the
+# exact same defaults via ``default_polish_args()``. The `slack` sub-parser in
+# check_poster.py also points its `default=` at these constants so the two
+# entry points can never drift.
+DEFAULT_FIG_MIN_RATIO = float(os.environ.get("POSTER_FIG_MIN_RATIO", "0.90"))
+DEFAULT_MAX_SPACE_BETWEEN_FILL = 0.05
+DEFAULT_MAX_CARD_TRAILING = 0.05
+DEFAULT_MAX_WIDOW_FRACTION = 0.20
 
 
 # Trailing glyphs that orphan when wrapped: arrows, multiplicative
@@ -332,6 +345,86 @@ _POLISH_JS = r"""
 """
 
 
+def collect_polish_data(page) -> dict:
+    """Run the two read-only polish measurement passes on an already-open,
+    already-settled page and return their raw results.
+
+    Split out of :func:`cmd_polish` so the same measurement can run on a
+    SHARED slack page (``check_poster.py slack --with-polish``) instead of
+    launching a second browser. Both evaluations are pure DOM geometry
+    reads -- they mutate nothing -- so running them after slack's own
+    measurement on the same page yields identical numbers.
+    """
+    injected = _render.inject_class_fallback_roles(page)
+    if injected:
+        print("[polish] no data-measure-role found; "
+              "using class fallback (.poster/.col/.section)")
+    data = page.evaluate(_POLISH_JS)
+    # ---- Gate F: mid-wide structural integrity ----
+    # The merged-middle layout requires Method as the only direct .section
+    # child of .mid-wide, with all other sub-cards (Dataset, Key Result,
+    # etc.) wrapped in .mid-sub. LLMs sometimes "fix" the layout by
+    # dropping .mid-sub and putting Key Result as a direct child of
+    # .mid-wide -- that makes Key Result span both middle columns
+    # (the old broken-looking layout). Detect both violation modes here:
+    #   - .mid-wide > .section with data-section != "method"
+    #   - .mid-wide exists but no .mid-sub child
+    mid_data = page.evaluate(r"""
+    () => {
+      const out = {wrong_direct: [], missing_midsub: false, midsub_count: -1,
+                   headline_hero_missing: false, headline_present: false};
+      const mw = document.querySelector('.mid-wide');
+      if (mw) {
+        const midsub = mw.querySelector(':scope > .mid-sub');
+        // The method-driven layout replaces .mid-sub with a .method-wrap
+        // holding a .msubs subsection grid — that is a valid merged-middle
+        // structure, so don't flag it as "missing .mid-sub".
+        const methodDriven = !!mw.querySelector('.msubs');
+        if (!midsub && !methodDriven) {
+          out.missing_midsub = true;
+        } else if (midsub) {
+          out.midsub_count = midsub.querySelectorAll(':scope > .section').length;
+        }
+        mw.querySelectorAll(':scope > .section').forEach(s => {
+          const ds = s.getAttribute('data-section') || '';
+          if (ds !== 'method') out.wrong_direct.push(ds || '(unnamed)');
+        });
+      }
+      // Headline Numbers must render as hero+supporting layout, NOT a
+      // plain <ul>. The template ships a `.headline-hero` div with
+      // `.hero-val` + `.supporting` row of `.stat-mini` tiles; the LLM
+      // sometimes bypasses this and substitutes generic bullets, which
+      // strips the section of its visual identity (the whole point is
+      // ONE big number the eye locks onto). Also tracks whether the
+      // supporting tile row is present, since the LLM sometimes adds
+      // .headline-hero with only the hero parts and drops .supporting,
+      // leaving a giant solo number on an otherwise-empty card.
+      const hn = document.querySelector('[data-section="headline-numbers"]');
+      if (hn) {
+        out.headline_present = true;
+        out.headline_hero_missing = !hn.querySelector('.headline-hero');
+        out.headline_stat_mini_count = hn.querySelectorAll('.stat-mini').length;
+      }
+      return out;
+    }
+    """)
+    return {"data": data, "mid_data": mid_data}
+
+
+def default_polish_args() -> argparse.Namespace:
+    """Polish gate thresholds at their CLI defaults, for callers that run the
+    gates without owning a polish arg namespace (e.g. ``slack --with-polish``).
+    ``strict`` is left off here; the caller sets it (the merged path inherits
+    slack's own ``--strict``)."""
+    return argparse.Namespace(
+        fig_min_ratio=DEFAULT_FIG_MIN_RATIO,
+        max_space_between_fill=DEFAULT_MAX_SPACE_BETWEEN_FILL,
+        max_card_trailing=DEFAULT_MAX_CARD_TRAILING,
+        max_widow_fraction=DEFAULT_MAX_WIDOW_FRACTION,
+        strict=False,
+    )
+
+
 def cmd_polish(args: argparse.Namespace) -> int:
     pw = import_playwright()
     if pw is None:
@@ -405,61 +498,20 @@ def cmd_polish(args: argparse.Namespace) -> int:
             )
             return 1
 
-        injected = _render.inject_class_fallback_roles(page)
-        if injected:
-            print("[polish] no data-measure-role found; "
-                  "using class fallback (.poster/.col/.section)")
-        data = page.evaluate(_POLISH_JS)
-        # ---- Gate F: mid-wide structural integrity ----
-        # The merged-middle layout requires Method as the only direct .section
-        # child of .mid-wide, with all other sub-cards (Dataset, Key Result,
-        # etc.) wrapped in .mid-sub. LLMs sometimes "fix" the layout by
-        # dropping .mid-sub and putting Key Result as a direct child of
-        # .mid-wide -- that makes Key Result span both middle columns
-        # (the old broken-looking layout). Detect both violation modes here:
-        #   - .mid-wide > .section with data-section != "method"
-        #   - .mid-wide exists but no .mid-sub child
-        mid_data = page.evaluate(r"""
-        () => {
-          const out = {wrong_direct: [], missing_midsub: false, midsub_count: -1,
-                       headline_hero_missing: false, headline_present: false};
-          const mw = document.querySelector('.mid-wide');
-          if (mw) {
-            const midsub = mw.querySelector(':scope > .mid-sub');
-            // The method-driven layout replaces .mid-sub with a .method-wrap
-            // holding a .msubs subsection grid — that is a valid merged-middle
-            // structure, so don't flag it as "missing .mid-sub".
-            const methodDriven = !!mw.querySelector('.msubs');
-            if (!midsub && !methodDriven) {
-              out.missing_midsub = true;
-            } else if (midsub) {
-              out.midsub_count = midsub.querySelectorAll(':scope > .section').length;
-            }
-            mw.querySelectorAll(':scope > .section').forEach(s => {
-              const ds = s.getAttribute('data-section') || '';
-              if (ds !== 'method') out.wrong_direct.push(ds || '(unnamed)');
-            });
-          }
-          // Headline Numbers must render as hero+supporting layout, NOT a
-          // plain <ul>. The template ships a `.headline-hero` div with
-          // `.hero-val` + `.supporting` row of `.stat-mini` tiles; the LLM
-          // sometimes bypasses this and substitutes generic bullets, which
-          // strips the section of its visual identity (the whole point is
-          // ONE big number the eye locks onto). Also tracks whether the
-          // supporting tile row is present, since the LLM sometimes adds
-          // .headline-hero with only the hero parts and drops .supporting,
-          // leaving a giant solo number on an otherwise-empty card.
-          const hn = document.querySelector('[data-section="headline-numbers"]');
-          if (hn) {
-            out.headline_present = true;
-            out.headline_hero_missing = !hn.querySelector('.headline-hero');
-            out.headline_stat_mini_count = hn.querySelectorAll('.stat-mini').length;
-          }
-          return out;
-        }
-        """)
+        collected = collect_polish_data(page)
         browser.close()
 
+    return report_polish(collected, args, html_path)
+
+
+def report_polish(collected: dict, args: argparse.Namespace,
+                  html_path: Path) -> int:
+    """Apply the visual-polish gates (A-G) to data gathered by
+    :func:`collect_polish_data` and emit warnings. Page-free, so the same
+    report runs both for standalone ``polish`` and for the merged
+    ``slack --with-polish`` path (which shares one rendered page)."""
+    data = collected["data"]
+    mid_data = collected["mid_data"]
     warns: list[str] = []
 
     # ---- Gate A: figure sizing by AR ----
