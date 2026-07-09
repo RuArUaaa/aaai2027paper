@@ -11,8 +11,8 @@
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Status: Active](https://img.shields.io/badge/Status-Active-brightgreen)
 
-ResearchStudio is a collection of skills covering the **entire research lifecycle** — from the moment you have a vague research direction to the moment your paper goes public.
-These skills are supported by [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) and [Codex](https://developers.openai.com/codex).
+ResearchStudio is a collection of skills covering the **entire research lifecycle** — from an under-specified research direction to a published paper.
+The skills run on [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) and [Codex](https://developers.openai.com/codex).
 
 ---
 
@@ -43,32 +43,40 @@ These skills are supported by [Claude Code](https://docs.claude.com/en/docs/clau
   <img src="https://raw.githubusercontent.com/ai-nuts/Storage/main/ResearchStudio/ResearchStudio-Idea/docs/figures/ideaspark_teaser.gif" alt="IdeaSpark — turning a research direction into a reviewer-defensible idea card end to end" width="100%">
 </p>
 <p align="center">
-  <sub>IdeaSpark runs the full pipeline end-to-end. </sub>
+  <sub>IdeaSpark runs the full pipeline end-to-end.</sub>
 </p>
 
-
-## News🔥🔥🔥
+## News 🔥🔥🔥
 
 - [**2026-07-08**] **[ResearchStudio-Reel](ResearchStudio-Reel/) is released** — the *post-paper* half: turn a finished paper PDF into the artifacts a publication needs — a print-ready poster, a narrated walkthrough video, a bilingual blog post, and an interactive reel viewer.
-- [**2026-07-03**] **[ResearchStudio-Idea](ResearchStudio-Idea/) is released** — the *pre-paper* half: turn an under-specified research direction into a reviewer-defensible, implementable idea, grounded in an empirical taxonomy induced from a large-scale papers of ICLR / ICML / NeurIPS submissions.
-
+- [**2026-07-03**] **[ResearchStudio-Idea](ResearchStudio-Idea/) is released** — the *pre-paper* half: turn an under-specified research direction into a reviewer-defensible, implementable idea, grounded in an empirical taxonomy induced from a large-scale corpus of ICLR / ICML / NeurIPS submissions.
 
 ## Quick Start
 
-**Option 1 — clone and run `install.sh`** (symlinks the skills from a local clone and scaffolds `.env`):
+We recommend creating an isolated environment first:
+
+```bash
+conda create -n researchstudio "python>=3.10" -y
+conda activate researchstudio
+```
+
+Then pick one of the two install paths below:
+
+**Option 1 — clone and run `install.sh`** (installs native tools, Python deps, symlinks the skills from a local clone and scaffolds `.env`):
 
 ```bash
 git clone https://github.com/microsoft/ResearchStudio.git && cd ResearchStudio
 bash install.sh
 ```
 
-**Option 2 — interactive `npx` installer** (choose which plugins to install, enter your API keys when prompted, and it writes `.env` for you):
+**Option 2 — interactive `npx` installer** (choose which plugins to install, enter your API keys when prompted, and it writes `.env`):
 
 ```bash
 npx github:microsoft/ResearchStudio
 ```
 
-We recommend utilizing these skills with models versions $\ge$ `claude-opus-4.6` and `gpt-5.5`.
+For usage, see [Idea](ResearchStudio-Idea/#usage) and [Reel](ResearchStudio-Reel/#usage).
+We recommend using these skills with model versions $\ge$ `claude-opus-4.6` or `gpt-5.5`.
 
 ## License
 

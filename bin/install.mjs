@@ -35,7 +35,8 @@ const PLUGINS = [
     pip: ['feedparser', 'openreview-py', 'beautifulsoup4', 'pymupdf'] },
   { key: 'reel', label: 'ResearchStudio-Reel', dir: 'ResearchStudio-Reel',
     blurb: 'paper2assets · paper2poster · paper2video · paper2blog · paper2reel',
-    pip: [] },
+    pip: ['pymupdf', 'pillow', 'numpy', 'python-docx>=1.1.2', 'qrcode',
+          'playwright', 'imageio-ffmpeg', 'edge-tts>=7.2.8'] },
 ];
 
 const C = { d: '\x1b[2m', b: '\x1b[1m', g: '\x1b[32m', y: '\x1b[33m', c: '\x1b[36m', r: '\x1b[0m' };
@@ -233,7 +234,19 @@ async function main() {
 
   const ns = selected.map((p) => `/${p.dir.toLowerCase()}:<skill>`).join('  ');
   say(`\n${C.b}${C.g}Done.${C.r} Restart your agent, then invoke a skill, e.g.  ${C.c}${ns}${C.r}`);
-  say(`${C.d}Reminder: also export your LLM backend key (e.g. ANTHROPIC_API_KEY) in your shell.${C.r}\n`);
+  say(`${C.d}Reminder: also export your LLM backend key (e.g. ANTHROPIC_API_KEY) in your shell.${C.r}`);
+
+  // Reel needs native binaries + a Playwright browser that this cross-platform
+  // installer won't touch (sudo apt-get is Debian-only; the Chromium download
+  // is ~300 MB). Print the exact commands so the user can run them themselves.
+  if (selected.some((p) => p.key === 'reel')) {
+    say(`\n${C.y}Reel needs native tools this installer can't touch — run these yourself:${C.r}`);
+    say(`  ${C.c}# Debian/Ubuntu${C.r} (use brew/dnf/pacman on macOS/Fedora/Arch)`);
+    say(`  sudo apt-get install -y poppler-utils libreoffice ffmpeg`);
+    say(`  ${C.c}# Chromium for Paper2Poster HTML→PDF/PNG (~300 MB download)${C.r}`);
+    say(`  python3 -m playwright install chromium`);
+  }
+  say('');
   process.exit(0);
 }
 main().catch((e) => { say(`${C.y}error: ${e.message}${C.r}`); process.exit(1); });
