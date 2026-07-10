@@ -129,14 +129,14 @@ Re-render ONLY when:
 
 ### Step 1 — Verify paper2assets prerequisites
 
-Required argument: an `<outdir>/` path produced by the `paper2assets` skill. Verify the required files exist before doing any work:
+Required argument: an `<outdir>/` path produced by the `paper2assets` skill, or a path to a source `*.pdf`. Verify the required files exist before doing any work:
 
 ```bash
 ls <outdir>/assets/meta/paper_spec.md <outdir>/assets/meta/text.txt <outdir>/assets/meta/figures.json <outdir>/assets/meta/metadata.json
 ls <outdir>/assets/figures/*.png
 ```
 
-If any of the five required files is missing, abort with a clear message telling the user to run `paper2assets` first.
+If any of the five required files is missing, automatically invoke the `paper2assets` skill on the source PDF to produce/populate the `<outdir>/`, then continue.
 
 **Optional files `<outdir>/assets/logos/` and `<outdir>/assets/qr/` may be absent** — but **DO NOT silently delete the logo/QR HTML blocks** just because the directory is missing. Two common reasons the directory is missing are recoverable:
 
@@ -515,7 +515,7 @@ Bundled in `assets/fonts/`: Inter Regular / SemiBold / Bold / ExtraBold in both 
 
 | Situation | Action |
 |---|---|
-| `<outdir>/` missing or missing required paper2assets outputs | Surface error, abort. Tell the user to run `paper2assets` first. |
+| `<outdir>/` missing or missing required paper2assets outputs | Automatically invoke the `paper2assets` skill on the source PDF to produce/populate the `<outdir>/`, then continue. |
 | `figures.json` is empty | Proceed; Method's figure is `none`. |
 | Selected figure file missing on disk | Treat as `none`. |
 | Method figure `none` | Use `<orientation>_half_<style>.html`, remove the Method `<figure>` block. |
