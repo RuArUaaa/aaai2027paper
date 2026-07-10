@@ -1,6 +1,11 @@
 ---
 name: idea-spark
-description: Generate ONE reviewer-defensible, implementable research idea — with a concrete method and a falsification plan, calibrated against the patterns of Oral-accepted papers — from a user's research direction. Diagnoses the bottleneck against retrieved literature, selects 1-3 of 15 induced ideation patterns that structurally fit the bottleneck (with corpus-derived anti-pattern guard), generates a single candidate, runs collision check + critique, and expands into a structured idea card. **One-shot guarantee**: one user input produces one of three outputs — the rendered idea-card markdown (returned inline as the run's final response, with the LaTeX side artifact + per-phase JSON left under the run directory), a `do_not_generate.md` (Phase 1 OOD), or a `phase_3_failed.md` (audit abandons) — never asking the user mid-flow. Use when the user asks for a research idea, novelty analysis, or paper-shape suggestion within a stated direction. Skip for code review, debugging, or pure brainstorming without research context.
+description: >-
+  Generate ONE reviewer-defensible, implementable research idea with a concrete
+  method and falsification plan from a stated research direction. Use when the
+  user asks for a research idea, novelty analysis, bottleneck diagnosis, or
+  paper-shape suggestion. Skip code review, debugging, and unconstrained
+  brainstorming without research context.
 ---
 
 # Idea Spark Skill
@@ -26,8 +31,8 @@ This file is the operational runbook. Design rationale (the 7 design principles,
 Follow [references/setup.md](references/setup.md). Quick version — set two shell variables, install deps, verify:
 
 ```bash
-SKILL_DIR=~/.claude/skills/idea-spark            # or wherever this folder lives
-RUN_DIR="$PWD/idea_run" && mkdir -p "$RUN_DIR"   # ANY absolute output dir (Claude Code: reuse CLAUDE_PROJECT_DIR)
+SKILL_DIR=<path to this folder>                  # e.g. ~/.claude/skills/idea-spark (Claude Code), ~/.codex/skills/idea_spark (Codex CLI), or any clone location
+RUN_DIR="$PWD/idea_run" && mkdir -p "$RUN_DIR"   # ANY absolute output dir (harnesses that inject a project dir can reuse it)
 python3 -m pip install feedparser openreview-py beautifulsoup4 pymupdf
 python3 "$SKILL_DIR/scripts/run.py" check_connectors   # from the SAME shell you'll run phases from
 ```
@@ -82,11 +87,11 @@ A full run accumulates ~180-250k tokens of intermediate state. If the host LLM c
 
 Whichever mechanism, the parent context stays ≤ ~30k tokens for the whole run because it never holds a phase's structured output.
 
-**Rule 2 — `Write` every phase artifact directly to disk; never paraphrase it into chat.** Output convention: `$RUN_DIR/<phase>/<phase>_output.json`. Use the `Write` tool — no Bash heredocs (permission prompts + silent truncation), no `echo`, no pasting JSON into replies. Bound tool-result captures from large files to ≤ 4 KB (`head -c 4000` / `jq` / `sed`); never `Read` a >10 KB intermediate dump into the parent context — the dump gets cached into every subsequent turn (this exact anti-pattern caused prior timeout runs).
+**Rule 2 — `Write` every phase artifact directly to disk; never paraphrase it into chat.** Output convention: `$RUN_DIR/<phase>/<phase>_output.json`. Use your harness's file-write tool (Claude Code: `Write`) — no Bash heredocs (permission prompts + silent truncation), no `echo`, no pasting JSON into replies. Bound tool-result captures from large files to ≤ 4 KB (`head -c 4000` / `jq` / `sed`); never `Read` a >10 KB intermediate dump into the parent context — the dump gets cached into every subsequent turn (this exact anti-pattern caused prior timeout runs).
 
 **Rule 3 — Compact between phases.** Natural compact points: after Phase 0+, after Phase 1, after Phase 2, after Phase 3.2. Every phase re-reads its disk inputs, so compacting loses nothing. With `/compact`, use it there; Rule 1 mechanisms (a)/(b) achieve the same on their own.
 
-**Diagnostic for "Request timed out" mid-phase:** inspect your harness's session log (Claude Code: `~/.claude/projects/<project-slug>/<session-id>.jsonl`, look for `isApiErrorMessage: true`); the prior tool call shows which prompt got too big. The fix is one of the three rules — usually Rule 1.
+**Diagnostic for "Request timed out" mid-phase:** inspect your harness's session transcript/log (Claude Code: `~/.claude/projects/<project-slug>/<session-id>.jsonl`, look for `isApiErrorMessage: true`; other harnesses: their session-log equivalent); the prior tool call shows which prompt got too big. The fix is one of the three rules — usually Rule 1.
 
 ---
 
@@ -128,7 +133,7 @@ Retrieval takes 3-10 min (the openreview connector alone budgets 600s) — set y
 
 **Pattern tagging (host step):** classify each `lit_results.json` paper per `references/pattern-summary-rubric.md` into 1-3 of the 15 patterns → write `lit_table.md` with columns `paper_id | year_month | venue | title | ideation pattern tags | bottleneck this paper targets | open issue / unresolved gap | resolves_problem | retrieved_via`. Pure classification — it does not need the large reasoning model: if your harness can route an isolated context to a cheaper/faster model tier or a lower reasoning effort, use that (this is the same tier `NOVELTY_LLM_CLASSIFY_FAST_CMD` names in § Configuration); otherwise just run it isolated on the host model.
 
-**Title-named user refs:** if the user query names anchor papers by TITLE ("based on the LoRA paper" — anything the URL/ID regex can't catch), register each BEFORE `phase0_fulltext` via `add_user_ref` (entry-point table). It does a deterministic dedup-merge into `user_refs.json` — do NOT hand-edit that file (the Write tool requires a prior Read on existing files, and a malformed edit silently drops the U fetch tier).
+**Title-named user refs:** if the user query names anchor papers by TITLE ("based on the LoRA paper" — anything the URL/ID regex can't catch), register each BEFORE `phase0_fulltext` via `add_user_ref` (entry-point table). It does a deterministic dedup-merge into `user_refs.json` — do NOT hand-edit that file (some harnesses' file-write tools refuse to overwrite a file that was never read, and a malformed edit silently drops the U fetch tier).
 
 **Phase 0+ full-text fetch — MANDATORY.** The instant `lit_table.md` lands, run `phase0_fulltext` (entry-point table) before touching Phase 1. Pool = U (user refs, never capped) + T2 (top-10 published on-topic) + T3 (top-5 arxiv on-topic), ceiling 15 excluding U, method-first ordering, concurrent fetch (HTML path first, pymupdf PDF fallback; per-paper budget so one slow PDF can't stall the step). Output `fulltext_cache.json` keyed by paper_id (`{tier, intro, method, source_used, warning}`); fetch failures degrade to abstract + warning. Phase 1 **hard-gates** on this file (`error: fulltext_not_fetched`).
 
@@ -225,6 +230,6 @@ By default every model-driven phase runs on the host LLM. To route phases to a d
 - `NOVELTY_LLM_REASONING_LARGE_CMD` — Phase 1 / 2.1 / 2.2 / 3.2 / 3.3 / 4.fill (needs ≥ 200k context, JSON output)
 - `NOVELTY_LLM_CLASSIFY_FAST_CMD` — Phase 0 intent extraction + per-paper pattern tagging (smaller context, JSON output)
 
-Each is a CLI taking a stdin prompt (`<<SYSTEM>>...<<USER>>...`) and emitting JSON on stdout. When unset (default for Claude Code), the orchestrator emits sentinel files and the host LLM handles those steps natively.
+Each is a CLI taking a stdin prompt (`<<SYSTEM>>...<<USER>>...`) and emitting JSON on stdout. When unset (the default when running inside any host LLM), the orchestrator emits sentinel files and the host LLM handles those steps natively.
 
 - `IDEASPARK_DEFAULT_COMPUTE` — optional standing compute profile for the user (free text, e.g. `"8×H100 node, ~300 GPU-days, $50k API budget"`). Put it in `.env` (auto-loaded); `next` surfaces it to Phase 1 as intake context. Precedence: compute stated in the user's query > this value > the factory default (80GB-class GPUs, ≤8 concurrent, ≈150 GPU-days / 5 months, ~$10k API campaign). Use this instead of editing the factory default — the default is the feasibility yardstick for users who state nothing.

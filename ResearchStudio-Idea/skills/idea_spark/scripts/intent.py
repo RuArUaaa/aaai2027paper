@@ -67,7 +67,7 @@ def call_llm(system: str, user: str) -> dict:
     # Host-LLM mode: write the prompt to a sentinel file the host LLM is expected to
     # read and respond to inline. This is the default Claude Code behavior.
     raise RuntimeError(
-        'NOVELTY_LLM_CLASSIFY_FAST_CMD not set. In Claude Code, the host LLM '
+        'NOVELTY_LLM_CLASSIFY_FAST_CMD not set. When running inside a host LLM, the host '
         'reads the prompt and returns JSON inline. For batch/library mode set the env var.'
     )
 

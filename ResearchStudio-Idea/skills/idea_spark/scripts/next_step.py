@@ -29,7 +29,7 @@ from pathlib import Path
 _SUBAGENT_FRAME = (
     'Run in a FRESH sub-agent (never the parent context): pass ONLY the file '
     'paths below, have it Write the output JSON to the exact output path '
-    '(Write tool — no heredoc, no inline JSON in the reply), and return <=250 '
+    '(direct file-write tool — no heredoc, no inline JSON in the reply), and return <=250 '
     'words: output path + the routing signal named in NOTES.'
 )
 
@@ -133,8 +133,8 @@ def next_step(run_dir: Path, root: Path, query: str | None = None) -> int:
                            'papers by TITLE (e.g. "based on the LoRA paper"), register each via: '
                            + skill_cd + f'add_user_ref --out "{p0}/" --title "<full title>" '
                            '--raw-match "<user phrasing>"  (deterministic merge; do NOT hand-edit '
-                           'user_refs.json — the Write tool requires a prior Read on existing '
-                           'files). OOD short-circuit: if the query matches intake-routing.md '
+                           'user_refs.json — some harnesses refuse to overwrite files never '
+                           'read). OOD short-circuit: if the query matches intake-routing.md '
                            'trigger #1/#2, skip retrieval and go straight to Phase 1 with a '
                            'do_not_generate routing.',
                      run_dir=d)
