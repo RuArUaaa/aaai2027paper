@@ -182,7 +182,7 @@ Output (strict JSON):
 
   "falsification_prediction": "<3-5 sentences containing: (a) the minimal experiment as a procedure (model / dataset / what to measure); (b) which metric moves and in which direction if the candidate works — name the metric and qualitative direction (e.g., 'foot-skating rate decreases', 'FID improves at 4 NFE on CIFAR-10', 'Spearman ρ between predicted and gold stop-time stays high'); (c) a mechanism distinguisher built around ONE NAMED LOAD-BEARING VARIABLE — the single quantity (a gradient norm, an information-gain term, a learned threshold, a logit divergence, a representational direction) whose behavior carries the mechanism claim — plus a negative-control intervention on it (randomize / oracle-replace / ablate its producer / label-permute). Anti-tautology guard: the control's predicted effect MUST be the downstream task-outcome metric that defines the mechanism's value (accuracy, win-rate, regret slope, real refusal pass-rate) — NOT the variable's own value, nor a quantity analytically a function of it. 'Intervene on X → X becomes 0' only tests a definition; 'intervene on X → downstream metric moves in direction D' is the real Popper test, because 'the metric moved' alone is equally consistent with calibration, estimator quality, or distribution shift. A positive control — a stripped-down model using only the load-bearing variable that recovers most of the downstream effect — is recommended when feasible, converting a falsifier into a constructive identification.>",
 
-  "compute_budget": "<user-relative concrete estimate, e.g. '0.6 GPU-day' or '50 A100-day'. Phase 4 feasibility_validation.compute checks against intake.compute (default 1×A100×3 months ≈ 90 A100-day if user didn't state). NO absolute cap. Calibration vs the 90 A100-day default: theory typically < 5 A100-day → 'comfortable'; method on small benchmark 5-30 A100-day → 'comfortable'; method on standard benchmark 30-80 → 'tight but feasible'; > 90 → 'tight, will need to scope down'; scaling/foundation 200+ → 'infeasible at default; needs larger compute'. Honesty over heuristic — write the real number.>",
+  "compute_budget": "<user-relative concrete estimate with BOTH cost lines when applicable: GPU-days (80GB-class; e.g. '0.6 GPU-day', '50 GPU-day') AND, if the falsification campaign calls paid APIs (closed-model baselines, LLM judges, long reasoning traces), the inference/API dollars for the FULL campaign, iteration included (e.g. '12 GPU-day + $2k API'). Phase 4 feasibility_validation.compute checks each line against intake.compute (default envelope if user didn't state: 80GB-class GPUs, ≤8 concurrent, ≈150 GPU-days over 5 months, ~$10k API campaign budget). NO absolute cap. Calibration vs the 150 GPU-day default: theory typically < 5 GPU-day → 'comfortable'; method on small benchmark 5-40 → 'comfortable'; method on standard benchmark 40-130 → 'tight but feasible'; > 150 → 'tight, will need to scope down'; scaling/foundation 300+ → 'infeasible at default; needs larger compute'. Honesty over heuristic — write the real numbers.>",
 
   "differentiation_from_lit": [
     {"paper_id": "<closest_adjacent paper_id from Phase 1, OR another lit_table paper that actually overlaps>",
@@ -197,6 +197,11 @@ Output (strict JSON):
   "signature_terms": [
     "<3-5 entries total; each a 3-7 word phrase>",
     "<3-7 word phrase>",
+    "..."
+  ],
+
+  "alias_terms": [
+    "<2-4 entries; each a 3-7 word phrase naming the SAME core mechanism in ANOTHER community's vocabulary>",
     "..."
   ]
 }
@@ -233,7 +238,19 @@ Notes:
 - `signature_terms[]`: 3-5 entries, 3-7 words each. Cover (a) the mechanism,
   (b) the claim, (c) the setting/setup. No verbatim title strings. No
   generic terms ("deep learning", "transformer"). These get sent verbatim to
-  the BM25 retriever in Phase 3.1 collision check.
+  the BM25 retriever in Phase 3.1 collision check (recent window).
+- `alias_terms[]`: 2-4 entries, 3-7 words each — how OTHER research
+  communities would name this candidate's core mechanism. This is a
+  PARAMETRIC-KNOWLEDGE step, not a paraphrase step: ask "if a reward-modeling
+  / classical-CV / RL / NLP / theory group had built this same mechanism 2-3
+  years ago, what would their papers' titles call it?" and write those names
+  (e.g. a "goal-image conditioned scorer for task completion" is, in other
+  vocabularies, a "goal-conditioned success detector" / "goal-image reward
+  model"). Do NOT reuse signature_terms vocabulary or the candidate's own
+  domain wording — the whole point is the words your community does NOT use.
+  Phase 3.1 runs these over a multi-year window to catch same-mechanism
+  ancestors that renamed the idea; a paraphrased signature term catches
+  nothing the signature channel didn't already catch.
 - `main_pattern` per entry comes from Phase 2.1; `sub_pattern` is picked
   in this phase's sub-step a. There is no separate `patterns_used[]` field.
 

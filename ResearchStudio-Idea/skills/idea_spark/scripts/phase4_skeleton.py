@@ -162,25 +162,32 @@ def build_venue_year_lookup(lit_results: list[dict]) -> dict[str, str]:
 
 
 # ---------------------------------------------------------------------------
-# Compute-budget feasibility — bucket against the 90 A100-day default
+# Compute-budget feasibility — bucket against the default envelope
+# (80GB-class GPUs, ≤8 concurrent, ≈150 GPU-days / 5 months, ~$10k API campaign)
 # ---------------------------------------------------------------------------
 
 _NUM = re.compile(r'(\d+(?:\.\d+)?)')
 
 
-def _extract_a100_days(s: str) -> float | None:
+def _extract_gpu_days(s: str) -> float | None:
     """Greedy parse: find the first `<num> A100-day` / `<num> GPU-day` /
-    `<num> H100-day` token. Returns the number as a float A100-day-equivalent
-    (H100 counted as 2× A100). Returns None if no number is found near a
-    compute-day unit."""
+    `<num> H100-day` token. Returns the number as a float GPU-day figure on
+    the 80GB-class A100=1 scale (H100 counted as 2×). Returns None if no
+    number is found near a compute-day unit."""
     if not s:
         return None
     pattern = re.compile(r'(\d+(?:\.\d+)?)\s*(A100|H100|GPU)[-\s]?day', re.IGNORECASE)
     m = pattern.search(s)
     if not m:
-        # Fallback: just the first number, treated as A100-day
-        m2 = _NUM.search(s)
-        return float(m2.group(1)) if m2 else None
+        # Fallback: first bare number treated as GPU-day — but never a number that
+        # is part of a dollar amount (`$8k API` must not become a phantom 8-GPU-day
+        # line; the API extractor owns those).
+        for m2 in _NUM.finditer(s):
+            prefix = s[max(0, m2.start() - 4):m2.start()]
+            if '$' in prefix or prefix.upper().endswith('USD') or prefix.upper().endswith('USD '):
+                continue
+            return float(m2.group(1))
+        return None
     n = float(m.group(1))
     unit = m.group(2).upper()
     if unit == 'H100':
@@ -188,31 +195,68 @@ def _extract_a100_days(s: str) -> float | None:
     return n
 
 
+def _extract_api_dollars(s: str) -> float | None:
+    """Find the first dollar amount near an API/inference context: `$1.5k API`,
+    `$800 inference`, `USD 2k API`, or a bare `$Nk`/`$N` when the string
+    mentions API/inference anywhere. Returns dollars as a float, else None."""
+    if not s:
+        return None
+    if not re.search(r'\bAPI\b|inference|token cost', s, re.IGNORECASE):
+        return None
+    m = re.search(r'(?:\$|USD\s*)(\d+(?:\.\d+)?)\s*([kK])?', s)
+    if not m:
+        return None
+    n = float(m.group(1))
+    if m.group(2):
+        n *= 1000.0
+    return n
+
+
+def _bucket(ratio: float) -> str:
+    if ratio <= 0.5:
+        return 'feasible'
+    elif ratio <= 1.0:
+        return 'tight'
+    return 'infeasible'
+
+
 def compute_verdict_from_budget(compute_budget: str, intake_compute: str) -> tuple[str, str]:
     """Return (verdict, rationale).
 
-    Default intake is `1×A100 × 3 months ≈ 90 A100-day`. Verdict thresholds:
-      - feasible: budget ≤ 50% of intake
-      - tight:    50% < budget ≤ 100%
-      - infeasible: budget > 100%
+    Default intake envelope: `80GB-class GPUs (A100/H100), up to 8 concurrent,
+    ≈150 GPU-days over 5 months, plus ~$10k inference/API budget for the full
+    falsification campaign`. Two independently-bucketed lines (GPU-days and
+    API dollars); the overall verdict is the WORSE of the two. Thresholds per
+    line: feasible ≤ 50% of intake, tight ≤ 100%, infeasible > 100%.
     """
-    DEFAULT_A100_DAY = 90.0
-    budget_n = _extract_a100_days(compute_budget)
-    intake_n = _extract_a100_days(intake_compute) or DEFAULT_A100_DAY
+    DEFAULT_GPU_DAYS = 150.0
+    DEFAULT_API_DOLLARS = 10_000.0
+    _SEV = {'feasible': 0, 'tight': 1, 'infeasible': 2}
 
-    if budget_n is None:
-        return ('tight', f'Could not parse a numeric A100-day budget from compute_budget; '
-                         f'manual review against intake.compute ({intake_compute or "default 90 A100-day"}) required.')
+    budget_gpu = _extract_gpu_days(compute_budget)
+    intake_gpu = _extract_gpu_days(intake_compute) or DEFAULT_GPU_DAYS
+    budget_api = _extract_api_dollars(compute_budget)
+    intake_api = _extract_api_dollars(intake_compute) or DEFAULT_API_DOLLARS
 
-    ratio = budget_n / intake_n
-    if ratio <= 0.5:
-        verdict = 'feasible'
-    elif ratio <= 1.0:
-        verdict = 'tight'
-    else:
-        verdict = 'infeasible'
-    return (verdict, f'Budget ≈ {budget_n:g} A100-day vs intake.compute ≈ {intake_n:g} A100-day '
-                     f'({ratio*100:.0f}% of envelope) → {verdict}.')
+    if budget_gpu is None and budget_api is None:
+        return ('tight', f'Could not parse a numeric GPU-day or API-dollar budget from '
+                         f'compute_budget; manual review against intake.compute '
+                         f'({intake_compute or "default 150 GPU-day + $10k API"}) required.')
+
+    parts = []
+    verdicts = []
+    if budget_gpu is not None:
+        r = budget_gpu / intake_gpu
+        v = _bucket(r)
+        verdicts.append(v)
+        parts.append(f'GPU line ≈ {budget_gpu:g} vs {intake_gpu:g} GPU-day ({r*100:.0f}%) → {v}')
+    if budget_api is not None:
+        r = budget_api / intake_api
+        v = _bucket(r)
+        verdicts.append(v)
+        parts.append(f'API line ≈ ${budget_api:g} vs ${intake_api:g} ({r*100:.0f}%) → {v}')
+    overall = max(verdicts, key=lambda v: _SEV[v])
+    return (overall, '; '.join(parts) + f'. Overall (worse line) → {overall}.')
 
 
 # ---------------------------------------------------------------------------
@@ -362,6 +406,26 @@ def build_reviewer_concerns(phase3_critique: dict,
                              '2-3 sentences: explain where in the candidate (which field) the defense is anchored; '
                              'reference the Phase 3.2 verdict_rationale when relevant'),
             'fields_changed_to_address': [],  # filled below from phase3_revise.applied_revisions[]
+        })
+
+    # 1b. paper_pointed_threat.parametric_family_concern — the audit's soft signal
+    # that an older, named mechanism family exists outside the retrieved pool.
+    # Never gates the verdict; here it becomes an explicit "run a scoop-check on
+    # this vocabulary before investing" reviewer concern so the card carries the
+    # known blind spot instead of silently claiming full novelty coverage.
+    pfc = ppt.get('parametric_family_concern')
+    if pfc and isinstance(pfc, str) and pfc.strip().lower() not in ('null', 'none', 'n/a'):
+        entries.append({
+            'attack': (f"Un-retrieved mechanism family flagged by the audit (parametric "
+                       f"knowledge, not in the retrieved pool): {pfc.strip()} — novelty vs "
+                       f"this family is UNVERIFIED; run a targeted scoop-check on that "
+                       f"vocabulary before investing."),
+            'severity': 'non_blocking',
+            'response': TODO(f'reviewer_concerns_and_responses[{len(entries)}].response',
+                             '1-2 sentences: state what a scoop-check on the named family must '
+                             'establish for the candidate\'s delta to survive (do NOT claim the '
+                             'check already passed)'),
+            'fields_changed_to_address': [],
         })
 
     # 2. gap_closure_reject_check borderline entries

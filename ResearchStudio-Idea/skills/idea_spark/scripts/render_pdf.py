@@ -490,6 +490,28 @@ def render_card_md(d: dict, register: str, lang: str) -> str:
             parts.append(f'$$ {body} \\tag{{{tag}}} $$')
             parts.append('')
 
+    # Reviewer concerns — detail register only. These are audit-derived (Phase 3.2
+    # findings incl. the parametric_family_concern "run a scoop-check on X first"
+    # flag, lifted mechanically by the Phase 4 skeleton) plus the authored
+    # responses; leaving them only in phase4_expansion.json hid the run's known
+    # blind spots from the one card meant to carry the novelty/validity defense.
+    if register == 'detail':
+        rcs = [c for c in (d.get('reviewer_concerns_and_responses') or [])
+               if isinstance(c, dict) and (c.get('attack') or c.get('response'))]
+        if rcs:
+            parts.append('## Reviewer concerns')
+            for c in rcs:
+                sev = str(c.get('severity', '') or '')
+                sev_tag = f' [{sev}]' if sev else ''
+                parts.append(f'- **Concern{sev_tag}:** {_render_inline(str(c.get("attack", "")), "md")}')
+                if c.get('response'):
+                    parts.append(f'  - **Response:** {_render_inline(str(c.get("response", "")), "md")}')
+                fca = c.get('fields_changed_to_address') or []
+                if fca:
+                    parts.append(f'  - *Fields changed to address:* '
+                                 + ', '.join(f'`{f}`' for f in fca))
+            parts.append('')
+
     return '\n'.join(parts) + '\n'
 
 
