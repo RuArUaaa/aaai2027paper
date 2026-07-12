@@ -17,7 +17,7 @@ Phase 3.3 is a SEPARATE LLM call from Phase 3.2 audit. The audit identifies issu
 **No `composition` scope.** If the audit's findings imply gap-level changes (different gaps selected, different main_pattern picks), revision_targets cannot fix that — the audit should produce verdict = abandon, and the user re-runs Phase 2.1+2.2 with a different random seed.
 
 Inputs (explicit paths):
-- `$RUN_DIR/phase2_generate/phase2_generate_output.json` — canonical Phase 2.2 candidate. Read it to understand WHAT the current values are; do not echo them back.
+- The CANONICAL candidate — `$RUN_DIR/phase2_coherence/refined_candidate.json` when the Phase 2.3 coherence gate patched, else `$RUN_DIR/phase2_generate/phase2_generate_output.json`. Read it to understand WHAT the current values are; do not echo them back.
 - `$RUN_DIR/phase2_select/phase2_select_output.json` — Phase 2.1 spec (gap × pattern matrix).
 - `$RUN_DIR/phase3_critique/phase3_critique_output.json` — `revision_targets[]` and the per-check findings that motivated each.
 - `references/ideation-sub-patterns/<C##>.md` (where `<C##>` is the leading cluster code of the sub_pattern value, formatted `C## (parent pattern name)` — strip everything after the code) — for scope=sub_pattern, read the new picked sub-pattern's `tactical_pattern` + `tactical_failure_mode`.
@@ -59,12 +59,12 @@ Output (JSON):
 The merger then runs:
 
   python3 -m scripts.run phase3_merge_revisions \
-    --phase2 $RUN_DIR/phase2_generate/phase2_generate_output.json \
+    --phase2 <the CANONICAL candidate file — refined_candidate.json when 2.3 patched, else the 2.2 output> \
     --revisions $RUN_DIR/phase3_revise/phase3_revise_output.json \
     --critique $RUN_DIR/phase3_critique/phase3_critique_output.json \
     --out $RUN_DIR/phase3_revise/
 
-(`--critique` is what authorizes a `rewrite_falsification` entry — the merger cross-checks the audit actually emitted a scope=falsification revision_target. Patches without that op run fine without the flag.)
+(Pointing `--phase2` at the raw 2.2 file when a coherence repair exists would silently DROP the 2.3 repairs from final_candidate — always patch against the canonical file. `--critique` is what authorizes a `rewrite_falsification` entry — the merger cross-checks the audit actually emitted a scope=falsification revision_target. Patches without that op run fine without the flag.)
 
 It produces `phase3_revise/final_candidate.json` (Phase 4's canonical input) and back-injects `final_candidate` into your patch file so the `kill_switch_integrity` validator's existing chain-check still works.
 

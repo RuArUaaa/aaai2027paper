@@ -1165,6 +1165,9 @@ def main():
                          'emitted a scope=falsification revision_target). Optional otherwise.')
     pm.add_argument('--out', required=True,
                     help='Output dir for final_candidate.json (typically the same dir as --revisions).')
+    pm.add_argument('--out-name', dest='out_name', default='final_candidate.json',
+                    help='Merged-candidate filename (default final_candidate.json). The Phase 2.3 '
+                         'coherence gate reuses this merger with --out-name refined_candidate.json.')
     def _cmd_phase3_merge(args):
         from scripts.merge_revisions import merge_phase3_revisions
         try:
@@ -1173,6 +1176,7 @@ def main():
                 Path(args.revisions).resolve(),
                 Path(args.out).resolve(),
                 critique_path=Path(args.critique).resolve() if args.critique else None,
+                out_name=args.out_name,
             )
         except ValueError as e:
             print(f'ERROR: {e}', file=sys.stderr)

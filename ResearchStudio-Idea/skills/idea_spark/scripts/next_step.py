@@ -247,21 +247,52 @@ def next_step(run_dir: Path, root: Path, query: str | None = None) -> int:
                            'to Phase 3 until `next` stops reporting this step.',
                      run_dir=d)
 
+    # ---- Phase 2.3 coherence gate (dry-run trace) -------------------------------
+    p2c_dir = d / 'phase2_coherence'
+    p2c = p2c_dir / 'phase2_coherence_output.json'
+    refined = p2c_dir / 'refined_candidate.json'
+    # Grandfather clause: a run that already has collision results predates the
+    # coherence gate (or deliberately skipped it) — do NOT demand 2.3
+    # retroactively; a refined candidate appearing AFTER the audit consumed the
+    # raw one would corrupt the chain. Legacy runs continue with canonical = 2.2.
+    legacy_past_gate = (d / 'phase3_collision' / 'collision_hits.json').exists()
+    if not p2c.exists() and not legacy_past_gate:
+        return _emit('Citation gate passed; coherence gate not yet run.',
+                     'Phase 2.3 — coherence gate (dry-run trace of the algorithm)', 'llm_subagent',
+                     prompt=str(prompts / 'coherence_trace.txt'),
+                     inputs=[str(p2g), str(p2s)],
+                     output=str(p2c),
+                     notes='MUST be a FRESH context — never the Phase 2.1+2.2 agent (the context '
+                           'that wrote a logic bug rubber-stamps it). Routing signal to return: '
+                           '`verdict` (pass | patched) + any `unrepaired[]` blocking findings.',
+                     run_dir=d)
+    p2c_doc = _read_json(p2c) or {}
+    if p2c_doc.get('verdict') == 'patched' and not refined.exists():
+        return _emit('Coherence gate emitted repairs; merger not yet run.',
+                     'Phase 2.3 merger (deterministic)', 'bash',
+                     run=[skill_cd + 'phase3_merge_revisions '
+                          f'--phase2 "{p2g}" --revisions "{p2c}" '
+                          f'--out "{p2c_dir}/" --out-name refined_candidate.json'],
+                     run_dir=d)
+    # Canonical candidate for every later phase: the coherence-repaired file when
+    # a repair happened, else the Phase 2.2 output.
+    canonical = refined if refined.exists() else p2g
+
     # ---- Phase 3.1 collision ---------------------------------------------------
     p3c_dir = d / 'phase3_collision'
     if (p3c_dir / '.signature_extraction_pending').exists() and not (p3c_dir / 'collision_hits.json').exists():
         return _emit('Phase 3.1 stalled: candidate lacks signature_terms[].',
                      'Fill signature_terms and re-invoke collision', 'llm_subagent',
                      prompt=str(ref / 'intent-recognition.md') + ' (Collision mode)',
-                     inputs=[str(p2g)],
-                     output=str(p2g) + ' (add signature_terms[] — 3-5 tight terms)',
-                     run=[skill_cd + f'phase3_collision --idea-json "{p2g}" '
+                     inputs=[str(canonical)],
+                     output=str(canonical) + ' (add signature_terms[] — 3-5 tight terms)',
+                     run=[skill_cd + f'phase3_collision --idea-json "{canonical}" '
                           f'--out "{p3c_dir}/"'],
                      run_dir=d)
     if not (p3c_dir / 'collision_hits.json').exists():
         return _emit('Candidate passed the citation gate.',
                      'Phase 3.1 — dual-channel collision retrieval (signature@10mo + alias@48mo)', 'bash',
-                     run=[skill_cd + f'phase3_collision --idea-json "{p2g}" '
+                     run=[skill_cd + f'phase3_collision --idea-json "{canonical}" '
                           f'--out "{p3c_dir}/"'],
                      notes='Takes minutes (openreview budgets 600s) — Bash timeout >= 600s or '
                            'background. If the command WARNs that alias_terms[] is missing, add '
@@ -273,9 +304,17 @@ def next_step(run_dir: Path, root: Path, query: str | None = None) -> int:
     # ---- Phase 3.2 audit --------------------------------------------------------
     p3q = d / 'phase3_critique' / 'phase3_critique_output.json'
     if not p3q.exists():
+        audit_inputs = [str(canonical), str(p2s), str(p0 / 'lit_table.md')]
+        # Per critique.txt: blocking unrepaired findings from the coherence gate are
+        # listed as an extra input (the audit stays blind to the full 2.3 report).
+        blocking = [u for u in (p2c_doc.get('unrepaired') or [])
+                    if isinstance(u, dict) and u.get('severity') == 'blocking']
+        if blocking:
+            audit_inputs.append('2.3 unrepaired BLOCKING findings (verbatim): '
+                                + ' | '.join(str(u.get('finding', ''))[:200] for u in blocking))
         return _emit('Collision hits retrieved.', 'Phase 3.2 — audit-and-verdict (5 checks)', 'llm_subagent',
                      prompt=str(prompts / 'critique.txt'),
-                     inputs=[str(p2g), str(p2s), str(p0 / 'lit_table.md'),
+                     inputs=audit_inputs + [
                              str(p3c_dir / 'collision_hits.json'),
                              str(ref / 'anti-patterns.md'),
                              str(ref / 'ideation-sub-patterns') + '/<each cited C##>.md'],
@@ -291,8 +330,8 @@ def next_step(run_dir: Path, root: Path, query: str | None = None) -> int:
         if not (d / '.retry_used').exists():
             arch = d / 'attempt_1'
             mv_dirs = ' '.join(f'"{d / n}"' for n in
-                               ('phase2_select', 'phase2_generate', 'phase3_collision',
-                                'phase3_critique', 'phase3_revise') if (d / n).exists())
+                               ('phase2_select', 'phase2_generate', 'phase2_coherence',
+                                'phase3_collision', 'phase3_critique', 'phase3_revise') if (d / n).exists())
             return _emit('Phase 3.2 verdict = abandon — ONE internal retry available '
                          '(no user re-invocation; the one-shot guarantee constrains asking the '
                          'user, not internal regeneration).',
@@ -331,7 +370,7 @@ def next_step(run_dir: Path, root: Path, query: str | None = None) -> int:
                          'structure repaired).' if has_fals else '')
             return _emit('Phase 3.2 verdict = revise.', 'Phase 3.3 — emit the revision patch', 'llm_subagent',
                          prompt=str(prompts / 'revise.txt'),
-                         inputs=[str(p2g), str(p2s), str(p3q)],
+                         inputs=[str(canonical), str(p2s), str(p3q)],
                          output=str(p3r),
                          notes='Patch-only: applied_revisions[] — never echo the candidate.' + fals_note,
                          run_dir=d)
@@ -339,7 +378,7 @@ def next_step(run_dir: Path, root: Path, query: str | None = None) -> int:
             return _emit('Revision patch written; merger not yet run.',
                          'Phase 3.3 merger (deterministic)', 'bash',
                          run=[skill_cd + 'phase3_merge_revisions '
-                              f'--phase2 "{p2g}" --revisions "{p3r}" --critique "{p3q}" '
+                              f'--phase2 "{canonical}" --revisions "{p3r}" --critique "{p3q}" '
                               f'--out "{p3r_dir}/"'],
                          run_dir=d)
         p3r_doc = _read_json(p3r) or {}
@@ -371,7 +410,7 @@ def next_step(run_dir: Path, root: Path, query: str | None = None) -> int:
     # Legacy runs without the sibling file fall back to the patch file (the
     # skeleton unwraps an inline `final_candidate` key itself).
     candidate_path = ((final_candidate if final_candidate.exists() else p3r)
-                      if on_revise_path else p2g)
+                      if on_revise_path else canonical)
     expansion_done = (p4_dir / 'phase4_expansion.json').exists()
     # Skeleton/fill are only prerequisites while the expansion doesn't exist yet
     # (pre-skeleton-era runs have an expansion but no skeleton/fill_map — don't
@@ -415,7 +454,7 @@ def next_step(run_dir: Path, root: Path, query: str | None = None) -> int:
     return _emit('All Phase 4 JSONs present; cards not yet rendered.',
                  'Validate, then render the idea cards', 'bash',
                  run=[skill_cd + 'validate '
-                      f'--phase2 "{p2g}" --phase3 "{phase3_for_validate}" '
+                      f'--phase2 "{canonical}" --phase3 "{phase3_for_validate}" '
                       f'--phase4 "{p4_dir / "phase4_expansion.json"}" '
                       f'--phase4-impl "{p4_dir / "phase4_implementability.json"}"',
                       skill_cd + 'phase4_render '
@@ -430,7 +469,9 @@ def cmd_next(args) -> int:
     run_dir = Path(args.dir).resolve()
     if not run_dir.exists():
         print(f'ERROR: run dir {run_dir} does not exist. Create it first '
-              f'(mkdir -p) — it is the --out root every phase writes under.', file=sys.stderr)
+              f'(mkdir -p) — it is the --out root every phase writes under. '
+              f'Convention: $PWD/ideaspark_run/<topic-slug> (one run = one dir; '
+              f'never reuse a dir that already has a phase0/).', file=sys.stderr)
         return 2
     root = Path(__file__).resolve().parent.parent
     return next_step(run_dir, root, getattr(args, 'query', None) or None)

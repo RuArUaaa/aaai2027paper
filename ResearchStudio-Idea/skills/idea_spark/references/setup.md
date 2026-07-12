@@ -5,7 +5,7 @@ Read this once when installing the skill; at run time SKILL.md never needs this 
 0. **Set two shell variables once per session** — where this skill is installed, and where run outputs should go. Neither depends on the harness:
    ```bash
    SKILL_DIR=~/.claude/skills/idea-spark            # Claude Code default; Codex CLI: ~/.codex/skills/idea_spark; else wherever this folder lives
-   RUN_DIR="$PWD/idea_run" && mkdir -p "$RUN_DIR"   # ANY absolute directory you want the per-phase outputs in
+   RUN_DIR="$PWD/ideaspark_run/<topic-slug>" && mkdir -p "$RUN_DIR"   # convention: one run = one dir under ideaspark_run/, kebab-case topic slug; any absolute dir works
    ```
    `RUN_DIR` is purely an output anchor — the orchestrator only ever sees the absolute `--out` paths you pass, so the variable *name* does not matter (Claude Code sessions can reuse the injected `CLAUDE_PROJECT_DIR` as their `RUN_DIR`). The orchestrator hard-fails early with an actionable message when a path argument contains an unexpanded `$variable`, collapses to filesystem root (empty expansion, e.g. `/phase0`), or is a relative `--out` — instead of a confusing `FileNotFoundError` mid-run.
 

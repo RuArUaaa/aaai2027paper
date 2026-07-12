@@ -397,7 +397,13 @@ def build_reviewer_concerns(phase3_critique: dict,
     # 1. paper_pointed_threat
     ppt = phase3_critique.get('paper_pointed_threat') or {}
     if ppt.get('threat_paper_id') and ppt.get('threat_paper_id') != 'no_threat_found':
-        sev = 'blocking' if (ppt.get('addressable_via') is None) else 'non_blocking'
+        # Severity keys on the EXPLICIT 'unaddressable' marker (exact-mechanism
+        # overlap). Legacy audits used null ambiguously for both 'unaddressable'
+        # and 'no change needed' — but a truly unaddressable overlap fires the
+        # 3.2 hard floor and never reaches Phase 4, so a null that got here
+        # means the candidate stands: non_blocking.
+        av = str(ppt.get('addressable_via') or '').strip().lower()
+        sev = 'blocking' if av == 'unaddressable' else 'non_blocking'
         entries.append({
             'attack': (f"Paper-pointed threat: {ppt.get('threat_paper_id')} "
                        f"({ppt.get('threat_source')}). {ppt.get('subsumption_argument') or ''}"),

@@ -32,7 +32,7 @@ Follow [references/setup.md](references/setup.md). Quick version — set two she
 
 ```bash
 SKILL_DIR=<path to this folder>                  # e.g. ~/.claude/skills/idea-spark (Claude Code), ~/.codex/skills/idea_spark (Codex CLI), or any clone location
-RUN_DIR="$PWD/idea_run" && mkdir -p "$RUN_DIR"   # ANY absolute output dir (harnesses that inject a project dir can reuse it)
+RUN_DIR="$PWD/ideaspark_run/<topic-slug>" && mkdir -p "$RUN_DIR"   # convention below; any absolute dir works
 python3 -m pip install feedparser openreview-py beautifulsoup4 pymupdf
 python3 "$SKILL_DIR/scripts/run.py" check_connectors   # from the SAME shell you'll run phases from
 ```
@@ -49,6 +49,8 @@ The canonical way to drive a run is the **run-state navigator**:
 python3 "$SKILL_DIR/scripts/run.py" next --dir "$RUN_DIR" --query "<user's research question>"
 ```
 
+**Run-dir convention (one run = one directory, named by the host BEFORE the first command):** `$PWD/ideaspark_run/<topic-slug>` — a short kebab-case slug distilled from the user's direction (e.g. `ideaspark_run/diffusion-watermark`); if the slug is taken, append `_2`, not a timestamp. NEVER reuse a directory that already contains a `phase0/` — every phase writes into `$RUN_DIR` and would clobber the prior run. The skill itself never names the dir (any absolute path works); this convention exists so runs from different harnesses land in one predictable place instead of each agent improvising.
+
 `next` inspects the artifacts already on disk and prints EXACTLY one next step — either a Bash command to run verbatim, or an LLM sub-agent spec (system-prompt path + input file paths + output path + the routing signal to report back). It is read-only and idempotent (safe to re-run anytime, including to resume an interrupted run). The host loop is:
 
 1. Run `next`.
@@ -62,7 +64,7 @@ If your host exposes a task/todo tool (e.g., TodoWrite), seed it with this check
 ```
 - [ ] Phase 0: Literature grounding → lit_table.md, then Phase 0+ full-text fetch (MANDATORY — Phase 1 hard-gates on it)
 - [ ] Phase 1: Bottleneck identification → phase1_output.json (routing: proceed | do_not_generate)
-- [ ] Phase 2: Gap×pattern selection + candidate generation (ONE isolated context, TWO output files) → citation gate
+- [ ] Phase 2: Gap×pattern selection + candidate generation (ONE isolated context, TWO output files) → citation gate → coherence gate (dry-run trace, fresh context)
 - [ ] Phase 3: Collision retrieval (signature@10mo + alias@48mo) → audit (5 checks) → [revise → merge → re-audit if falsification rewritten] | [abandon → 1 internal retry]
 - [ ] Phase 4: skeleton → fill → assemble → implementability audit → validate → render → return 3 cards inline
 ```
@@ -79,7 +81,7 @@ Three outcomes per run: the rendered idea-card markdown returned inline (LaTeX +
 
 A full run accumulates ~180-250k tokens of intermediate state. If the host LLM carries that in its own conversation context across phases, the Phase 1 / 2.2 / 4.fill calls routinely hit the backend request timeout (`[API Error · Request timed out · Retrying...]`) and the retry times out again. Apply ALL three rules on every run:
 
-**Rule 1 — Run every LLM-driven phase in an ISOLATED context.** Phases 1 / 2 (2.1+2.2) / 3.2 / 3.3 / 4.fill / 4.1.5 each have file-path inputs and one JSON output; no phase needs the conversation that produced an earlier one. Use the FIRST isolation mechanism your harness supports:
+**Rule 1 — Run every LLM-driven phase in an ISOLATED context.** Phases 1 / 2 (2.1+2.2) / 2.3 / 3.2 / 3.3 / 4.fill / 4.1.5 each have file-path inputs and one JSON output; no phase needs the conversation that produced an earlier one. Use the FIRST isolation mechanism your harness supports:
 
 - **(a) Subprocess LLM** — set `NOVELTY_LLM_REASONING_LARGE_CMD` / `NOVELTY_LLM_CLASSIFY_FAST_CMD` (see § Configuration); each phase runs as its own subprocess, fresh context by construction, on any harness.
 - **(b) Sub-agent tool** (Claude Code `Agent` or equivalent) — spawn one per phase, passing ONLY the file paths the phase prompt lists — not conversation history, not file contents inline. The sub-agent reads from disk, `Write`s to disk, returns ≤ 250 words (output path + routing signal). Exception by design: Phase 2.1 and 2.2 run in ONE sub-agent writing both output files — both are generation-side; the adversarial separations (3.2 vs 3.3, 4.fill vs 4.1.5) must stay separate calls.
@@ -108,14 +110,15 @@ Whichever mechanism, the parent context stays ≤ ~30k tokens for the whole run 
 | user-ref registration (title-named anchor papers; BEFORE phase0_fulltext) | `add_user_ref --out $RUN_DIR/phase0/ --title "<full title>" [--raw-match "<user phrasing>"] [--id <arxiv/DOI/URL>]` |
 | Phase 0+ full-text (**mandatory**, the moment lit_table.md lands) | `phase0_fulltext --out $RUN_DIR/phase0/` |
 | Phase 1 anchor top-up (optional, when the #1 closest_adjacent fell outside the fulltext pool) | `phase1_fulltext_topup --out $RUN_DIR/phase0/ --paper-id <anchor paper_id>` |
-| Phase 3.1 collision | `phase3_collision --idea-json $RUN_DIR/phase2_generate/phase2_generate_output.json --out $RUN_DIR/phase3_collision/` |
-| Phase 3.3 merger | `phase3_merge_revisions --phase2 <p2.2-output> --revisions <p3.3-patch> --critique <p3.2-report> --out $RUN_DIR/phase3_revise/` |
+| Phase 3.1 collision | `phase3_collision --idea-json <canonical candidate> --out $RUN_DIR/phase3_collision/` |
+| Phase 3.3 merger | `phase3_merge_revisions --phase2 <canonical candidate> --revisions <p3.3-patch> --critique <p3.2-report> --out $RUN_DIR/phase3_revise/` |
+| Phase 2.3 merger (same tool; only when coherence verdict=patched) | `phase3_merge_revisions --phase2 <p2.2-output> --revisions <p2.3-output> --out $RUN_DIR/phase2_coherence/ --out-name refined_candidate.json` |
 | Phase 4 skeleton | `phase4_skeleton --candidate <final_candidate-or-p2.2> --phase1 ... --phase2-select ... --phase3-critique ... [--phase3-revise ...] --phase0-dir $RUN_DIR/phase0/ [--collision ...] --out $RUN_DIR/phase4/` |
 | Phase 4 assemble | `phase4_assemble --skeleton $RUN_DIR/phase4/phase4_skeleton.json --fill-map $RUN_DIR/phase4/fill_map.json --out $RUN_DIR/phase4/` |
 | Phase 4 render | `phase4_render --expansion $RUN_DIR/phase4/phase4_expansion.json --out $RUN_DIR/phase4/` |
 | Validators | `validate --phase2 ... [--phase3 ...] [--phase4 ...] [--phase4-impl ...]` |
 
-The LLM-driven phases (1 / 2.1 / 2.2 / 3.2 / 3.3 / 4.fill / 4.1.5 / falsification re-audit) have no orchestrator subcommand (a `cat prompt | llm` wrapper would add fragility without determinism): read the prompt at `references/system-prompts/<phase>.txt`, gather the inputs listed at its top, `Write` the JSON described under `Output:` to `$RUN_DIR/<phase>/<phase>_output.json`. Run each under the Context discipline rules — Phase 4.fill is the largest output and the most timeout-prone; never in the parent context.
+The LLM-driven phases (1 / 2.1 / 2.2 / 2.3 / 3.2 / 3.3 / 4.fill / 4.1.5 / falsification re-audit) have no orchestrator subcommand (a `cat prompt | llm` wrapper would add fragility without determinism): read the prompt at `references/system-prompts/<phase>.txt`, gather the inputs listed at its top, `Write` the JSON described under `Output:` to `$RUN_DIR/<phase>/<phase>_output.json`. Run each under the Context discipline rules — Phase 4.fill is the largest output and the most timeout-prone; never in the parent context.
 
 ### Phase 0 — Literature grounding
 
@@ -159,6 +162,8 @@ python3 "$SKILL_DIR/scripts/run.py" validate --phase2 $RUN_DIR/phase2_generate/p
 
 Any `fail` = a `sub_pattern` citation was guessed from the parent's gist, not read from `overview.md`. Fix against `references/ideation-sub-patterns/overview.md` (or regenerate 2.2 with the card open) and re-run until clean — the gate proves parent-consistency only; whether core_mechanism performs the cluster's actual tactic is Phase 3.2's `recipe_application_check`. (`next` runs this gate automatically.)
 
+**Coherence gate (2.3 — one isolated LLM call, MANDATORY after the citation gate, before 3.1):** prompt [references/system-prompts/coherence_trace.txt](references/system-prompts/coherence_trace.txt); inputs: the 2.2 candidate + the 2.1 spec; MUST be a FRESH context, never the 2.1+2.2 agent (the context that wrote a logic bug rubber-stamps it). It verifies internal procedural validity by EXECUTION, not review — four trace actions: formalize the dataflow (undefined symbols, missing producers, circular deps), numeric dry-run on one small concrete instance (magnitude/probability absurdities — logic bugs read fluently and only surface when computed), degenerate probes (empty/k=0/ties), and claim→step mapping (asserted properties nobody constructs). Verdict `pass` | `patched`; repairs are patch-only via the SAME merger (`--out-name refined_candidate.json`), scoped to making the written procedure sound (core_mechanism*, how_closed narrative, signature/alias terms when the repair changed what the mechanism is) — novelty surface, pattern bindings, and kill-switch fields are out of scope; unfixable-without-redesign findings go to `unrepaired[]` for the audit to weigh. Single pass, never abandons, and the 3.2 audit does NOT read its report (judges the repaired candidate blind). When `refined_candidate.json` exists it is the canonical candidate for every later phase (`next` wires this automatically). It validates that the algorithm survives on paper — NOT that it works empirically (falsification experiment) or is novel (audit).
+
 ### Phase 3 — Quality gauntlet
 
 **3.1 collision (orchestrator, no LLM):** entry-point table. TWO retrieval channels over all 4 connectors, merged into `collision_hits.json` with a per-hit `collision_channel` tag: **signature** — the candidate's `signature_terms[]` over a 10-month window (contemporaneous scoop risk); **alias** — the candidate's `alias_terms[]` (other communities' names for the same mechanism, produced from parametric knowledge at 2.2) over a 48-month window (renamed-ancestor risk — the "goal-conditioned success detector vs goal-image conditioned scorer" blind spot is lexical, not temporal, so widening the signature window alone cannot catch it). Missing `signature_terms[]` → rc=11 sentinel: produce BOTH term sets per intent-recognition.md Collision mode (terms 3-7 words each — long sentences break URL encoding), edit the candidate JSON, re-invoke. Missing only `alias_terms[]` → loud warning, alias channel skipped (add the field and re-run to close the blind spot). The audit-facing pool is relevance-truncated per channel (≤120 hits/channel by lexical overlap with the channel's own terms; zero-relevance BM25 noise dropped unconditionally; drops printed; untruncated pool preserved as `collision_hits.full.json`), so the audit can consume `collision_hits.json` in a few sequential Read chunks — no jq two-pass triage needed.
@@ -183,7 +188,7 @@ Verdict is two-layer. **Hard floor** (LLM cannot override) → `abandon`: trigge
 
   ```bash
   mkdir -p "$RUN_DIR/attempt_1" && \
-  mv "$RUN_DIR/phase2_select" "$RUN_DIR/phase2_generate" "$RUN_DIR/phase3_collision" \
+  mv "$RUN_DIR/phase2_select" "$RUN_DIR/phase2_generate" "$RUN_DIR/phase2_coherence" "$RUN_DIR/phase3_collision" \
      "$RUN_DIR/phase3_critique" "$RUN_DIR/phase3_revise" "$RUN_DIR/attempt_1/" 2>/dev/null; \
   touch "$RUN_DIR/.retry_used"
   ```
@@ -192,7 +197,7 @@ Verdict is two-layer. **Hard floor** (LLM cannot override) → `abandon`: trigge
 
 ### Phase 4 — Expansion + packaging
 
-Five steps in order (`next` emits each with the correct flags for the advance vs revise path — on the revise path `--candidate` is `final_candidate.json` and `--phase3-revise` is passed; on advance it's the 2.2 output and the flag is omitted):
+Five steps in order (`next` emits each with the correct flags for the advance vs revise path — on the revise path `--candidate` is `final_candidate.json` and `--phase3-revise` is passed; on advance it's the CANONICAL candidate (refined_candidate.json when 2.3 patched, else the 2.2 output) and the flag is omitted):
 
 1. **skeleton** (orchestrator): populates every mechanical field — kill-switch echoes (byte-identical from the candidate), `differentiation_from_lit` venue_years, `almost_prior_venue_year`, `why_prior_stopped[].paper_id/venue_year`, `domain_landscape` (pattern_distribution + candidate_uses), `literature_breakdown`, `reviewer_concerns_and_responses[].attack/severity/fields_changed_to_address` (lifted from audit + patch), `feasibility_validation.compute` (bucketed against `intake.compute`) — and marks every prose field `<TODO[path]: hint>`.
 2. **fill** (one isolated LLM call, prompt [references/system-prompts/expand.txt](references/system-prompts/expand.txt)): author ONLY the TODO paths as one flat `{path: value}` map → `phase4/fill_map.json` (~12 prose fields, ~8k tokens vs ~30 fields/~20k without the skeleton). No calendar projections; no experiment matrix / ablation plan / baseline table — the skill produces IDEA + falsifiability + feasibility judgment, not experimental engineering.
@@ -206,8 +211,9 @@ Five steps in order (`next` emits each with the correct flags for the advance vs
 
 ```bash
 # advance path: --phase3 = phase3_critique_output.json; revise path: --phase3 = phase3_revise_output.json
+# --phase2 = the CANONICAL candidate (refined_candidate.json when 2.3 patched, else the 2.2 output)
 python3 "$SKILL_DIR/scripts/run.py" validate \
-  --phase2 $RUN_DIR/phase2_generate/phase2_generate_output.json \
+  --phase2 <canonical candidate file> \
   --phase3 <see comment> \
   --phase4 $RUN_DIR/phase4/phase4_expansion.json \
   --phase4-impl $RUN_DIR/phase4/phase4_implementability.json   # optional; enables implementability checks

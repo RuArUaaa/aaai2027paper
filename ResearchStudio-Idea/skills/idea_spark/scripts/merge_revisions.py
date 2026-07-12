@@ -290,7 +290,8 @@ def _critique_authorizes_falsification_rewrite(critique_path: Path | None) -> bo
 
 
 def merge_phase3_revisions(phase2_candidate_path: Path, revisions_path: Path,
-                           out_dir: Path, critique_path: Path | None = None) -> tuple[Path, Path]:
+                           out_dir: Path, critique_path: Path | None = None,
+                           out_name: str = 'final_candidate.json') -> tuple[Path, Path]:
     """Top-level entry. Read Phase 2.2 candidate + Phase 3.3 patch; write
     `final_candidate.json` to out_dir AND back-inject `final_candidate` into
     the patch file (so the legacy kill_switch_integrity check on
@@ -317,7 +318,7 @@ def merge_phase3_revisions(phase2_candidate_path: Path, revisions_path: Path,
         for r in applied)
 
     out_dir.mkdir(parents=True, exist_ok=True)
-    final_path = out_dir / 'final_candidate.json'
+    final_path = out_dir / out_name
     final_path.write_text(json.dumps(final_candidate, indent=2, ensure_ascii=False))
 
     # Back-inject for legacy consumers (kill_switch_integrity, host LLM expecting
