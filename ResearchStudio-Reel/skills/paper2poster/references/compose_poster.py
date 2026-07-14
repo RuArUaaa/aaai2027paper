@@ -153,7 +153,7 @@ def compose(layout: str, style: str, header: str, outpath, *,
         # methoddriven is OPT-IN (only when the user explicitly asks for a
         # method-driven poster) — never let --layout random select it.
         layout = _rand_pick(layouts, ".html", str(outpath) + "|layout",
-                            exclude=("methoddriven",))
+                            exclude=("methoddriven", "methoddriven4"))
     if header == "random":
         header = _rand_pick(headers, ".html", str(outpath) + "|header")
     if not is_portrait:

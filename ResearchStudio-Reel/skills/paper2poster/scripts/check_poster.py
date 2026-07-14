@@ -199,7 +199,7 @@ def build_parser() -> argparse.ArgumentParser:
              "(default 0.05); catches a flex-stretched card padded "
              "with whitespace to fake a full page. Tightened from 0.10 "
              "to 0.05 to match the slack gate's 5pt FULL band — anything "
-             "looser hides 5-9% trailing voids the eye still sees",
+             "looser hides 5-9%% trailing voids the eye still sees",
     )
     ppl.add_argument(
         "--max-widow-fraction", type=float,

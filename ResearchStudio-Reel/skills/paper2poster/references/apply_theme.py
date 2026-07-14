@@ -58,6 +58,9 @@ THEMES: dict[str, dict[str, str]] = {
     "rust":     {"accent": "#a2521c", "accent-soft": "#f6ece1"},
     "slate":    {"accent": "#33415e", "accent-soft": "#e9ecf3"},
     "plum":     {"accent": "#7d2860", "accent-soft": "#f4e6ef"},
+    # Neutral / minimal "clean white" register: a near-black charcoal accent (no
+    # hue), so the poster reads grayscale on the light template background.
+    "mono":     {"accent": "#34373b", "accent-soft": "#eeeff1"},
 }
 
 # Vars rewritten per theme, longest name first (so `--accent-soft` is not
