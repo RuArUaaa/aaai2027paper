@@ -27,6 +27,10 @@ import { execSync } from 'node:child_process';
 const PKG_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const AGENTS = { claude: '.claude', codex: '.codex' };
 
+// Preserve an explicit editor choice while giving installer subprocesses a
+// predictable fallback on machines where EDITOR is unset or empty.
+process.env.EDITOR ||= 'vim';
+
 // Plugin registry. `dir` is the top-level folder in this repo; `pip` lists Python
 // deps installed when that plugin is selected. Availability is detected at runtime.
 const PLUGINS = [

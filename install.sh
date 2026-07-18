@@ -28,10 +28,15 @@
 #
 # Env overrides:
 #   PYTHON=./.venv/bin/python          use a specific interpreter
+#   EDITOR=code                        use a specific editor (defaults to vim)
 #   CLAUDE_SKILLS_DIR=/custom/path      use a non-default Claude skills dir
 #   CODEX_SKILLS_DIR=/custom/path       use a non-default Codex skills dir
 #
 set -euo pipefail
+
+# Some install steps and their child processes expect EDITOR to be set. Keep a
+# caller-provided value; otherwise use the widely available terminal editor.
+export EDITOR="${EDITOR:-vim}"
 
 REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 IDEA_REPO="${REPO_ROOT}/ResearchStudio-Idea"
