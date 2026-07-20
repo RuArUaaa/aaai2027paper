@@ -78,6 +78,53 @@ def _read_json(path: Path):
         return None
 
 
+
+def _attempt_dirs(d: Path) -> list:
+    """Archived gauntlet attempts, ordered by index (attempt_1, attempt_2, ...)."""
+    out = []
+    for p in d.iterdir() if d.exists() else []:
+        if p.is_dir() and p.name.startswith('attempt_') and p.name[8:].isdigit():
+            out.append(p)
+    return sorted(out, key=lambda p: int(p.name[8:]))
+
+
+def _lessons(doc: dict) -> set:
+    """Extract the LESSON SET of one audit report: every binding piece of
+    information a failed attempt produced, as (kind, normalized-id) pairs.
+    Retry routing is information-gain over these sets — a retry is justified
+    only by lessons the previous generation did not have. Kinds:
+      finding — upheld executed blocking finding (mechanism-level directive)
+      threat  — unaddressable subsuming paper (mechanism-family negative anchor;
+                REPEATED across attempts it binds at the framing level instead)
+      reject / anti / recipe — generation-quality lessons (negative constraints)
+    """
+    ls = set()
+    for dd in doc.get('blocking_findings_disposition') or []:
+        if isinstance(dd, dict) and dd.get('status') == 'upheld':
+            ls.add(('finding', str(dd.get('finding_ref', ''))[:40]))
+    t = doc.get('paper_pointed_threat') or {}
+    if t.get('addressable_via') == 'unaddressable':
+        ls.add(('threat', str(t.get('threat_paper_id')
+                              or t.get('subsumption_argument') or '')[:60]))
+    for e in (doc.get('gap_closure_reject_check') or {}).get('entries') or []:
+        for l in (e.get('reject_lessons_evaluated') or []):
+            if str(l.get('candidate_match', '')).lower() in ('yes', 'true'):
+                ls.add(('reject', str(l.get('lesson_quoted', ''))[:60]))
+    ap = doc.get('anti_pattern_check') or {}
+    mp = ap.get('matched_pattern_id')
+    if mp and str(mp).lower() not in ('none', 'null') and             str(ap.get('mitigation_substantively_delivered', '')).lower() not in ('yes', 'true'):
+        ls.add(('anti', str(mp)[:40]))
+    rc = doc.get('recipe_application_check') or {}
+    if rc.get('verdict') == 'bypassed':
+        tagged = False
+        for e in rc.get('entries') or []:
+            if str(e.get('verdict', '')).lower() == 'bypassed':
+                ls.add(('recipe', str(e.get('sub_pattern', ''))[:40])); tagged = True
+        if not tagged:
+            ls.add(('recipe', 'bypassed'))
+    return ls
+
+
 def next_step(run_dir: Path, root: Path, query: str | None = None) -> int:
     """Inspect run_dir artifacts and print the single next step. Returns 0."""
     d = run_dir
@@ -183,16 +230,25 @@ def next_step(run_dir: Path, root: Path, query: str | None = None) -> int:
         if user_compute:
             p1_inputs.insert(1, f'standing user compute default (IDEASPARK_DEFAULT_COMPUTE, '
                                 f'overrides factory default; user query still wins): "{user_compute}"')
-        if (d / '.bottleneck_retry_used').exists() and (d / 'attempt_2' / 'phase1').exists():
+        _ph1_arch = None
+        if (d / '.bottleneck_retry_used').exists():
+            for _a in reversed(_attempt_dirs(d)):
+                if (_a / 'phase1' / 'phase1_output.json').exists():
+                    _ph1_arch = _a
+                    break
+        if _ph1_arch is not None:
+            _crits = ' and '.join(
+                str(_a / 'phase3_critique' / 'phase3_critique_output.json')
+                for _a in _attempt_dirs(d)
+                if (_a / 'phase3_critique' / 'phase3_critique_output.json').exists())
             p1_inputs.append(
                 'BOTTLENECK-RETRY MODE (see the OPTIONAL bottleneck-retry input in '
                 'bottleneck_identify.txt) — negative anchors: '
-                + str(d / 'attempt_2' / 'phase1' / 'phase1_output.json')
+                + str(_ph1_arch / 'phase1' / 'phase1_output.json')
                 + ' (the RETIRED bottleneck_statement + anchor; do not re-frame it), plus '
-                + str(d / 'attempt_1' / 'phase3_critique' / 'phase3_critique_output.json') + ' and '
-                + str(d / 'attempt_2' / 'phase3_critique' / 'phase3_critique_output.json')
-                + ' (read ONLY paper_pointed_threat from each — the papers that killed both '
-                  'attempts define occupied ground)')
+                + _crits
+                + ' (read ONLY paper_pointed_threat from each — the papers that killed the '
+                  'archived attempts define occupied ground)')
         return _emit('Phase 0 complete.', 'Phase 1 — bottleneck identification', 'llm_subagent',
                      prompt=str(prompts / 'bottleneck_identify.txt'),
                      inputs=p1_inputs,
@@ -215,21 +271,31 @@ def next_step(run_dir: Path, root: Path, query: str | None = None) -> int:
     p2s = d / 'phase2_select' / 'phase2_select_output.json'
     p2g = d / 'phase2_generate' / 'phase2_generate_output.json'
     retry_note = ''
-    if (d / '.retry_used').exists() and (d / 'attempt_1').exists():
-        if (d / '.bottleneck_retry_used').exists() and (d / 'attempt_2').exists():
-            # Post bottleneck re-diagnosis: the archived SELECTIONS belong to the
-            # retired bottleneck (different gaps — context only, not binding), but
-            # both attempts' threat papers stay hard negative constraints.
+    _atts = _attempt_dirs(d)
+    if _atts:
+        _att_crits = ' and '.join(
+            str(_a / 'phase3_critique' / 'phase3_critique_output.json') for _a in _atts
+            if (_a / 'phase3_critique' / 'phase3_critique_output.json').exists())
+        if (d / '.bottleneck_retry_used').exists():
+            # Post bottleneck re-diagnosis: the archived SELECTIONS belong to
+            # retired bottleneck(s) (different gaps — context only, not binding),
+            # but every attempt's threat papers stay hard negative constraints.
             retry_note = (' RETRY MODE (new bottleneck, ONE candidate attempt): also pass '
-                          + str(d / 'attempt_1/phase3_critique/phase3_critique_output.json') + ' and '
-                          + str(d / 'attempt_2/phase3_critique/phase3_critique_output.json')
+                          + _att_crits
                           + ' as negative constraints — their paper_pointed_threat papers must not '
                             'be re-collided with. The archived phase2 selections belong to the '
                             'RETIRED bottleneck: context only, not binding.')
         else:
-            retry_note = (' RETRY MODE: also pass ' + str(d / 'attempt_1/phase3_critique/phase3_critique_output.json') +
-                          ' and ' + str(d / 'attempt_1/phase2_select/phase2_select_output.json') +
-                          ' as negative constraints (see the OPTIONAL retry input in ideate_select.txt).')
+            _parts = []
+            for _a in _atts:
+                for _rel in ('phase3_critique/phase3_critique_output.json',
+                             'phase2_select/phase2_select_output.json'):
+                    if (_a / _rel).exists():
+                        _parts.append(str(_a / _rel))
+            retry_note = (' RETRY MODE: also pass ' + ' and '.join(_parts) +
+                          ' as negative constraints (see the OPTIONAL retry input in '
+                          'ideate_select.txt); upheld blocking findings in ANY archived audit '
+                          'are POSITIVE directives the new mechanism must confront.')
     # Cross-run mechanism dedup (soft): sibling run dirs under the same parent are
     # scanned for their canonical candidates, whose titles + signature terms ride
     # along as SOFT negative anchors — adjacent-direction runs otherwise silently
@@ -596,70 +662,103 @@ def next_step(run_dir: Path, root: Path, query: str | None = None) -> int:
                                'obstacle) or abandon (redesign → internal retry).',
                          run_dir=d)
 
-    # ---- abandon → bounded internal retry ---------------------------------------
+    # ---- abandon → information-gain retry rule -------------------------------
+    # ONE rule replaces the former death-type taxonomy (single retry + the
+    # both-subsumption bottleneck branch): a retry must carry NEW binding
+    # information the previous generation did not have; termination happens on
+    # information exhaustion or the global budget, never on death-shape alone.
+    #   lesson sets    L_new (this attempt) vs L_seen (union of archived attempts)
+    #   fresh lessons  L_new - L_seen
+    #   framing indict repeated threat-kind across attempts (the lesson "this
+    #                  space is occupied" binds at the FRAMING level, so a
+    #                  re-diagnosis, not another candidate roll, is the answer)
+    #   budget         candidate cycles <= 3 under one framing; bottleneck
+    #                  re-diagnosis <= 1, granting exactly ONE further attempt
+    #                  (worst case 4 gauntlet cycles per run).
+    # First abandon always retries: generation ran with no audit information at
+    # all, so the first report is new information by construction.
     if verdict == 'abandon':
-        if not (d / '.retry_used').exists():
-            arch = d / 'attempt_1'
-            mv_dirs = ' '.join(f'"{d / n}"' for n in
-                               ('phase2_select', 'phase2_generate', 'phase2_coherence',
-                                'phase3_collision', 'phase3_critique', 'phase3_revise') if (d / n).exists())
-            return _emit('Phase 3.2 verdict = abandon — ONE internal retry available '
+        attempts = _attempt_dirs(d)
+        next_idx = (int(attempts[-1].name[8:]) + 1) if attempts else 1
+        arch = d / f'attempt_{next_idx}'
+        cand_mv = ' '.join(f'"{d / n}"' for n in
+                           ('phase2_select', 'phase2_generate', 'phase2_coherence',
+                            'phase3_collision', 'phase3_critique', 'phase3_revise')
+                           if (d / n).exists())
+        L_new = _lessons(p3q_doc)
+        seen_sets = [_lessons(_read_json(a / 'phase3_critique' /
+                                         'phase3_critique_output.json') or {})
+                     for a in attempts]
+        L_seen = set().union(*seen_sets) if seen_sets else set()
+        fresh = L_new - L_seen
+        cycles_used = len(attempts) + 1
+        framing_indicted = (any(k == 'threat' for k, _ in L_new)
+                            and any(k == 'threat' for k, _ in L_seen))
+        fail_inputs = [str(p3q)] + [
+            str(a / 'phase3_critique' / 'phase3_critique_output.json') for a in attempts]
+
+        if (d / '.bottleneck_retry_used').exists():
+            # The re-diagnosed framing had its one granted attempt.
+            return _emit('Phase 3.2 verdict = abandon — retry budget exhausted '
+                         '(bottleneck retry already used; its one candidate attempt failed).',
+                         'Write phase_3_failed.md', 'llm_subagent',
+                         inputs=fail_inputs,
+                         output=str(d / 'phase_3_failed.md'),
+                         notes='Include EVERY attempt\'s verdict_rationale + triggering checks + the '
+                               'user-side options (drop direction / change framing / re-run with a '
+                               'different direction). That file is the run\'s final output.',
+                         run_dir=d)
+        if not attempts:
+            return _emit('Phase 3.2 verdict = abandon — internal retry available '
                          '(no user re-invocation; the one-shot guarantee constrains asking the '
                          'user, not internal regeneration).',
                          'Archive attempt 1 and regenerate Phase 2.1+2.2 under negative constraints',
                          'bash',
-                         run=[f'mkdir -p "{arch}" && mv {mv_dirs} "{arch}/" && touch "{d}/.retry_used"'],
+                         run=[f'mkdir -p "{arch}" && mv {cand_mv} "{arch}/" && touch "{d}/.retry_used"'],
                          notes='Then re-run `next` — it will route to Phase 2.1+2.2 in retry mode '
                                '(the archived audit + selection become negative constraints, and any '
                                'blocking obstacle findings become POSITIVE directives — the new '
                                'mechanism must confront them — per ideate_select.txt\'s OPTIONAL '
                                'retry input). Phase 0/1 artifacts are reused as-is.',
                          run_dir=d)
-        # ---- second abandon: failure attribution decides bottleneck retry vs terminal ----
-        # Mechanism-level deaths (recipe bypassed / reject lesson / obstacle holes)
-        # indict GENERATION — a third mechanism roll has diminishing returns, so
-        # terminate with diagnosis. But when BOTH independently-generated candidates
-        # died by exact-mechanism subsumption (paper_pointed_threat.addressable_via
-        # == 'unaddressable'), the occupied space indicts the BOTTLENECK FRAMING
-        # itself: one Phase 1 re-diagnosis on the same corpus (zero retrieval cost)
-        # is cheaper than bouncing the run to the user, and Phase 1's
-        # do_not_generate exit keeps it honest. Budget: ONE bottleneck retry, and
-        # the new bottleneck gets ONE candidate attempt (.retry_used stays set) —
-        # whole-run worst case is 3 gauntlet cycles.
-        a1q_doc = _read_json(d / 'attempt_1' / 'phase3_critique' /
-                             'phase3_critique_output.json') or {}
-
-        def _threat_killed(doc):
-            return (doc.get('paper_pointed_threat') or {}).get('addressable_via') == 'unaddressable'
-
-        bottleneck_indicted = _threat_killed(p3q_doc) and _threat_killed(a1q_doc)
-        if bottleneck_indicted and not (d / '.bottleneck_retry_used').exists():
-            arch2 = d / 'attempt_2'
-            mv2 = ' '.join(f'"{d / n}"' for n in
-                           ('phase1', 'phase2_select', 'phase2_generate', 'phase2_coherence',
-                            'phase3_collision', 'phase3_critique', 'phase3_revise') if (d / n).exists())
-            return _emit('Second abandon, and BOTH attempts died by exact-mechanism subsumption '
-                         '(paper_pointed_threat.addressable_via = unaddressable) — the space around '
-                         'this bottleneck framing is occupied. ONE bottleneck-level retry available.',
-                         'Archive attempt 2 (incl. phase1) and re-diagnose the bottleneck', 'bash',
-                         run=[f'mkdir -p "{arch2}" && mv {mv2} "{arch2}/" && '
+        if framing_indicted:
+            mv_b = ' '.join(f'"{d / n}"' for n in
+                            ('phase1', 'phase2_select', 'phase2_generate', 'phase2_coherence',
+                             'phase3_collision', 'phase3_critique', 'phase3_revise')
+                            if (d / n).exists())
+            return _emit('Abandon with a REPEATED unaddressable-subsumption lesson across attempts '
+                         '— the occupied space binds at the framing level, so another candidate '
+                         'roll cannot help. ONE bottleneck-level retry available.',
+                         f'Archive attempt {next_idx} (incl. phase1) and re-diagnose the bottleneck',
+                         'bash',
+                         run=[f'mkdir -p "{arch}" && mv {mv_b} "{arch}/" && '
                               f'touch "{d}/.bottleneck_retry_used"'],
                          notes='Then re-run `next` — it routes to Phase 1 in BOTTLENECK-RETRY MODE '
-                               '(the retired bottleneck_statement + both attempts\' threat papers '
+                               '(the retired bottleneck_statement + every attempt\'s threat papers '
                                'become negative anchors per bottleneck_identify.txt\'s OPTIONAL '
                                'retry input; do_not_generate remains a legitimate, preferred '
                                'outcome over a blander re-framing). The new bottleneck gets ONE '
                                'candidate attempt. Phase 0 artifacts are reused as-is.',
                          run_dir=d)
-        fail_inputs = [str(p3q),
-                       str(d / 'attempt_1' / 'phase3_critique' / 'phase3_critique_output.json')]
-        if (d / 'attempt_2').exists():
-            fail_inputs.append(str(d / 'attempt_2' / 'phase3_critique' /
-                                   'phase3_critique_output.json'))
-        why_terminal = ('bottleneck retry already used'
-                        if (d / '.bottleneck_retry_used').exists()
-                        else 'mechanism-level deaths do not indict the bottleneck')
-        return _emit(f'Phase 3.2 verdict = abandon — retry budget exhausted ({why_terminal}).',
+        if fresh and cycles_used < 3:
+            fresh_desc = '; '.join(f'{k}: {v}' for k, v in sorted(fresh))[:400]
+            return _emit(f'Phase 3.2 verdict = abandon, but this attempt produced NEW binding '
+                         f'directive(s) the previous generation did not have ({len(fresh)} new '
+                         f'lesson(s)) — a directed retry is justified by information gain.',
+                         f'Archive attempt {next_idx} and regenerate Phase 2.1+2.2 under the '
+                         'accumulated lessons', 'bash',
+                         run=[f'mkdir -p "{arch}" && mv {cand_mv} "{arch}/" && touch "{d}/.retry_used"'],
+                         notes='NEW lessons this attempt added (become POSITIVE directives / negative '
+                               f'anchors for the regeneration): {fresh_desc}. Then re-run `next` — '
+                               'retry mode carries ALL archived audits + selections as constraints. '
+                               'Phase 0/1 artifacts are reused as-is.',
+                         run_dir=d)
+        if fresh:
+            why = f'candidate-cycle cap (3) reached under this framing'
+        else:
+            why = ('no NEW binding information — this attempt\'s lessons repeat what the '
+                   'generation already had, so another roll is not justified')
+        return _emit(f'Phase 3.2 verdict = abandon — retry budget exhausted ({why}).',
                      'Write phase_3_failed.md', 'llm_subagent',
                      inputs=fail_inputs,
                      output=str(d / 'phase_3_failed.md'),

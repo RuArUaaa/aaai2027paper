@@ -13,7 +13,10 @@ real runs rarely (or never) exercise, so a skill edit cannot silently break them
   T5  guard: advance coexists with an upheld finding -> bounce (inconsistent)
   T6  2nd abandon, BOTH attempts subsumption-killed -> bottleneck-level retry
   T7  2nd abandon, bottleneck retry already used -> terminal, all attempts cited
-  T8  2nd abandon, mechanism-level deaths -> terminal (no bottleneck retry)
+  T8  2nd abandon, lessons repeat what generation already had -> terminal
+  T17 2nd abandon carrying NEW upheld obstacle findings -> directed 3rd attempt
+  T18 abandon at candidate-cycle cap (3 cycles used) -> terminal
+  T19 obstacle death then NEW subsumption threat -> retry (new negative anchor)
   T9  post-archive state -> Phase 1 emit carries BOTTLENECK-RETRY MODE anchors
   T10 sibling run exists -> Phase 2 emit carries the CROSS-RUN DEDUP soft anchors
   T11 merger: authorized rewrite_falsification is applied (strengthen-only route)
@@ -249,8 +252,8 @@ def main() -> int:
         wj(d / 'attempt_1' / 'phase3_critique' / 'phase3_critique_output.json',
            crit('abandon'))
         out = run_next(d)
-        check('T8 mechanism deaths terminal',
-              'mechanism-level deaths' in out and 'phase_3_failed' in out, out[:300])
+        check('T8 no-new-information terminal',
+              'no NEW binding information' in out and 'phase_3_failed' in out, out[:300])
 
         # T9 — post-archive: Phase 1 emit carries bottleneck-retry anchors
         d = tmp / 'T9' / 'run'
@@ -319,6 +322,44 @@ def main() -> int:
         out = run_next(d)
         check('T16 matching sidecar reaches the audit',
               'audit-and-verdict' in out, out[:400])
+
+        # T17 — 2nd abandon with NEW upheld obstacle findings -> directed 3rd attempt
+        disp_up = [{'finding_ref': f[:40], 'status': 'upheld', 'basis': 'stands'}
+                   for f in (FINDING, FINDING2, FINDING3)]
+        d = tmp / 'T17' / 'run'
+        base_run(d, with_critique=crit('abandon', disp_up))
+        wj(d / 'attempt_1' / 'phase3_critique' / 'phase3_critique_output.json',
+           crit('abandon'))  # first death carried no lessons -> these findings are NEW
+        (d / '.retry_used').touch()
+        out = run_next(d)
+        check('T17 directed third attempt on new obstacle findings',
+              'NEW binding directive' in out and 'attempt_2' in out
+              and 'phase_3_failed' not in out, out[:400])
+
+        # T18 — new lessons but candidate-cycle cap reached -> terminal
+        d = tmp / 'T18' / 'run'
+        base_run(d, with_critique=crit('abandon', disp_up))
+        wj(d / 'attempt_1' / 'phase3_critique' / 'phase3_critique_output.json',
+           crit('abandon'))
+        wj(d / 'attempt_2' / 'phase3_critique' / 'phase3_critique_output.json',
+           crit('abandon'))
+        (d / '.retry_used').touch()
+        out = run_next(d)
+        check('T18 candidate-cycle cap terminal',
+              'candidate-cycle cap' in out and 'phase_3_failed' in out, out[:400])
+
+        # T19 — obstacle death first, NEW subsumption threat second -> retry
+        # (info-gain dividend: the threat paper is a new negative anchor, and no
+        # prior threat exists so the framing is NOT indicted)
+        d = tmp / 'T19' / 'run'
+        base_run(d, with_critique=crit('abandon', unaddressable=True), blocking=False)
+        wj(d / 'attempt_1' / 'phase3_critique' / 'phase3_critique_output.json',
+           crit('abandon', disp_up))
+        (d / '.retry_used').touch()
+        out = run_next(d)
+        check('T19 new threat anchor retries (not framing-indicted)',
+              'NEW binding directive' in out and 'bottleneck-level retry' not in out
+              and 'phase_3_failed' not in out, out[:400])
 
         # T11 — merger applies an AUTHORIZED rewrite_falsification
         d = tmp / 'T11'; d.mkdir(parents=True)
