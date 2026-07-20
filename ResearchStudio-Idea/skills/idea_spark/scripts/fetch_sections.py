@@ -324,6 +324,42 @@ def _resolve_arxiv_via_ss(doi: Optional[str], ss_id: Optional[str]) -> Optional[
     return None
 
 
+def _resolve_oa_pdf_via_ss(doi: str) -> Optional[str]:
+    """Ask Semantic Scholar's paper-lookup endpoint (by DOI) for an open-access
+    PDF url. Same throttle/retry discipline as _resolve_arxiv_via_ss. Returns
+    the url or None; tolerates all errors silently."""
+    global _last_ss_call_at
+    if not doi:
+        return None
+    api_key = os.environ.get("SEMANTICSCHOLAR_API_KEY", "")
+    url = (f"https://api.semanticscholar.org/graph/v1/paper/"
+           f"{urllib.parse.quote(f'DOI:{doi}', safe=':/')}?fields=openAccessPdf")
+    for attempt in range(2):
+        since_last = time.time() - _last_ss_call_at
+        if since_last < _SS_MIN_INTERVAL_SEC:
+            time.sleep(_SS_MIN_INTERVAL_SEC - since_last)
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "idea-spark/1.0"})
+            if api_key:
+                req.add_header("x-api-key", api_key)
+            with urllib.request.urlopen(req, timeout=15) as r:
+                _last_ss_call_at = time.time()
+                if r.status != 200:
+                    return None
+                data = json.loads(r.read())
+            oa = data.get("openAccessPdf") or {}
+            return oa.get("url") or None
+        except urllib.error.HTTPError as e:
+            _last_ss_call_at = time.time()
+            if e.code == 429 and attempt == 0:
+                time.sleep(5)
+                continue
+            return None
+        except (urllib.error.URLError, json.JSONDecodeError, TimeoutError, ConnectionError):
+            return None
+    return None
+
+
 def _extract_arxiv_id(paper_meta: dict) -> Optional[str]:
     """Pull arxiv ID from any of several possible locations.
 
@@ -366,8 +402,83 @@ def _extract_openreview_id(paper_meta: dict) -> Optional[str]:
     return None
 
 
+# ---------------------------------------------------------------------------
+# Cross-run fetch cache. Papers recur across runs on adjacent topics (same
+# anchor communities keep coming back), and a Phase-1 anchor top-up mid-phase
+# costs minutes of pure network wait — a global content cache turns repeats
+# into instant hits. Successful fetches only (a transient network failure must
+# not stick for 30 days); keyed by paper_id, version-aware for arxiv ids.
+# Disable with IDEASPARK_FETCH_CACHE=off; relocate by setting it to a path.
+_CACHE_TTL_S = 30 * 24 * 3600  # arXiv revisions happen; don't serve stale v1 forever
+
+
+def _fetch_cache_dir() -> "Path | None":
+    from pathlib import Path
+    loc = os.environ.get('IDEASPARK_FETCH_CACHE', '').strip()
+    if loc.lower() == 'off':
+        return None
+    return Path(loc) if loc else Path.home() / '.cache' / 'ideaspark' / 'fulltext'
+
+
+def _fetch_cache_key(paper_meta: dict) -> "str | None":
+    pid = paper_meta.get('paper_id') or paper_meta.get('id')
+    key = pid or _extract_arxiv_id(paper_meta) or _extract_openreview_id(paper_meta)
+    if not key:
+        return None
+    return re.sub(r'[^A-Za-z0-9._-]', '_', str(key))
+
+
+def _fetch_cache_get(paper_meta: dict) -> "dict | None":
+    cache_dir = _fetch_cache_dir()
+    key = _fetch_cache_key(paper_meta)
+    if cache_dir is None or key is None:
+        return None
+    f = cache_dir / f'{key}.json'
+    try:
+        if not f.exists() or (time.time() - f.stat().st_mtime) > _CACHE_TTL_S:
+            return None
+        doc = json.loads(f.read_text())
+        secs = doc.get('sections') or {}
+        if secs.get('source_used') in (None, 'failed'):
+            return None
+        return {'intro': secs.get('intro', ''), 'method': secs.get('method', ''),
+                'source_used': secs['source_used'], 'warning': secs.get('warning')}
+    except Exception:
+        return None  # cache is an accelerator, never a failure source
+
+
+def _fetch_cache_put(paper_meta: dict, sections: dict) -> None:
+    if sections.get('source_used') in (None, 'failed'):
+        return
+    cache_dir = _fetch_cache_dir()
+    key = _fetch_cache_key(paper_meta)
+    if cache_dir is None or key is None:
+        return
+    try:
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        (cache_dir / f'{key}.json').write_text(json.dumps({
+            'title': paper_meta.get('title') or '',
+            'fetched_at': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+            'sections': sections,
+        }, ensure_ascii=False))
+    except Exception:
+        pass
+
+
 def fetch_sections(paper_meta: dict, pdf_timeout: int = 30,
                    per_paper_budget_s: float = 75.0) -> dict:
+    """Cache-fronted wrapper around the network fetch — see _fetch_sections_uncached."""
+    hit = _fetch_cache_get(paper_meta)
+    if hit is not None:
+        return hit
+    sections = _fetch_sections_uncached(paper_meta, pdf_timeout=pdf_timeout,
+                                        per_paper_budget_s=per_paper_budget_s)
+    _fetch_cache_put(paper_meta, sections)
+    return sections
+
+
+def _fetch_sections_uncached(paper_meta: dict, pdf_timeout: int = 30,
+                             per_paper_budget_s: float = 75.0) -> dict:
     """For one paper, try HTML → PDF paths until one yields non-empty intro or method.
 
     paper_meta should be a Phase 0 lit_results.json record. Recognised fields:
@@ -434,6 +545,23 @@ def fetch_sections(paper_meta: dict, pdf_timeout: int = 30,
             secs = parse_raw_text_sections(text)
             if secs["intro"] or secs["method"]:
                 return {**secs, "source_used": f"pdf_{source_label}_pymupdf", "warning": None}
+
+    # Last resort before degrading: papers known only to OpenAlex often carry a DOI
+    # under which Semantic Scholar has an open-access PDF the record itself lacks.
+    # Lazy (one throttled SS call) so it costs nothing when an earlier path worked.
+    if time.monotonic() < deadline:
+        doi = paper_meta.get("doi") or (paper_meta.get("externalIds") or {}).get("DOI")
+        ss_pdf_known = isinstance(paper_meta.get("openAccessPdf"), dict) and paper_meta["openAccessPdf"].get("url")
+        if doi and not ss_pdf_known:
+            oa_url = _resolve_oa_pdf_via_ss(doi)
+            if oa_url:
+                pdf_bytes = fetch_pdf_bytes(oa_url, timeout=pdf_timeout)
+                if pdf_bytes:
+                    text = pdf_to_text_pymupdf(pdf_bytes)
+                    if text:
+                        secs = parse_raw_text_sections(text)
+                        if secs["intro"] or secs["method"]:
+                            return {**secs, "source_used": "pdf_ss_doi_pymupdf", "warning": None}
 
     # All paths failed — fall back to abstract for intro, empty for method
     return {

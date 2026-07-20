@@ -434,6 +434,26 @@ def build_reviewer_concerns(phase3_critique: dict,
             'fields_changed_to_address': [],
         })
 
+    # Dropped revisions: an audit-requested change the merger refused under
+    # kill-switch protection (outcome=skipped_anti_substitution) is NOT in the
+    # candidate — the card must carry that openly instead of silently reading
+    # as if the audit's fix landed.
+    for rev in ((phase3_revise or {}).get('applied_revisions') or []):
+        if isinstance(rev, dict) and rev.get('outcome') == 'skipped_anti_substitution':
+            entries.append({
+                'attack': (f"Audit-requested revision NOT applied (kill-switch protection): "
+                           f"the Phase 3.2 audit asked for a change touching "
+                           f"'{rev.get('field')}' ({str(rev.get('issue') or '').strip()}), but the "
+                           f"merger refused it outside the authorized falsification route — the "
+                           f"final candidate does NOT contain this fix."),
+                'severity': 'non_blocking',
+                'response': TODO(f'reviewer_concerns_and_responses[{len(entries)}].response',
+                                 '1-2 sentences: state plainly what the un-applied change was and '
+                                 'why the candidate still stands without it (or what the authors '
+                                 'must add manually) — do NOT claim the fix was applied'),
+                'fields_changed_to_address': [],
+            })
+
     # 2. gap_closure_reject_check borderline entries
     gcrc = phase3_critique.get('gap_closure_reject_check') or {}
     for j, entry in enumerate(gcrc.get('entries', [])):

@@ -22,7 +22,11 @@ NOT your concern here. A step that is expensive but fully specified is exactly w
 Do not mention cost, budget, or feasibility anywhere in your output.
 
 Inputs (explicit paths):
-- `$RUN_DIR/phase4/phase4_expansion.json` — the Phase 4.1 expansion. Read:
+- `$RUN_DIR/phase4/method_view.json` — a deterministic slice of the expansion carrying EXACTLY the
+  fields listed below (produced by `phase4_method_view`; motivation prose, differentiation,
+  landscape and kill-switch fields are excluded by construction — this audit never reads them).
+  If the view file is missing, fall back to `$RUN_DIR/phase4/phase4_expansion.json` and read ONLY
+  the fields below. Read:
   - `method_flow.high_level_pipeline` and `method_flow.steps[]` (each with `step_id`, `title`,
     `what_changes`, `input`, `output`).
   - `plain_method_steps_en[]` and `plain_method_steps_zh[]` (same step_ids; the 普通版 renderings).

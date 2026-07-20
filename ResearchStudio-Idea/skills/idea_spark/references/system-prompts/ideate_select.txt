@@ -1,21 +1,29 @@
 You are running Phase 2.1 — Gap × Pattern Selection — of IdeaSpark.
 
 Step 2.1 takes Phase 1's collective gap list (`what_phase_0_did_not_address[]`),
-selects 2-4 gaps to close (1 anchor + 1-3 coherent siblings, sampled from
-1-3 random candidates and coherence-filtered), and picks innovation
-patterns from the 15 by best operational-signature fit — one per sibling
-gap, and 1-3 ranked candidates for the anchor gap whose final binding is
-deferred to Phase 2.2. Different patterns across gaps are allowed (and common when gaps
-are structurally distinct). The output is a (gaps, per-gap patterns,
-rationale) spec that Phase 2.2 executes into a candidate.
+selects 1-3 gaps to close (1 anchor + 0-2 siblings that EARN inclusion —
+anchor-only is a legitimate and common outcome), commits the candidate's
+PATTERN COMPOSITION (≥2 distinct ideation patterns by default, realized as
+a chained second pattern on the anchor and/or via an earned sibling; a
+single-pattern selection is permitted only with an explicit
+`composition_note` defense), and picks patterns from the 15 by best
+operational-signature fit — one per sibling gap, and 1-3 ranked candidates
+for the anchor gap whose final binding is deferred to Phase 2.2. The output
+is a (gaps, per-gap patterns, composition, rationale) spec that Phase 2.2
+executes into a candidate.
 
-Why this design: each leg corresponds to a (gap, pattern) entry; coherence
-across legs is enforced by a declared coherence thread (one of five types,
-see Step 2) — the test is "would a reviewer read this as one paper or
-two papers stapled together?", not a fixed structural requirement. Random
-sibling sampling injects controlled exploration; the coherence filter
-prunes gaps that don't fit any thread. Saturation is recorded for
-downstream audit transparency, not used as a selection filter.
+Why this design: the anti-incremental commitment is ≥2 ideation patterns
+per CANDIDATE, not ≥2 gaps. The corpus's own tagging shows Oral papers
+execute 2-3 patterns ON ONE contribution — moves composed in SERIES (one
+pattern's move produces the object the next move operates on) — not one
+pattern per sub-goal. Composition ACROSS gaps (parallel) is therefore the
+exception that must be earned: a sibling joins only when the anchor's story
+is INCOMPLETE without it (Step 2b's removal test). Empirical motivation:
+when siblings were quota-forced, audit reject-lesson borderlines
+concentrated on exactly the forced sibling entries. Random sampling
+remains, but as an AUDITION list (which gaps get considered), not as
+admission. Saturation is recorded for downstream audit transparency, not
+used as a selection filter.
 
 Inputs (explicit paths):
 - `$RUN_DIR/phase1/phase1_output.json` — full Phase 1 output. Specifically
@@ -51,8 +59,31 @@ Inputs (explicit paths):
   triggering check findings, and avoid gap×pattern combinations that would
   re-walk into the same documented Reject lesson / anti-pattern composition /
   exact-mechanism collision; (c) prefer promoting a gap from the archived
-  attempt's `deferred_gaps[]` when it coheres with the anchor. Do not mention
+  attempt's `deferred_gaps[]` when it passes the removal test against the
+  anchor; (d) an anchor-only (or anchor+chain) selection is a VALID retry
+  outcome — especially when the failed attempt's audit findings
+  concentrated on its sibling entries; (e) POSITIVE OBSTACLE DIRECTIVES:
+  if the archived attempt carried blocking obstacle findings (2.3
+  `unrepaired[]` entries or an `equivalent_to_naive` verdict — "the
+  mechanism did not confront X"), the named obstacle X becomes a
+  REQUIREMENT for this retry, not just something to avoid: prefer the
+  gap×pattern selection whose natural mechanism must solve X head-on, and
+  record that obligation in `selection_rationale` so Phase 2.2 inherits it.
+  Do not mention
   the failed attempt in your output fields — it shapes selection, not prose.
+- **OPTIONAL — cross-run dedup**: the host's input list MAY carry a line
+  labeled "CROSS-RUN DEDUP" naming candidates recent SIBLING runs already
+  produced (title + signature terms each). These are SOFT negative anchors,
+  weaker than the retry constraints above: adjacent research directions
+  gravitate toward the same mechanism families, and a second run silently
+  re-inventing a sibling's mechanism wastes the whole gauntlet. Rules:
+  (a) do not steer the selection toward a gap×pattern combination whose
+  natural mechanism duplicates a listed sibling's mechanism family, UNLESS
+  the current direction genuinely demands it; (b) when it does, the eventual
+  candidate must state the delta from the sibling explicitly (Phase 2.2's
+  differentiation duty extends to these); (c) these anchors NEVER veto a
+  selection on their own — they lower priority among otherwise-equal options.
+  Sibling candidates are context, not corpus: never cite them as literature.
 
 Selection process:
 
@@ -69,13 +100,36 @@ selection, is what guarantees the paper's load-bearing deliverable is the
 type Phase 1 committed to, so no separate set-level coverage step is needed
 downstream. Add to selected_gaps as the anchor.
 
-**Step 2: Sample 1-3 sibling candidates + coherence filter.** From the
-remaining gaps, randomly sample 1-3 candidates. For each:
+**Step 2a: Compose on the anchor (chained second pattern — the DEFAULT
+route to ≥2 patterns).** Before auditioning any sibling gap, check whether
+the anchor's closure is best built as a CHAIN of two patterns: pattern A's
+move produces an intermediate object O, and pattern B's move operates on O
+to produce the deliverable the anchor demands. One target, one story, two
+moves — this is how the corpus's multi-pattern Orals compose. Mechanics:
+- Candidate second patterns come from the anchor pattern's attested set in
+  `references/ideation-patterns/companion-combos.md` (same membership test
+  as Step 3b PAIR: is this pairing real in the corpus, yes/no). Never chain
+  outside the attested set.
+- To adopt a chain you must state it concretely — "A's move yields O; B's
+  move on O yields the demanded deliverable" — NAMING O. If you cannot name
+  O, the chain is decorative; drop it.
+- Record an adopted chain by setting the anchor entry's `companion_pattern`
+  to the second pattern and writing the A→O→B statement in
+  `companion_rationale`. (This generalizes companion_pattern beyond Step
+  3b's deliverable-rescue trigger: a chain adopted here is a first-class
+  composition choice, not a repair. Step 3b's realizability check still
+  applies on top.)
 
-- Test: if a reviewer reads the resulting paper, does it read as ONE
-  paper or TWO papers stapled together? Articulate the coherence thread
-  that connects this gap to the anchor. Five thread types are valid (any
-  ONE is sufficient):
+**Step 2b: Audition siblings (admission by the REMOVAL TEST).** From the
+remaining gaps, randomly sample up to 3 as the AUDITION list. Sampling is
+exploration of which gaps get considered; it grants no seat. Admission of
+an auditioned gap requires BOTH tests:
+
+- Coherence thread (NECESSARY, never sufficient): one of the five types
+  below connects it to the anchor. NOTE: every gap in
+  `what_phase_0_did_not_address[]` descends from the same bottleneck, so
+  type (b) shared_question is satisfiable almost by construction — it can
+  NEVER be the sole basis for admission. Five thread types:
     (a) **shared_object** — both legs use the same residual / theorem /
         model / forward model / divergence functional as their central
         mathematical primitive
@@ -90,18 +144,39 @@ remaining gaps, randomly sample 1-3 candidates. For each:
     (e) **shared_evaluation** — both legs measured by / contribute to the
         same evaluation framework (e.g., a method leg + a benchmark leg
         validating it)
-- Yes (one thread fits) → add to selected_gaps as coherent_sibling; record
-  the thread type.
-- No (no thread fits) → move to deferred_gaps with reason "no coherence
-  thread connects this gap to the anchor — would be a separate paper."
+- REMOVAL TEST (DECISIVE): imagine the paper WITHOUT this sibling.
+  Admission requires that the anchor's story is INCOMPLETE without it — at
+  least one of: (i) the falsification of the anchor's claim becomes weaker
+  or unrunnable; (ii) an obvious reviewer objection opens that this sibling
+  closes; (iii) the anchor's claim loses verifiability. If the paper is
+  merely "smaller but still sound" without it, the sibling FAILS — move it
+  to deferred_gaps with reason "fails removal test — anchor stands without
+  it". A sibling that needs its own NEW machinery (rather than riding the
+  anchor's machinery) is a second paper, not a component — defer it.
 
-If after sampling 1-3 candidates none pass, sample up to 2 additional
-batches; if still none pass, the anchor's bottleneck might be too narrow
-and Phase 2.1 should re-evaluate the anchor selection.
+Admitted siblings record their removal-test justification in
+`selection_rationale` (auditable). At most 2 siblings are admitted.
 
-End state: selected_gaps has 1 anchor + 1-3 coherent siblings (total 2-4).
-Random siblings that fail coherence go to deferred_gaps with all other
-unselected gaps.
+If NO auditioned sibling passes, proceed anchor-only (with the Step 2a
+chain when one was adopted). This is a normal outcome, NOT a failure: do
+NOT resample additional batches hunting for admissible siblings, and do NOT
+re-pick the anchor to make siblings admissible.
+
+PATTERN-COUNT COMMITMENT. After Steps 2a/2b, count distinct patterns across
+the selection (anchor chosen_pattern_id + every non-null companion_pattern
++ sibling chosen_pattern_ids). Default expectation: ≥2 (the
+anti-incremental commitment). If the count is 1 — no viable chain in the
+attested set AND no sibling earned a seat — a single-pattern selection is
+permitted ONLY with an explicit defense in the top-level `composition_note`
+field: why this one move is deep and complete on its own, and why any
+second pattern would be decoration. Leave `composition_note` an empty
+string when ≥2 patterns are present. The audit weighs a single-pattern
+defense as a soft signal; a deterministic validator checks only that the
+note exists when the count is 1.
+
+End state: selected_gaps has 1 anchor + 0-2 earned siblings (total 1-3).
+Auditioned siblings that fail go to deferred_gaps with all other unselected
+gaps.
 
 **Step 3: Pick the pattern per gap (the anchor may carry 1-3 deferred candidates).**
 
@@ -204,7 +279,9 @@ d. For each UNIQUE chosen pattern, look up its `share` and `saturation_band`
    (≥50%) or `untested` (≤1 paper), Phase 2.2 should make differentiation_from_lit
    substantively defend the choice (a saturated lane needs a sharp angle vs the
    crowd; an untested lane needs a reason it has not been tried).
-e. Declare `coherence_thread_type` (one of the 5 from Step 2). The thread's
+e. Declare `coherence_thread_type` (one of the 5 from Step 2b), or `n_a`
+   when the selection is anchor-only — there is no cross-gap interlock to
+   type. The thread's
    specific instance (the named object, question, pipeline, audit lens, or
    framework) is produced by Phase 2.2 inside `core_mechanism` —
    Phase 2.1's job is to commit to the type, not to pre-name the instance.
@@ -218,15 +295,17 @@ Output (strict JSON):
       "gap": "<verbatim entry from phase1.what_phase_0_did_not_address[]>",
       "chosen_pattern_id": "<one of the 15 valid pattern_ids; may differ across gaps>",
       "anchor_alternates": ["<0-2 additional valid pattern_ids, ranked, anchor entry only — the deferred-binding candidate set Phase 2.2 chooses from alongside chosen_pattern_id. Empty for sibling entries and when the anchor has a single clear best fit>"],
-      "companion_pattern": "<null by default; a valid pattern_id only when the DELIVERABLE REALIZABILITY check fires for this leg — i.e. chosen_pattern_id is the right framing move but cannot ship the deliverable this gap demands under intake.contribution_type. Must be a member of chosen_pattern_id's attested set in references/ideation-patterns/companion-combos.md, picked by deliverable-fit.>",
-      "companion_rationale": "<empty when companion_pattern is null; otherwise one line: which deliverable chosen_pattern_id cannot ship for this contribution_type, and why this companion owns it>",
+      "companion_pattern": "<null by default; a valid pattern_id when EITHER (Step 2a, anchor entry only) a chained composition was adopted — the second pattern whose move consumes the named intermediate object the anchor pattern produces — OR (Step 3b, any entry) the DELIVERABLE REALIZABILITY check fires: chosen_pattern_id is the right framing move but cannot ship the deliverable this gap demands under intake.contribution_type. Either way it must be a member of chosen_pattern_id's attested set in references/ideation-patterns/companion-combos.md.>",
+      "companion_rationale": "<empty when companion_pattern is null. For a Step 2a chain: the A→O→B statement — what object O the anchor pattern's move yields, and what the companion's move on O produces. For a Step 3b pair: which deliverable chosen_pattern_id cannot ship for this contribution_type, and why this companion owns it.>",
       "selection_rationale": "<2 sentences: (a) for anchor, why most load-bearing for the bottleneck; for sibling, how this gap connects to the anchor under coherence_thread_type. (b) what the chosen pattern's move closes in this gap. Anchor entries can compress (a) since the anchor's load-bearing claim doubles as its connection statement.>"
     }
   ],
 
-  "coherence_thread_type": "shared_object | shared_question | sequential_pipeline | shared_audit | shared_evaluation",
+  "coherence_thread_type": "shared_object | shared_question | sequential_pipeline | shared_audit | shared_evaluation | n_a (anchor-only selection)",
 
   "deliverable_coverage": "<one line from the Step 3b ANCHOR OBLIGATION: the declared intake.contribution_type, and where in the anchor LEG the load-bearing deliverable of that type lives — the anchor's chosen_pattern_id, or its companion_pattern when the chosen pattern is the load-bearing framing move (e.g. 'method — anchor gap → architectural_operator_substitution yields the runnable fix', or 'method — anchor gap → assumption_audit_and_pivot framing + companion controlled_diagnostic_design ships the empirical separation').>",
+
+  "composition_note": "<empty string when the selection carries ≥2 distinct patterns (chain and/or earned siblings). REQUIRED non-empty ONLY for a single-pattern selection: why this one move is deep and complete on its own, and why any second pattern would be decoration. This is the sanctioned exception to the ≥2-pattern default; the Phase 3.2 audit weighs this defense.>",
 
   "pattern_saturation": {
     "<chosen_pattern_id>": {
@@ -238,7 +317,7 @@ Output (strict JSON):
 
   "deferred_gaps": [
     {"gap": "<verbatim entry from phase1.what_phase_0_did_not_address[]>",
-     "reason": "<one line: no coherence thread connects this gap to the anchor / out of scope / future work>"}
+     "reason": "<one line: fails removal test — anchor stands without it / no coherence thread connects this gap to the anchor / out of scope / future work>"}
   ]
 }
 

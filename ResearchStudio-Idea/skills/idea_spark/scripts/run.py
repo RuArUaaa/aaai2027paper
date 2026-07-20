@@ -51,6 +51,16 @@ import re
 import shutil
 import subprocess
 import sys
+import warnings
+
+# LibreSSL/urllib3 noise: macOS system Python links LibreSSL, so urllib3 v2 warns on
+# every import — pure noise repeated by each connector call. Filter for this process,
+# and via PYTHONWARNINGS (message-prefix form, no import needed) for every
+# connector/dedup subprocess, preserving any user-set entries.
+_URLLIB3_WARN_FILTER = 'ignore:urllib3 v2 only supports OpenSSL'
+warnings.filterwarnings('ignore', message='urllib3 v2 only supports OpenSSL')
+os.environ['PYTHONWARNINGS'] = (os.environ['PYTHONWARNINGS'] + ',' + _URLLIB3_WARN_FILTER
+                                if os.environ.get('PYTHONWARNINGS') else _URLLIB3_WARN_FILTER)
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -603,6 +613,45 @@ def cmd_phase0(args) -> int:
         print(f'dedup_merge failed: {r.stderr[:600]}', file=sys.stderr)
         return 4
 
+    # Survey demotion: survey/review titles are magnets for broad queries but rarely
+    # carry a mechanism to anchor on; stable-sort them to the BOTTOM of lit_results
+    # (never dropped — pattern tagging still sees them; the demotion lowers their
+    # salience in the fulltext-pool ranking and closest_adjacent scanning). Skipped
+    # when the user's query itself asks for surveys.
+    try:
+        if not re.search(r'survey|review|综述', (args.query or ''), re.I):
+            merged = json.loads(merged_out.read_text())
+            papers_list = merged['papers'] if isinstance(merged, dict) and 'papers' in merged else merged
+            is_survey = lambda p: bool(re.search(
+                r'^(a |an )?(comprehensive |systematic |brief )*(survey|review|meta-analysis)\b'
+                r'|:\s*(a )?(comprehensive |systematic )*(survey|review)\b',
+                (p.get('title') or ''), re.I))
+            n_surveys = sum(1 for p in papers_list if is_survey(p))
+            if n_surveys:
+                papers_list.sort(key=is_survey)  # stable: relative order preserved within groups
+                merged_out.write_text(json.dumps(merged, indent=2, ensure_ascii=False))
+                print(f'  demoted {n_surveys} survey/review-titled paper(s) to the bottom of '
+                      f'lit_results (kept, not dropped)', file=sys.stderr)
+    except Exception as e:
+        print(f'  (survey demotion skipped: {e})', file=sys.stderr)
+
+    # retrieved_via backfill: connector hit records don't all carry the field, but
+    # the lit_table schema has a retrieved_via column and Phase 1's entry assertion
+    # references it — absent values surface as None in every downstream reader.
+    # Default = the winning connector (source); webfallback mode tags elsewhere.
+    try:
+        merged = json.loads(merged_out.read_text())
+        papers_list = merged['papers'] if isinstance(merged, dict) and 'papers' in merged else merged
+        n_fill = sum(1 for p in papers_list if not p.get('retrieved_via'))
+        if n_fill:
+            for p in papers_list:
+                if not p.get('retrieved_via'):
+                    p['retrieved_via'] = p.get('source') or 'unknown'
+            merged_out.write_text(json.dumps(merged, indent=2, ensure_ascii=False))
+            print(f'  backfilled retrieved_via for {n_fill} paper(s) (= source)', file=sys.stderr)
+    except Exception as e:
+        print(f'  (retrieved_via backfill skipped: {e})', file=sys.stderr)
+
     # Step 5: pattern_summary (LLM-driven; tags methodology, bottleneck, open_issue, resolves_problem).
     # Only emits lit_table.md — the methodology distribution + saturation flags are recomputed
     # by Phase 1 Step 1.0 directly from lit_table.md (via methodology-tag aggregation by time bucket),
@@ -635,7 +684,10 @@ def cmd_phase0(args) -> int:
                 '(resolves_problem is high-bar; ≤5% of papers — leave empty otherwise). '
                 'Render lit_table.md only (columns per inputs). The ideation pattern distribution and '
                 'saturation flags are derived by Phase 1 Step 1.0 from lit_table directly; no '
-                'separate summary file needed.'
+                'separate summary file needed. Pure classification — do NOT spend the large '
+                'reasoning model on it: default to a cheaper/faster model tier or lower '
+                'reasoning effort when the harness supports routing (the '
+                'NOVELTY_LLM_CLASSIFY_FAST_CMD tier).'
             ),
             re_invocation='no re-invocation; write lit_table.md directly to out_dir; Phase 1 entry assertion will pick it up',
             exit_code=0,
@@ -802,13 +854,23 @@ def cmd_phase3_collision(args) -> int:
         nonzero = sorted((h for h in ch_hits if h['relevance_score'] > 0),
                          key=lambda h: -h['relevance_score'])
         n_zero = len(ch_hits) - len(nonzero)
+        # Adaptive relevance floor: score 1-2 is generic-word overlap, which admits
+        # pure BM25 noise (observed live: humor-studies and cosmology hits riding a
+        # skill-library query) whenever the corpus is rich. When at least half the
+        # cap clears score>=3 the sub-3 tail is almost surely noise — drop it.
+        # Thin channels keep the permissive floor so sparse corpora aren't starved.
+        n_floor = 0
+        strong = [h for h in nonzero if h['relevance_score'] >= 3]
+        if len(strong) >= COLLISION_CHANNEL_CAP // 2:
+            n_floor = len(nonzero) - len(strong)
+            nonzero = strong
         n_cap = max(0, len(nonzero) - COLLISION_CHANNEL_CAP)
         kept_ch = nonzero[:COLLISION_CHANNEL_CAP]
         kept.extend(kept_ch)
         min_kept = f'; min kept score {kept_ch[-1]["relevance_score"]}' if kept_ch else ''
         print(f'  truncation[{ch}]: kept {len(kept_ch)}/{len(ch_hits)} '
-              f'(dropped {n_zero} zero-relevance + {n_cap} over cap '
-              f'{COLLISION_CHANNEL_CAP}{min_kept})',
+              f'(dropped {n_zero} zero-relevance + {n_floor} below adaptive floor + '
+              f'{n_cap} over cap {COLLISION_CHANNEL_CAP}{min_kept})',
               file=sys.stderr)
 
     # Full untruncated pool for forensics; the audit-facing file is the kept set.
@@ -836,12 +898,59 @@ def cmd_phase3_collision(args) -> int:
     except Exception as _e:  # never fail the phase on a slim hiccup
         print(f'collision_hits slim skipped: {_e}', file=sys.stderr)
 
+    # Sidecar recording WHICH terms produced these hits. `next` compares it
+    # against the canonical candidate's terms so that a collision run launched
+    # in PARALLEL with the 2.3 coherence gate stays valid: if a 2.3 patch later
+    # changed signature/alias terms (rare — scoped to mechanism-changing
+    # repairs), the mismatch is detected and collision is re-issued.
+    (out_dir / '.collision_terms.json').write_text(json.dumps(
+        {'signature_terms': sorted(t for t in (sig or []) if t),
+         'alias_terms': sorted(t for t in (alias or []) if t)},
+        ensure_ascii=False, indent=1))
+
     (out_dir / '.lit_grounding_mode').write_text('real')
     print(f'✅ Phase 3.1 collision retrieval complete. {merged_out.name} has {len(json.loads(merged_out.read_text()))} hits. retrieved at: {now.isoformat()}')
     return 0
 
 
 # --- validators -------------------------------------------------------------
+
+def _write_fulltext_split(out_dir: Path, cache: dict, lit_results: list) -> None:
+    """Derived per-paper read view of fulltext_cache.json (the blob stays canonical).
+
+    Downstream LLM phases read exactly the papers they need with plain file reads
+    (offset/limit on a .md) instead of slicing a ~300KB JSON blob. Regenerated
+    WHOLESALE on every blob write — including phase1_fulltext_topup — so the view
+    can never go stale relative to the blob. index.json carries tier/source_used/
+    warning per paper because the Phase 1 contract downgrades residue confidence
+    for source_used=failed entries; dropping that marker would hide the downgrade.
+    """
+    titles = {}
+    for p in lit_results or []:
+        pid = p.get('paper_id') or p.get('id')
+        if pid:
+            titles[pid] = p.get('title') or ''
+    split_dir = out_dir / 'fulltext'
+    split_dir.mkdir(parents=True, exist_ok=True)
+    for old in split_dir.glob('*.md'):  # exact mirror: drop leftovers from a prior, larger cache
+        old.unlink()
+    index = {}
+    for pid, entry in cache.items():
+        fname = re.sub(r'[^A-Za-z0-9._-]', '_', str(pid)) + '.md'
+        intro = entry.get('intro') or ''
+        method = entry.get('method') or ''
+        (split_dir / fname).write_text(
+            f"# {titles.get(pid) or pid}\n\n"
+            f"paper_id: {pid}\ntier: {entry.get('tier')}\n"
+            f"source_used: {entry.get('source_used')}\n"
+            f"warning: {entry.get('warning') or 'none'}\n\n"
+            f"## Intro\n\n{intro}\n\n## Method\n\n{method}\n")
+        index[pid] = {'file': f'fulltext/{fname}', 'title': titles.get(pid, ''),
+                      'tier': entry.get('tier'), 'source_used': entry.get('source_used'),
+                      'intro_chars': len(intro), 'method_chars': len(method),
+                      'warning': entry.get('warning')}
+    (split_dir / 'index.json').write_text(json.dumps(index, indent=2, ensure_ascii=False))
+
 
 def cmd_validate(args) -> int:
     """Run the contract validators on the phase outputs the user provides."""
@@ -954,8 +1063,10 @@ def main():
 
         cache_path = out_dir / 'fulltext_cache.json'
         cache_path.write_text(json.dumps(cache, indent=2, ensure_ascii=False))
+        _write_fulltext_split(out_dir, cache, lit_results)
         n_ok = sum(1 for v in cache.values() if v['source_used'] != 'failed')
         print(f'\n  wrote {cache_path} ({n_ok}/{len(cache)} succeeded)', file=sys.stderr)
+        print(f'  wrote per-paper read view: {out_dir / "fulltext"}/ ({len(cache)} .md + index.json)', file=sys.stderr)
         return 0
     pf.set_defaults(func=_cmd_phase0_fulltext)
 
@@ -1018,6 +1129,7 @@ def main():
         cache[pid] = {'tier': 'A', **sections}
         cache_path.parent.mkdir(parents=True, exist_ok=True)
         cache_path.write_text(json.dumps(cache, indent=2, ensure_ascii=False))
+        _write_fulltext_split(out_dir, cache, lit_results)
         status = sections['source_used']
         if status == 'failed':
             print(f'[topup] WARN anchor {pid} still failed across all paths — residue stays abstract-level; flag it', file=sys.stderr)
@@ -1025,6 +1137,112 @@ def main():
         print(f'[topup] wrote {cache_path} — anchor {pid} now grounded via {status}', file=sys.stderr)
         return 0
     pt.set_defaults(func=_cmd_phase1_fulltext_topup)
+
+    p2p = sub.add_parser('phase2_prepare',
+                         help='Materialize phase2_generate/closest_abstracts.json — the closest_adjacent-only '
+                              'slice of lit_results.json that ideate_generate.txt already instructs Phase 2.2 '
+                              'to read. Deterministic: enforces the existing read contract instead of relying '
+                              'on the sub-agent to self-filter (the non-closest ~30-40 papers are noise there '
+                              'and cost ~15k tokens when read whole).')
+    p2p.add_argument('--dir', required=True, help='Run directory (must contain phase1/phase1_output.json + phase0/lit_results.json)')
+    def _cmd_phase2_prepare(args):
+        d = Path(args.dir).resolve()
+        p1_path = d / 'phase1' / 'phase1_output.json'
+        lit_path = d / 'phase0' / 'lit_results.json'
+        for pth in (p1_path, lit_path):
+            if not pth.exists():
+                print(f'error: {pth} not found', file=sys.stderr)
+                return 1
+        p1 = json.loads(p1_path.read_text())
+        lit = json.loads(lit_path.read_text())
+        if isinstance(lit, dict) and 'papers' in lit:
+            lit = lit['papers']
+        ca_ids = [e.get('paper_id') for e in (p1.get('closest_adjacent') or []) if e.get('paper_id')]
+        matched = [p for p in lit if (p.get('paper_id') or p.get('id')) in set(ca_ids)]
+        out_dir = d / 'phase2_generate'
+        out_dir.mkdir(parents=True, exist_ok=True)
+        out = out_dir / 'closest_abstracts.json'
+        out.write_text(json.dumps(matched, indent=2, ensure_ascii=False))
+        missing = sorted(set(ca_ids) - {(p.get('paper_id') or p.get('id')) for p in matched})
+        print(f'[phase2_prepare] wrote {out} ({len(matched)}/{len(ca_ids)} closest_adjacent papers)', file=sys.stderr)
+        if missing:
+            # Slice must never silently narrow the contract: surface the gap so the
+            # 2.2 sub-agent knows to pull these ids from lit_results.json itself.
+            print(f'[phase2_prepare] WARN {len(missing)} closest_adjacent id(s) not found in lit_results.json: '
+                  f'{", ".join(missing)} — the Phase 2.2 agent must look these up in lit_results.json directly',
+                  file=sys.stderr)
+        return 0
+    p2p.set_defaults(func=_cmd_phase2_prepare)
+
+    ltm = sub.add_parser('lit_table_merge',
+                         help='Assemble lit_table.md from sharded pattern-tagging row files '
+                              '(deterministic). Validates every row has exactly 9 cells, total '
+                              'row count == lit_results paper count, and paper_id coverage — '
+                              'the manual checks a host otherwise does by hand after parallel '
+                              'fast-tier tagging.')
+    ltm.add_argument('--out', required=True, help='phase0 output dir (contains lit_results.json; lit_table.md is written here)')
+    ltm.add_argument('--shards', required=True, nargs='+',
+                     help='Shard row files IN INPUT ORDER (rows only, with or without leading pipes; no header)')
+    def _cmd_lit_table_merge(args):
+        out_dir = Path(args.out).resolve()
+        lit_path = out_dir / 'lit_results.json'
+        if not lit_path.exists():
+            print(f'error: {lit_path} not found', file=sys.stderr)
+            return 1
+        lit = json.loads(lit_path.read_text())
+        papers = lit['papers'] if isinstance(lit, dict) and 'papers' in lit else lit
+        expected_ids = [str(p.get('paper_id') or p.get('id') or '') for p in papers]
+        cols = ['paper_id', 'year_month', 'venue', 'title', 'ideation pattern tags',
+                'bottleneck this paper targets', 'open issue / unresolved gap',
+                'resolves_problem', 'retrieved_via']
+        rows, bad = [], []
+        for fn in args.shards:
+            fp = Path(fn).resolve()
+            if not fp.exists():
+                print(f'error: shard {fp} not found', file=sys.stderr)
+                return 1
+            for ln in fp.read_text(encoding='utf-8').splitlines():
+                ln = ln.strip()
+                if not ln or ln.startswith('|---') or 'paper_id | year_month' in ln:
+                    continue
+                cells = [c.strip() for c in ln.strip('|').split('|')]
+                if len(cells) != len(cols):
+                    bad.append((fp.name, len(cells), ln[:80]))
+                    continue
+                rows.append(cells)
+        if bad:
+            for b in bad:
+                print(f'  MALFORMED ROW [{b[0]}] ({b[1]} cells): {b[2]}', file=sys.stderr)
+            print(f'error: {len(bad)} malformed row(s) — fix the shard(s) and re-run; '
+                  'nothing was written', file=sys.stderr)
+            return 2
+        if len(rows) != len(expected_ids):
+            print(f'error: {len(rows)} rows != {len(expected_ids)} papers in lit_results.json — '
+                  'a shard dropped or duplicated papers; nothing was written', file=sys.stderr)
+            return 2
+        got_ids = [r[0] for r in rows]
+        missing = [i for i in expected_ids if i not in set(got_ids)]
+        extra = [i for i in got_ids if i not in set(expected_ids)]
+        if missing or extra:
+            if missing:
+                print(f'  missing paper_id(s): {", ".join(missing[:5])}'
+                      + (f' … +{len(missing)-5}' if len(missing) > 5 else ''), file=sys.stderr)
+            if extra:
+                print(f'  unknown paper_id(s): {", ".join(extra[:5])}'
+                      + (f' … +{len(extra)-5}' if len(extra) > 5 else ''), file=sys.stderr)
+            print('error: paper_id coverage mismatch vs lit_results.json; nothing was written',
+                  file=sys.stderr)
+            return 2
+        header = '| ' + ' | '.join(cols) + ' |'
+        sep = '|' + '|'.join(['---'] * len(cols)) + '|'
+        body = '\n'.join('| ' + ' | '.join(r) + ' |' for r in rows)
+        (out_dir / 'lit_table.md').write_text(header + '\n' + sep + '\n' + body + '\n',
+                                              encoding='utf-8')
+        print(f'OK lit_table.md written: {out_dir / "lit_table.md"} '
+              f'({len(rows)} rows from {len(args.shards)} shard(s); all 9-column, '
+              'count + paper_id coverage verified)', file=sys.stderr)
+        return 0
+    ltm.set_defaults(func=_cmd_lit_table_merge)
 
     pr = sub.add_parser('phase4_render', help='Render the Phase 4 expansion JSON into the idea-card markdown + LaTeX (templating, no model call; compiles a PDF when xelatex/tectonic is on PATH, else skips with a hint)')
     pr.add_argument('--expansion', required=True, help='Phase 4 expansion JSON path')
@@ -1118,18 +1336,28 @@ def main():
                               'producing phase4_expansion.json. Refuses to overwrite kill-switch '
                               'fields. Pure Python, no LLM.')
     pas.add_argument('--skeleton', required=True, help='Path to phase4_skeleton.json')
-    pas.add_argument('--fill-map', required=True,
+    pas.add_argument('--fill-map', required=True, action='append',
                      help='Path to a JSON file with {field_path: value} entries authored by the LLM. '
-                          'Each path is the SAME path syntax used in the TODO placeholders.')
+                          'Each path is the SAME path syntax used in the TODO placeholders. '
+                          'Repeatable: pass once per map (e.g. the technical fill_map and the '
+                          'derive_map) — maps are merged; overlapping paths are an error.')
     pas.add_argument('--out', required=True, help='Output dir for phase4_expansion.json.')
     def _cmd_phase4_assemble(args):
         from scripts.phase4_skeleton import assemble_expansion
         skeleton = json.loads(Path(args.skeleton).resolve().read_text())
-        fill_map = json.loads(Path(args.fill_map).resolve().read_text())
-        if not isinstance(fill_map, dict):
-            print(f'ERROR: fill_map JSON must be an object {{path: value}}, got {type(fill_map).__name__}',
-                  file=sys.stderr)
-            return 1
+        fill_map: dict = {}
+        for fm_path in args.fill_map:
+            fm = json.loads(Path(fm_path).resolve().read_text())
+            if not isinstance(fm, dict):
+                print(f'ERROR: fill_map JSON must be an object {{path: value}}, got '
+                      f'{type(fm).__name__} in {fm_path}', file=sys.stderr)
+                return 1
+            overlap = set(fill_map) & set(fm)
+            if overlap:
+                print(f'ERROR: fill maps overlap on {sorted(overlap)[:5]} — each TODO path must be '
+                      f'owned by exactly one map', file=sys.stderr)
+                return 1
+            fill_map.update(fm)
         try:
             expansion = assemble_expansion(skeleton, fill_map)
         except ValueError as e:
@@ -1145,6 +1373,88 @@ def main():
         print(f'OK Phase 4 assembly complete. Wrote {out_path}', file=sys.stderr)
         return 0
     pas.set_defaults(func=_cmd_phase4_assemble)
+
+    pmv = sub.add_parser('phase4_method_view',
+                         help='Extract the method-only slice of phase4_expansion.json into '
+                              'phase4/method_view.json — exactly the fields the 4.1.5 '
+                              'implementability audit reads (method_flow, plain step renderings, '
+                              'key_equations, claims). Cuts the audit\'s input roughly in half; '
+                              'motivation prose, differentiation, landscape and kill-switch fields '
+                              'are excluded by construction. Pure Python, no LLM.')
+    pmv.add_argument('--expansion', required=True, help='Path to the COMPLETE phase4_expansion.json')
+    pmv.add_argument('--out', required=True, help='Output dir for method_view.json')
+    def _cmd_phase4_method_view(args):
+        expansion = json.loads(Path(args.expansion).resolve().read_text())
+        view_fields = ['title', 'method_name', 'abstract_draft', 'core_claim', 'sub_claims',
+                       'key_equations', 'method_flow', 'plain_method_steps_en', 'plain_method_steps_zh']
+        view = {k: expansion[k] for k in view_fields if k in expansion}
+        missing = [k for k in ('method_flow', 'key_equations') if k not in view]
+        if missing:
+            print(f'ERROR: expansion lacks required field(s) {missing} — is this a complete expansion?',
+                  file=sys.stderr)
+            return 1
+        leaked = '<TODO[' in json.dumps(view)
+        if leaked:
+            print('ERROR: view still contains TODO placeholders — run the final assemble '
+                  '(all fill maps) before extracting the view', file=sys.stderr)
+            return 1
+        out_dir = Path(args.out).resolve(); out_dir.mkdir(parents=True, exist_ok=True)
+        out_path = out_dir / 'method_view.json'
+        out_path.write_text(json.dumps(view, indent=2, ensure_ascii=False))
+        full = len(json.dumps(expansion))
+        print(f'OK method view written: {out_path} ({len(json.dumps(view)):,}B vs expansion {full:,}B)',
+              file=sys.stderr)
+        return 0
+    pmv.set_defaults(func=_cmd_phase4_method_view)
+
+    prb = sub.add_parser('phase3_revise_brief',
+                         help='Extract the revision brief from the Phase 3.2 audit report — verdict, '
+                              'rationale, revision_targets and the compact checks, dropping the '
+                              'gap_closure_reject_check bulk (per-lesson quotations the audit already '
+                              'distilled into revision_targets). The 3.3 reviser reads this instead of '
+                              'the full report. Pure Python, no LLM.')
+    prb.add_argument('--critique', required=True, help='Path to phase3_critique_output.json')
+    prb.add_argument('--out', required=True, help='Output dir for revise_brief.json')
+    def _cmd_phase3_revise_brief(args):
+        critique_path = Path(args.critique).resolve()
+        critique = json.loads(critique_path.read_text())
+        if not critique.get('revision_targets'):
+            print('WARN critique has no revision_targets — brief written anyway, but 3.3 should not '
+                  'be running on this verdict', file=sys.stderr)
+        brief = {k: v for k, v in critique.items() if k != 'gap_closure_reject_check'}
+        brief['_brief_note'] = ('gap_closure_reject_check details omitted for context economy — '
+                                f'full report at {critique_path}; read it ONLY if a revision_target\'s '
+                                '`issue` cites a specific reject lesson you need verbatim.')
+        out_dir = Path(args.out).resolve(); out_dir.mkdir(parents=True, exist_ok=True)
+        out_path = out_dir / 'revise_brief.json'
+        out_path.write_text(json.dumps(brief, indent=2, ensure_ascii=False))
+        print(f'OK revision brief written: {out_path} ({len(json.dumps(brief)):,}B vs '
+              f'critique {len(json.dumps(critique)):,}B)', file=sys.stderr)
+        return 0
+    prb.set_defaults(func=_cmd_phase3_revise_brief)
+
+    pfv = sub.add_parser('phase3_falsification_view',
+                         help='Extract the falsification-re-audit slice of the merged candidate — '
+                              'the rewritten falsification_prediction plus the mechanism fields '
+                              'needed to judge non-tautology. The re-audit reads this instead of the '
+                              'full candidate. Pure Python, no LLM.')
+    pfv.add_argument('--candidate', required=True, help='Path to phase3_revise/final_candidate.json')
+    pfv.add_argument('--out', required=True, help='Output dir for falsification_view.json')
+    def _cmd_phase3_falsification_view(args):
+        cand = json.loads(Path(args.candidate).resolve().read_text())
+        fields = ['title', 'falsification_prediction', 'core_mechanism',
+                  'core_mechanism_steps', 'core_mechanism_reasoning']
+        view = {k: cand[k] for k in fields if k in cand}
+        if 'falsification_prediction' not in view:
+            print('ERROR: candidate lacks falsification_prediction — wrong file?', file=sys.stderr)
+            return 1
+        out_dir = Path(args.out).resolve(); out_dir.mkdir(parents=True, exist_ok=True)
+        out_path = out_dir / 'falsification_view.json'
+        out_path.write_text(json.dumps(view, indent=2, ensure_ascii=False))
+        print(f'OK falsification view written: {out_path} ({len(json.dumps(view)):,}B vs '
+              f'candidate {len(json.dumps(cand)):,}B)', file=sys.stderr)
+        return 0
+    pfv.set_defaults(func=_cmd_phase3_falsification_view)
 
     pm = sub.add_parser('phase3_merge_revisions',
                         help='Apply the Phase 3.3 patch (applied_revisions[]) to the Phase 2.2 '
@@ -1181,13 +1491,32 @@ def main():
         except ValueError as e:
             print(f'ERROR: {e}', file=sys.stderr)
             return 1
-        print(f'✅ Phase 3.3 merge complete. Wrote {final_path}', file=sys.stderr)
+        # The same merger serves two phases; label the log by the actual out-name
+        # so a 2.3 coherence merge doesn't masquerade as Phase 3.3 in run logs.
+        stage = ('Phase 2.3 coherence' if (args.out_name or '') == 'refined_candidate.json'
+                 else 'Phase 3.3')
+        print(f'✅ {stage} merge complete. Wrote {final_path}', file=sys.stderr)
         print(f'   Back-injected `final_candidate` into {args.revisions} for legacy consumers.', file=sys.stderr)
+        try:
+            rev_doc = json.loads(Path(revisions_path).read_text())
+            skipped = [r for r in (rev_doc.get('applied_revisions') or [])
+                       if isinstance(r, dict) and r.get('outcome') == 'skipped_anti_substitution']
+            if skipped:
+                print('   ⚠️  DROPPED REVISION(S) — kill-switch protection refused these audit-requested '
+                      'changes; they are NOT in the merged candidate:', file=sys.stderr)
+                for r in skipped:
+                    print(f'      - field={r.get("field")!r} issue={str(r.get("issue") or "")[:120]!r}',
+                          file=sys.stderr)
+                print('      The Phase 4 skeleton surfaces these as reviewer concerns; if the change '
+                      'was a strengthen-only falsification edit, the audit should have authorized it '
+                      'via a scope=falsification target (see critique.txt).', file=sys.stderr)
+        except Exception:
+            pass
         try:
             if json.loads(Path(revisions_path).read_text()).get('falsification_rewritten'):
                 print('   ⚠️  falsification_prediction was REWRITTEN (audited exception). '
                       'Before Phase 4, run the falsification re-audit '
-                      '(critique.txt "Falsification re-audit mode") → '
+                      '(falsification_reaudit.txt — self-contained prompt) → '
                       'phase3_critique/falsification_reaudit.json with verdict=advance.',
                       file=sys.stderr)
         except Exception:

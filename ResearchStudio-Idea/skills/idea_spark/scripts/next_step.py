@@ -21,6 +21,7 @@ Usage:
 from __future__ import annotations
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -144,12 +145,15 @@ def next_step(run_dir: Path, root: Path, query: str | None = None) -> int:
                      prompt=str(ref / 'pattern-summary-rubric.md'),
                      inputs=[str(p0 / 'lit_results.json')],
                      output=str(p0 / 'lit_table.md'),
-                     notes='Pure classification — no large reasoning model needed: route the '
-                           'isolated context to a cheaper/faster tier or lower effort if your '
-                           'harness supports it (the NOVELTY_LLM_CLASSIFY_FAST_CMD tier); '
-                           'otherwise run it isolated on the host model. Tag each paper with '
+                     notes='Pure classification — no large reasoning model needed: DEFAULT to '
+                           'a cheaper/faster model tier or lower reasoning effort for this '
+                           'step (the NOVELTY_LLM_CLASSIFY_FAST_CMD tier); fall back to the '
+                           'host model isolated only when no cheaper tier exists. Tag each paper with '
                            '1-3 of the 15 patterns + bottleneck + open_issue + retrieved_via '
-                           'per the rubric. Routing signal: none (just the file).',
+                           'per the rubric. Rows are per-paper independent, so for 40+ papers '
+                           'you MAY shard across 2-3 parallel fast-tier sub-agents (contiguous '
+                           'slices, mechanically concatenated in input order; verify total row '
+                           'count == paper count before accepting). Routing signal: none (just the file).',
                      run_dir=d)
     if not (p0 / 'fulltext_cache.json').exists():
         return _emit('lit_table.md written; full-text cache missing (Phase 1 hard-gates on it).',
@@ -167,13 +171,28 @@ def next_step(run_dir: Path, root: Path, query: str | None = None) -> int:
         # here so the Phase 1 sub-agent receives it as intake context. Precedence
         # inside Phase 1: user query > this value > factory default.
         user_compute = os.environ.get('IDEASPARK_DEFAULT_COMPUTE', '').strip()
+        ft_cache_line = str(p0 / 'fulltext_cache.json')
+        if (p0 / 'fulltext' / 'index.json').exists():
+            ft_cache_line += (' — cheaper access: read ' + str(p0 / 'fulltext' / 'index.json') +
+                              ' first (per-paper split view with tier/source_used/warning), then open '
+                              'only the candidate-pool papers\' .md files; the .json blob stays canonical')
         p1_inputs = ['the user query + intake context',
                      str(p0 / 'lit_table.md'),
-                     str(p0 / 'fulltext_cache.json'),
+                     ft_cache_line,
                      str(p0 / 'lit_results.json')]
         if user_compute:
             p1_inputs.insert(1, f'standing user compute default (IDEASPARK_DEFAULT_COMPUTE, '
                                 f'overrides factory default; user query still wins): "{user_compute}"')
+        if (d / '.bottleneck_retry_used').exists() and (d / 'attempt_2' / 'phase1').exists():
+            p1_inputs.append(
+                'BOTTLENECK-RETRY MODE (see the OPTIONAL bottleneck-retry input in '
+                'bottleneck_identify.txt) — negative anchors: '
+                + str(d / 'attempt_2' / 'phase1' / 'phase1_output.json')
+                + ' (the RETIRED bottleneck_statement + anchor; do not re-frame it), plus '
+                + str(d / 'attempt_1' / 'phase3_critique' / 'phase3_critique_output.json') + ' and '
+                + str(d / 'attempt_2' / 'phase3_critique' / 'phase3_critique_output.json')
+                + ' (read ONLY paper_pointed_threat from each — the papers that killed both '
+                  'attempts define occupied ground)')
         return _emit('Phase 0 complete.', 'Phase 1 — bottleneck identification', 'llm_subagent',
                      prompt=str(prompts / 'bottleneck_identify.txt'),
                      inputs=p1_inputs,
@@ -197,34 +216,112 @@ def next_step(run_dir: Path, root: Path, query: str | None = None) -> int:
     p2g = d / 'phase2_generate' / 'phase2_generate_output.json'
     retry_note = ''
     if (d / '.retry_used').exists() and (d / 'attempt_1').exists():
-        retry_note = (' RETRY MODE: also pass ' + str(d / 'attempt_1/phase3_critique/phase3_critique_output.json') +
-                      ' and ' + str(d / 'attempt_1/phase2_select/phase2_select_output.json') +
-                      ' as negative constraints (see the OPTIONAL retry input in ideate_select.txt).')
+        if (d / '.bottleneck_retry_used').exists() and (d / 'attempt_2').exists():
+            # Post bottleneck re-diagnosis: the archived SELECTIONS belong to the
+            # retired bottleneck (different gaps — context only, not binding), but
+            # both attempts' threat papers stay hard negative constraints.
+            retry_note = (' RETRY MODE (new bottleneck, ONE candidate attempt): also pass '
+                          + str(d / 'attempt_1/phase3_critique/phase3_critique_output.json') + ' and '
+                          + str(d / 'attempt_2/phase3_critique/phase3_critique_output.json')
+                          + ' as negative constraints — their paper_pointed_threat papers must not '
+                            'be re-collided with. The archived phase2 selections belong to the '
+                            'RETIRED bottleneck: context only, not binding.')
+        else:
+            retry_note = (' RETRY MODE: also pass ' + str(d / 'attempt_1/phase3_critique/phase3_critique_output.json') +
+                          ' and ' + str(d / 'attempt_1/phase2_select/phase2_select_output.json') +
+                          ' as negative constraints (see the OPTIONAL retry input in ideate_select.txt).')
+    # Cross-run mechanism dedup (soft): sibling run dirs under the same parent are
+    # scanned for their canonical candidates, whose titles + signature terms ride
+    # along as SOFT negative anchors — adjacent-direction runs otherwise silently
+    # re-invent the same mechanism family (observed live: two runs converged on the
+    # same held-out-Shapley family). Read-only, capped at the 5 most recent, and
+    # soft by design (a direction may legitimately demand a related mechanism —
+    # then the delta must be explicit). Disable with IDEASPARK_CROSS_RUN_DEDUP=off.
+    crossrun_line = None
+    if os.environ.get('IDEASPARK_CROSS_RUN_DEDUP', '').lower() not in ('off', '0', 'false'):
+        try:
+            sib_entries = []
+            sibs = [s for s in d.parent.iterdir()
+                    if s.is_dir() and s != d and (s / 'phase0').exists()]
+            for sib in sorted(sibs, key=lambda p: -p.stat().st_mtime):
+                cand = None
+                for rel in ('phase3_revise/final_candidate.json',
+                            'phase2_coherence/refined_candidate.json',
+                            'phase2_generate/phase2_generate_output.json'):
+                    if (sib / rel).exists():
+                        cand = _read_json(sib / rel) or {}
+                        break
+                if not cand or not cand.get('title'):
+                    continue
+                terms = ', '.join(str(t) for t in (cand.get('signature_terms') or [])[:4])
+                sib_entries.append(f'[{sib.name}] "{cand.get("title")}"'
+                                   + (f' ({terms})' if terms else ''))
+                if len(sib_entries) >= 5:
+                    break
+            if sib_entries:
+                crossrun_line = ('CROSS-RUN DEDUP (soft negative anchors — see the OPTIONAL '
+                                 'cross-run input in ideate_select.txt): recent sibling runs '
+                                 'already produced these mechanisms; do NOT re-propose the same '
+                                 'mechanism family unless this direction demands it AND the '
+                                 'delta is stated explicitly: ' + ' | '.join(sib_entries))
+        except Exception:
+            pass
     if not p2s.exists() or not p2g.exists():
+        # Slim view: ideate_generate.txt already forbids reading the full lit_results
+        # dump (closest_adjacent entries only) — materializing the slice up front turns
+        # that instruction into a physical guarantee instead of sub-agent discipline.
+        prep_cmd = skill_cd + f'phase2_prepare --dir "{d}"'
+        slim = d / 'phase2_generate' / 'closest_abstracts.json'
+        slim_line = (str(slim) + ' (pre-filtered closest_adjacent slice, materialized by the RUN '
+                     'command; if it is missing or phase2_prepare WARNed about unmatched ids, fall '
+                     'back to filtering ' + str(p0 / 'lit_results.json') + ' yourself)')
+        # Thin-anchor sentinel: a crowded lane with very few closest_adjacent entries
+        # usually means Phase 1 under-anchored — warn, never auto-pad (forcing a count
+        # band would dilute residues with noise anchors or truncate real ones).
+        sentinel = ''
+        try:
+            ca_n = len((p1_doc.get('closest_adjacent') or []))
+            rows = [ln for ln in (p0 / 'lit_table.md').read_text().splitlines()
+                    if ln.strip().startswith('|') and 'paper_id' not in ln and '---' not in ln]
+            on_topic = sum(1 for ln in rows if 'outside_taxonomy' not in ln)
+            if on_topic >= 20 and ca_n < 3:
+                sentinel = (f' WARNING: only {ca_n} closest_adjacent entries against ~{on_topic} '
+                            'on-topic papers — thin anchor grounding in a crowded lane; consider '
+                            're-examining Phase 1 anchor choices before generating.')
+        except Exception:
+            pass
         if p2s.exists():  # only 2.2 left
             return _emit('Phase 2.1 selection done; candidate not yet generated.',
                          'Phase 2.2 — sub-pattern picking + candidate generation', 'llm_subagent',
                          prompt=str(prompts / 'ideate_generate.txt'),
-                         inputs=[str(p2s), str(p1), str(p0 / 'lit_results.json'),
-                                 str(ref / 'ideation-sub-patterns') + '/<picked C##>.md'],
+                         run=[prep_cmd],
+                         inputs=[str(p2s), str(p1), slim_line,
+                                 str(ref / 'ideation-sub-patterns') + '/<picked C##>.md']
+                                + ([crossrun_line] if crossrun_line else []),
                          output=str(p2g),
-                         notes='Immediately after: `next` runs the citation gate for you.' + retry_note,
+                         notes='Run the RUN command first (deterministic, materializes the slim '
+                               'input), then the sub-agent. Immediately after: `next` runs the '
+                               'citation gate for you.' + sentinel + retry_note,
                          run_dir=d)
         return _emit('Phase 1 complete (state=proceed).',
                      'Phase 2.1 + 2.2 — ONE sub-agent, TWO output files', 'llm_subagent',
                      prompt=str(prompts / 'ideate_select.txt') + ' THEN ' + str(prompts / 'ideate_generate.txt'),
+                     run=[prep_cmd],
                      inputs=[str(p1),
                              str(ref / 'ideation-patterns' / 'overview.md'),
                              str(ref / 'ideation-patterns' / 'companion-combos.md'),
                              str(p0 / 'lit_table.md'),
-                             str(p0 / 'lit_results.json'),
-                             str(ref / 'ideation-sub-patterns' / 'overview.md') + ' (+ picked C##.md cards)'],
+                             slim_line,
+                             str(ref / 'ideation-sub-patterns' / 'overview.md') + ' (+ picked C##.md cards)']
+                            + ([crossrun_line] if crossrun_line else []),
                      output=f'{p2s} then {p2g}',
-                     notes='Both phases are generation-side (no adversarial separation needed '
-                           'between them — that separation is for 3.2/3.3 and 4.fill/4.1.5), so '
-                           'one sub-agent runs 2.1, Writes its output, then continues into 2.2 '
-                           'and Writes the candidate. Saves a sub-agent spin-up + duplicate '
-                           'input reads. Routing signal: none.' + retry_note,
+                     notes='Run the RUN command first (deterministic, materializes the slim input '
+                           'for 2.2), then the sub-agent. Both phases are generation-side (no '
+                           'adversarial separation needed between them — that separation is for '
+                           '3.2/3.3 and 4.fill/4.1.5), so one sub-agent runs 2.1, Writes its '
+                           'output, then continues into 2.2 and Writes the candidate. Saves a '
+                           'sub-agent spin-up + duplicate input reads. Routing signal: none.'
+                           + sentinel + retry_note,
                      run_dir=d)
 
     # ---- deterministic citation gate (run inline — pure) ----------------------
@@ -251,18 +348,36 @@ def next_step(run_dir: Path, root: Path, query: str | None = None) -> int:
     p2c_dir = d / 'phase2_coherence'
     p2c = p2c_dir / 'phase2_coherence_output.json'
     refined = p2c_dir / 'refined_candidate.json'
-    # Grandfather clause: a run that already has collision results predates the
-    # coherence gate (or deliberately skipped it) — do NOT demand 2.3
+    # Grandfather clause: a run whose AUDIT already consumed a candidate predates
+    # the coherence gate (or deliberately skipped it) — do NOT demand 2.3
     # retroactively; a refined candidate appearing AFTER the audit consumed the
-    # raw one would corrupt the chain. Legacy runs continue with canonical = 2.2.
-    legacy_past_gate = (d / 'phase3_collision' / 'collision_hits.json').exists()
+    # raw one would corrupt the chain. Collision hits alone do NOT trigger this:
+    # collision reads only signature/alias terms, so it legitimately runs in
+    # PARALLEL with 2.3 (the .collision_terms.json sidecar + the mismatch check
+    # below make that safe). Legacy runs continue with canonical = 2.2.
+    legacy_past_gate = (d / 'phase3_critique' / 'phase3_critique_output.json').exists()
     if not p2c.exists() and not legacy_past_gate:
+        # Collision (3.1) reads ONLY signature/alias terms, which 2.3 patches
+        # almost never touch — so it can start NOW, in parallel with the gate.
+        # If a patch does change the terms, the sidecar mismatch check below
+        # re-issues collision; nothing is silently stale.
+        par_pending = not (d / 'phase3_collision' / 'collision_hits.json').exists()
+        par_run = ([skill_cd + f'phase3_collision --idea-json "{p2g}" '
+                    f'--out "{d / "phase3_collision"}/"'] if par_pending else None)
         return _emit('Citation gate passed; coherence gate not yet run.',
-                     'Phase 2.3 — coherence gate (dry-run trace of the algorithm)', 'llm_subagent',
+                     'Phase 2.3 — coherence gate (dry-run trace)'
+                     + (' — AND launch 3.1 collision in parallel' if par_pending else ''),
+                     'llm_subagent',
                      prompt=str(prompts / 'coherence_trace.txt'),
                      inputs=[str(p2g), str(p2s)],
                      output=str(p2c),
-                     notes='MUST be a FRESH context — never the Phase 2.1+2.2 agent (the context '
+                     run=par_run,
+                     notes=(('TWO independent actions: (1) launch the RUN command in the '
+                             'BACKGROUND first — deterministic retrieval, no LLM, reads only '
+                             'signature/alias terms (if a 2.3 patch changes them, `next` '
+                             'detects the mismatch and re-issues collision); (2) run the 2.3 '
+                             'sub-agent. ') if par_pending else '')
+                           + 'MUST be a FRESH context — never the Phase 2.1+2.2 agent (the context '
                            'that wrote a logic bug rubber-stamps it). Routing signal to return: '
                            '`verdict` (pass | patched) + any `unrepaired[]` blocking findings.',
                      run_dir=d)
@@ -292,6 +407,28 @@ def next_step(run_dir: Path, root: Path, query: str | None = None) -> int:
 
     # ---- Phase 3.1 collision ---------------------------------------------------
     p3c_dir = d / 'phase3_collision'
+    # Parallel-collision consistency: hits retrieved (possibly alongside 2.3)
+    # with terms a coherence patch has since changed are stale — re-run on the
+    # canonical candidate. Skipped for legacy runs (audit already consumed the
+    # chain) and for pre-sidecar runs (nothing to compare against).
+    terms_sidecar = p3c_dir / '.collision_terms.json'
+    if ((p3c_dir / 'collision_hits.json').exists() and terms_sidecar.exists()
+            and not legacy_past_gate):
+        _used = _read_json(terms_sidecar) or {}
+        _cand = _read_json(canonical) or {}
+        def _tset(v):
+            return sorted(t for t in (v or []) if t)
+        if (_tset(_used.get('signature_terms')) != _tset(_cand.get('signature_terms'))
+                or _tset(_used.get('alias_terms')) != _tset(_cand.get('alias_terms'))):
+            return _emit('Collision hits were retrieved with terms a 2.3 patch has since changed.',
+                         'Re-run Phase 3.1 collision with the repaired terms', 'bash',
+                         run=[skill_cd + f'phase3_collision --idea-json "{canonical}" '
+                              f'--out "{p3c_dir}/"'],
+                         notes='The parallel collision launch used pre-repair terms; the '
+                               'coherence patch changed signature/alias terms, so the hits '
+                               'are stale. Re-running overwrites collision_hits.json and '
+                               'its sidecar.',
+                         run_dir=d)
     if (p3c_dir / '.signature_extraction_pending').exists() and not (p3c_dir / 'collision_hits.json').exists():
         return _emit('Phase 3.1 stalled: candidate lacks signature_terms[].',
                      'Fill signature_terms and re-invoke collision', 'llm_subagent',
@@ -315,15 +452,26 @@ def next_step(run_dir: Path, root: Path, query: str | None = None) -> int:
 
     # ---- Phase 3.2 audit --------------------------------------------------------
     p3q = d / 'phase3_critique' / 'phase3_critique_output.json'
+    # Blocking unrepaired findings from the coherence gate reach the audit as
+    # executed evidence (critique.txt input rules). Preferred transport: the
+    # self-contained blocking_findings.json the 2.3 gate writes; inline text is
+    # the degraded fallback for pre-handoff runs.
+    blocking = [u for u in (p2c_doc.get('unrepaired') or [])
+                if isinstance(u, dict) and u.get('severity') == 'blocking']
+    bf_file = d / 'phase2_coherence' / 'blocking_findings.json'
     if not p3q.exists():
         audit_inputs = [str(canonical), str(p2s), str(p0 / 'lit_table.md')]
-        # Per critique.txt: blocking unrepaired findings from the coherence gate are
-        # listed as an extra input (the audit stays blind to the full 2.3 report).
-        blocking = [u for u in (p2c_doc.get('unrepaired') or [])
-                    if isinstance(u, dict) and u.get('severity') == 'blocking']
-        if blocking:
-            audit_inputs.append('2.3 unrepaired BLOCKING findings (verbatim): '
-                                + ' | '.join(str(u.get('finding', ''))[:200] for u in blocking))
+        disposition_note = (' The report MUST contain blocking_findings_disposition[] with one '
+                            'entry per blocking finding (refute only via a concrete '
+                            'modeling/arithmetic flaw); while any entry is upheld, advance is '
+                            'forbidden.')
+        if blocking and bf_file.exists():
+            audit_inputs.append(str(bf_file) + ' (2.3 blocking findings — self-contained executed-'
+                                'evidence slice; disposition each per critique.txt)')
+        elif blocking:
+            audit_inputs.append('2.3 unrepaired BLOCKING findings (verbatim, inline fallback — '
+                                'blocking_findings.json absent): '
+                                + ' | '.join(str(u.get('finding', ''))[:400] for u in blocking))
         return _emit('Collision hits retrieved.', 'Phase 3.2 — audit-and-verdict (5 checks)', 'llm_subagent',
                      prompt=str(prompts / 'critique.txt'),
                      inputs=audit_inputs + [
@@ -332,10 +480,121 @@ def next_step(run_dir: Path, root: Path, query: str | None = None) -> int:
                              str(ref / 'ideation-sub-patterns') + '/<each cited C##>.md'],
                      output=str(p3q),
                      notes='Routing signal to return: `verdict` (advance | revise | abandon) + '
-                           'verdict_rationale.',
+                           'verdict_rationale.' + (disposition_note if blocking else ''),
                      run_dir=d)
     p3q_doc = _read_json(p3q) or {}
     verdict = p3q_doc.get('verdict')
+
+    # ---- deterministic guard: executed blocking evidence must be dispositioned ----
+    # An audit that never saw (or silently ignored) the 2.3 gate's blocking
+    # findings can emit a false advance — this exact failure occurred in a live
+    # run (host truncated the emit; audit judged without the evidence and said
+    # advance against an executed refutation). The guard is deterministic: it
+    # checks presence/coverage of blocking_findings_disposition[], not quality.
+    if blocking and verdict in ('advance', 'revise'):
+        dispositions = [dd for dd in (p3q_doc.get('blocking_findings_disposition') or [])
+                        if isinstance(dd, dict)]
+        upheld = [dd for dd in dispositions if dd.get('status') == 'upheld']
+        refuted = [dd for dd in dispositions if dd.get('status') == 'refuted']
+        recheck_p = d / 'phase3_critique' / 'refutation_recheck.json'
+        recheck_doc = _read_json(recheck_p) or {}
+        # A recheck verdict only counts against the CURRENT report's refuted
+        # dispositions (prefix-match on finding_ref) — otherwise a stale
+        # recheck file from a superseded report would bounce a clean re-audit
+        # forever (or a fresh refutation would coast on an old validation).
+        _refuted_refs = [str(dd.get('finding_ref', ''))[:40] for dd in refuted]
+        invalid_refutations = [
+            r for r in (recheck_doc.get('rechecks') or [])
+            if isinstance(r, dict) and r.get('refutation_valid') is False
+            and any(ref and (str(r.get('finding_ref', ''))[:40].startswith(ref[:20])
+                             or ref.startswith(str(r.get('finding_ref', ''))[:20]))
+                    for ref in _refuted_refs)]
+        # Quality backstop on the ONE path where the presence-only guard is
+        # gameable: a `refuted` disposition dismisses executed evidence, so it
+        # gets a bounded second opinion (fresh call, judges ONLY whether the
+        # stated basis names a concrete modeling/arithmetic flaw). Upheld
+        # dispositions need no recheck — they already concede the evidence.
+        # Ordering: coverage first (an incomplete report is regenerated whole,
+        # rechecking it would be wasted), then recheck, then verdict consistency.
+        if len(dispositions) >= len(blocking) and refuted and not recheck_p.exists():
+            return _emit(f'Phase 3.2 verdict = {verdict} with {len(refuted)} blocking finding(s) '
+                         'marked REFUTED — a refutation of executed evidence requires a bounded '
+                         're-check before the verdict is trusted.',
+                         'Refutation re-check (single bounded call)', 'llm_subagent',
+                         prompt=str(prompts / 'refutation_recheck.txt'),
+                         inputs=[(str(bf_file) if bf_file.exists() else
+                                  '2.3 blocking findings (verbatim): '
+                                  + ' | '.join(str(u.get('finding', ''))[:400] for u in blocking)),
+                                 str(p3q) + ' (read ONLY blocking_findings_disposition[])',
+                                 str(canonical) + ' (ONLY to verify quoted step text)'],
+                         output=str(recheck_p),
+                         notes='Routing signal: per-finding `refutation_valid` (true|false). '
+                               'When in doubt, the executed finding stands (refutation_valid='
+                               'false). This call judges the refutation, not the candidate.',
+                         run_dir=d)
+        if refuted and invalid_refutations:
+            return _emit(f'Phase 3.2 verdict = {verdict}, but the refutation re-check judged '
+                         f'{len(invalid_refutations)} refutation(s) INVALID — the underlying '
+                         'blocking finding(s) stand un-confronted. The verdict is NOT trusted.',
+                         'Re-run Phase 3.2 (overwrite the report) — invalidly-refuted findings '
+                         'must be treated as upheld', 'llm_subagent',
+                         prompt=str(prompts / 'critique.txt'),
+                         inputs=[str(canonical), str(p2s), str(p0 / 'lit_table.md'),
+                                 (str(bf_file) if bf_file.exists() else
+                                  '2.3 blocking findings (verbatim): '
+                                  + ' | '.join(str(u.get('finding', ''))[:400] for u in blocking)),
+                                 str(recheck_p) + ' (the re-check verdicts — these refutations '
+                                 'are invalid and must not be repeated)',
+                                 str(p3c_dir / 'collision_hits.json'),
+                                 str(ref / 'anti-patterns.md'),
+                                 str(ref / 'ideation-sub-patterns') + '/<each cited C##>.md'],
+                         output=str(p3q),
+                         notes='Regenerate the FULL audit. The re-checked findings count as '
+                               'UPHELD: verdict is capped at revise (targets confronting each) '
+                               'or abandon (redesign → internal retry). Delete/overwrite the '
+                               'stale refutation_recheck.json only if new dispositions differ.',
+                         run_dir=d)
+        if len(dispositions) < len(blocking):
+            return _emit(f'Phase 3.2 verdict = {verdict}, but the 2.3 coherence gate holds '
+                         f'{len(blocking)} BLOCKING executed finding(s) and the audit report '
+                         f'dispositioned only {len(dispositions)} — the evidence was not weighed. '
+                         'The verdict is NOT trusted.',
+                         'Re-run Phase 3.2 WITH the blocking findings (overwrite the report)',
+                         'llm_subagent',
+                         prompt=str(prompts / 'critique.txt'),
+                         inputs=[str(canonical), str(p2s), str(p0 / 'lit_table.md'),
+                                 (str(bf_file) if bf_file.exists() else
+                                  '2.3 blocking findings (verbatim): '
+                                  + ' | '.join(str(u.get('finding', ''))[:400] for u in blocking)),
+                                 str(p3c_dir / 'collision_hits.json'),
+                                 str(ref / 'anti-patterns.md'),
+                                 str(ref / 'ideation-sub-patterns') + '/<each cited C##>.md'],
+                         output=str(p3q),
+                         notes='Regenerate the FULL audit including blocking_findings_disposition[] '
+                               '(one entry per finding; refute only via a concrete modeling/'
+                               'arithmetic flaw — executed evidence outranks unexecuted reasoning). '
+                               'While any finding is upheld, advance is forbidden: route revise '
+                               '(tactical confrontation) or abandon (redesign → internal retry).',
+                         run_dir=d)
+        if verdict == 'advance' and upheld:
+            return _emit('Phase 3.2 verdict = advance, but the audit itself UPHELD '
+                         f'{len(upheld)} blocking executed finding(s) — advance is forbidden by '
+                         'critique.txt while an upheld blocking finding stands. Inconsistent report.',
+                         'Re-run Phase 3.2 (overwrite the report) — verdict must be revise or abandon',
+                         'llm_subagent',
+                         prompt=str(prompts / 'critique.txt'),
+                         inputs=[str(canonical), str(p2s), str(p0 / 'lit_table.md'),
+                                 (str(bf_file) if bf_file.exists() else
+                                  '2.3 blocking findings (verbatim): '
+                                  + ' | '.join(str(u.get('finding', ''))[:400] for u in blocking)),
+                                 str(p3c_dir / 'collision_hits.json'),
+                                 str(ref / 'anti-patterns.md'),
+                                 str(ref / 'ideation-sub-patterns') + '/<each cited C##>.md'],
+                         output=str(p3q),
+                         notes='Keep the five checks; fix the verdict layer: upheld blocking '
+                               'findings cap the verdict at revise (fix_direction confronts the '
+                               'obstacle) or abandon (redesign → internal retry).',
+                         run_dir=d)
 
     # ---- abandon → bounded internal retry ---------------------------------------
     if verdict == 'abandon':
@@ -351,16 +610,60 @@ def next_step(run_dir: Path, root: Path, query: str | None = None) -> int:
                          'bash',
                          run=[f'mkdir -p "{arch}" && mv {mv_dirs} "{arch}/" && touch "{d}/.retry_used"'],
                          notes='Then re-run `next` — it will route to Phase 2.1+2.2 in retry mode '
-                               '(the archived audit + selection become negative constraints per '
-                               'ideate_select.txt\'s OPTIONAL retry input). Phase 0/1 artifacts are '
-                               'reused as-is.',
+                               '(the archived audit + selection become negative constraints, and any '
+                               'blocking obstacle findings become POSITIVE directives — the new '
+                               'mechanism must confront them — per ideate_select.txt\'s OPTIONAL '
+                               'retry input). Phase 0/1 artifacts are reused as-is.',
                          run_dir=d)
-        return _emit('Phase 3.2 verdict = abandon on the RETRY attempt — retry budget (1) exhausted.',
+        # ---- second abandon: failure attribution decides bottleneck retry vs terminal ----
+        # Mechanism-level deaths (recipe bypassed / reject lesson / obstacle holes)
+        # indict GENERATION — a third mechanism roll has diminishing returns, so
+        # terminate with diagnosis. But when BOTH independently-generated candidates
+        # died by exact-mechanism subsumption (paper_pointed_threat.addressable_via
+        # == 'unaddressable'), the occupied space indicts the BOTTLENECK FRAMING
+        # itself: one Phase 1 re-diagnosis on the same corpus (zero retrieval cost)
+        # is cheaper than bouncing the run to the user, and Phase 1's
+        # do_not_generate exit keeps it honest. Budget: ONE bottleneck retry, and
+        # the new bottleneck gets ONE candidate attempt (.retry_used stays set) —
+        # whole-run worst case is 3 gauntlet cycles.
+        a1q_doc = _read_json(d / 'attempt_1' / 'phase3_critique' /
+                             'phase3_critique_output.json') or {}
+
+        def _threat_killed(doc):
+            return (doc.get('paper_pointed_threat') or {}).get('addressable_via') == 'unaddressable'
+
+        bottleneck_indicted = _threat_killed(p3q_doc) and _threat_killed(a1q_doc)
+        if bottleneck_indicted and not (d / '.bottleneck_retry_used').exists():
+            arch2 = d / 'attempt_2'
+            mv2 = ' '.join(f'"{d / n}"' for n in
+                           ('phase1', 'phase2_select', 'phase2_generate', 'phase2_coherence',
+                            'phase3_collision', 'phase3_critique', 'phase3_revise') if (d / n).exists())
+            return _emit('Second abandon, and BOTH attempts died by exact-mechanism subsumption '
+                         '(paper_pointed_threat.addressable_via = unaddressable) — the space around '
+                         'this bottleneck framing is occupied. ONE bottleneck-level retry available.',
+                         'Archive attempt 2 (incl. phase1) and re-diagnose the bottleneck', 'bash',
+                         run=[f'mkdir -p "{arch2}" && mv {mv2} "{arch2}/" && '
+                              f'touch "{d}/.bottleneck_retry_used"'],
+                         notes='Then re-run `next` — it routes to Phase 1 in BOTTLENECK-RETRY MODE '
+                               '(the retired bottleneck_statement + both attempts\' threat papers '
+                               'become negative anchors per bottleneck_identify.txt\'s OPTIONAL '
+                               'retry input; do_not_generate remains a legitimate, preferred '
+                               'outcome over a blander re-framing). The new bottleneck gets ONE '
+                               'candidate attempt. Phase 0 artifacts are reused as-is.',
+                         run_dir=d)
+        fail_inputs = [str(p3q),
+                       str(d / 'attempt_1' / 'phase3_critique' / 'phase3_critique_output.json')]
+        if (d / 'attempt_2').exists():
+            fail_inputs.append(str(d / 'attempt_2' / 'phase3_critique' /
+                                   'phase3_critique_output.json'))
+        why_terminal = ('bottleneck retry already used'
+                        if (d / '.bottleneck_retry_used').exists()
+                        else 'mechanism-level deaths do not indict the bottleneck')
+        return _emit(f'Phase 3.2 verdict = abandon — retry budget exhausted ({why_terminal}).',
                      'Write phase_3_failed.md', 'llm_subagent',
-                     inputs=[str(p3q),
-                             str(d / 'attempt_1' / 'phase3_critique' / 'phase3_critique_output.json')],
+                     inputs=fail_inputs,
                      output=str(d / 'phase_3_failed.md'),
-                     notes='Include BOTH attempts\' verdict_rationale + triggering checks + the '
+                     notes='Include EVERY attempt\'s verdict_rationale + triggering checks + the '
                            'user-side options (drop direction / change framing / re-run with a '
                            'different direction). That file is the run\'s final output.',
                      run_dir=d)
@@ -380,11 +683,17 @@ def next_step(run_dir: Path, root: Path, query: str | None = None) -> int:
             fals_note = (' One revision_target has scope=falsification — emit ONE '
                          'rewrite_falsification entry for it (same experiment/metric/claim, '
                          'structure repaired).' if has_fals else '')
+            brief = p3r_dir / 'revise_brief.json'
             return _emit('Phase 3.2 verdict = revise.', 'Phase 3.3 — emit the revision patch', 'llm_subagent',
                          prompt=str(prompts / 'revise.txt'),
-                         inputs=[str(canonical), str(p2s), str(p3q)],
+                         run=[skill_cd + f'phase3_revise_brief --critique "{p3q}" --out "{p3r_dir}/"'],
+                         inputs=[str(canonical), str(p2s),
+                                 str(brief) + ' (revision brief, materialized by the RUN command; '
+                                 'falls back to ' + str(p3q) + ' if missing — the brief\'s _brief_note '
+                                 'says when to consult the full report)'],
                          output=str(p3r),
-                         notes='Patch-only: applied_revisions[] — never echo the candidate.' + fals_note,
+                         notes='Run the RUN command first (deterministic). Patch-only: '
+                               'applied_revisions[] — never echo the candidate.' + fals_note,
                          run_dir=d)
         if not merged:
             return _emit('Revision patch written; merger not yet run.',
@@ -397,14 +706,20 @@ def next_step(run_dir: Path, root: Path, query: str | None = None) -> int:
         reaudit = d / 'phase3_critique' / 'falsification_reaudit.json'
         if p3r_doc.get('falsification_rewritten'):
             if not reaudit.exists():
+                fview = d / 'phase3_critique' / 'falsification_view.json'
                 return _emit('falsification_prediction was rewritten (audited exception) — '
                              're-audit REQUIRED before Phase 4.',
                              'Falsification re-audit (single-check)', 'llm_subagent',
-                             prompt=str(prompts / 'critique.txt') + ' — section "Falsification re-audit mode" ONLY',
-                             inputs=[str(final_candidate)],
+                             prompt=str(prompts / 'falsification_reaudit.txt'),
+                             run=[skill_cd + 'phase3_falsification_view '
+                                  f'--candidate "{final_candidate}" --out "{d / "phase3_critique"}/"'],
+                             inputs=[str(fview) + ' (falsification slice, materialized by the RUN '
+                                     'command; falls back to ' + str(final_candidate) +
+                                     ' if missing — then read ONLY the fields the prompt names)'],
                              output=str(reaudit),
-                             notes='Routing signal: `verdict` (advance | abandon). Exactly one '
-                                   'rewrite attempt per run — deficient again means abandon.',
+                             notes='Run the RUN command first (deterministic). Routing signal: '
+                                   '`verdict` (advance | abandon). Exactly one rewrite attempt '
+                                   'per run — deficient again means abandon.',
                              run_dir=d)
             re_doc = _read_json(reaudit) or {}
             if re_doc.get('verdict') == 'abandon':
@@ -438,24 +753,87 @@ def next_step(run_dir: Path, root: Path, query: str | None = None) -> int:
         return _emit(f'Gauntlet cleared ({verdict} path).', 'Phase 4 skeleton (deterministic)', 'bash',
                      run=[cmd], run_dir=d)
     if not expansion_done and not (p4_dir / 'fill_map.json').exists():
-        return _emit('Skeleton built.', 'Phase 4.fill — author the prose TODOs', 'llm_subagent',
+        return _emit('Skeleton built.', 'Phase 4.fill — author the TECHNICAL prose TODOs', 'llm_subagent',
                      prompt=str(prompts / 'expand.txt'),
                      inputs=[str(p4_dir / 'phase4_skeleton.json')],
                      output=str(p4_dir / 'fill_map.json'),
                      notes='Flat {TODO-path: prose} map ONLY — the assembler refuses kill-switch '
-                           'roots. This is the most timeout-prone call: NEVER run it in the '
-                           'parent context.',
+                           'roots. SKIP the derive-owned paths (title_zh + all plain_* — see the '
+                           'exclusion list in expand.txt): a separate fast-tier derive step authors '
+                           'them from your finished prose. This is the most timeout-prone call: '
+                           'NEVER run it in the parent context.',
                      run_dir=d)
     if not expansion_done:
-        return _emit('fill_map written.', 'Phase 4 assemble (deterministic)', 'bash',
+        return _emit('fill_map written.', 'Phase 4 assemble — partial (deterministic)', 'bash',
                      run=[skill_cd + 'phase4_assemble '
                           f'--skeleton "{p4_dir / "phase4_skeleton.json"}" '
                           f'--fill-map "{p4_dir / "fill_map.json"}" --out "{p4_dir}/"'],
+                     notes='The WARN about remaining TODO placeholders is EXPECTED here — the '
+                           'derive-owned plain fields are still placeholders; the derive step '
+                           'fills them next and a final assemble merges both maps.',
+                     run_dir=d)
+    # ---- derive stage (plain-register fields; fast-tier) -----------------------------
+    expansion_path = p4_dir / 'phase4_expansion.json'
+    remaining_todos = re.findall(r'<TODO\[([^\]]+)\]', expansion_path.read_text())
+    if remaining_todos:
+        derive_map = p4_dir / 'derive_map.json'
+        fill_keys = set((_read_json(p4_dir / 'fill_map.json') or {}).keys())
+        derive_keys = set((_read_json(derive_map) or {}).keys()) if derive_map.exists() else set()
+        missing = [p for p in remaining_todos if p not in fill_keys | derive_keys]
+        # A missing TECHNICAL path is a fill gap, never derive's to author — route it back
+        # to the fill contract instead of asking the derive step to invent technical prose.
+        missing_tech = [p for p in missing if p != 'title_zh' and not p.startswith('plain_')]
+        if missing_tech:
+            return _emit('fill_map is missing technical TODO paths.',
+                         'Fix fill_map — author the missing technical paths', 'llm_subagent',
+                         prompt=str(prompts / 'expand.txt'),
+                         inputs=[str(p4_dir / 'phase4_skeleton.json'),
+                                 str(p4_dir / 'fill_map.json')],
+                         output=str(p4_dir / 'fill_map.json') + ' (edited in place — add the missing keys)',
+                         notes='Missing: ' + ', '.join(missing_tech[:8]) +
+                               '. Add ONLY these keys to the existing fill_map (derive-owned '
+                               'paths stay excluded), then re-run `next` — it will re-assemble.',
+                         run_dir=d)
+        missing = [p for p in missing if p not in missing_tech]
+        if not derive_map.exists() or missing:
+            miss_note = ''
+            if derive_map.exists() and missing:
+                miss_note = (' REGENERATION: the existing derive_map does not cover ' +
+                             ', '.join(missing[:6]) + ' — rewrite the FULL map including them.')
+            return _emit('Partial expansion assembled; plain-register fields pending.',
+                         'Phase 4.derive — plain-register derivation (fast-tier)', 'llm_subagent',
+                         prompt=str(prompts / 'derive_plain.txt'),
+                         inputs=[str(expansion_path)],
+                         output=str(derive_map),
+                         notes='Mechanical register derivation + translation, NO new facts — '
+                               'route to a cheaper/faster model tier BY DEFAULT (the '
+                               'NOVELTY_LLM_CLASSIFY_FAST_CMD tier); fall back to the host model '
+                               'in an isolated context only when no cheaper tier exists (the small '
+                               'input still keeps it cheap). Routing signal: none (just the file).'
+                               + miss_note,
+                         run_dir=d)
+        return _emit('derive_map written; expansion still partial.',
+                     'Phase 4 assemble — final merge + method view (deterministic)', 'bash',
+                     run=[skill_cd + 'phase4_assemble '
+                          f'--skeleton "{p4_dir / "phase4_skeleton.json"}" '
+                          f'--fill-map "{p4_dir / "fill_map.json"}" '
+                          f'--fill-map "{derive_map}" --out "{p4_dir}/"',
+                          skill_cd + 'phase4_method_view '
+                          f'--expansion "{expansion_path}" --out "{p4_dir}/"'],
                      run_dir=d)
     if not (p4_dir / 'phase4_implementability.json').exists():
+        view_path = p4_dir / 'method_view.json'
+        if (not view_path.exists()
+                or view_path.stat().st_mtime < expansion_path.stat().st_mtime):
+            return _emit('Expansion complete; method view missing or stale.',
+                         'Phase 4 method-view extract (deterministic)', 'bash',
+                         run=[skill_cd + 'phase4_method_view '
+                              f'--expansion "{expansion_path}" --out "{p4_dir}/"'],
+                         run_dir=d)
         return _emit('Expansion assembled.', 'Phase 4.1.5 — implementability audit', 'llm_subagent',
                      prompt=str(prompts / 'implementability_audit.txt'),
-                     inputs=[str(p4_dir / 'phase4_expansion.json')],
+                     inputs=[str(view_path) + ' (method-only slice; fall back to '
+                             + str(expansion_path) + ' only if the view is missing)'],
                      output=str(p4_dir / 'phase4_implementability.json'),
                      notes='Fresh skeptical-engineer persona (separate call from 4.fill). '
                            'Compute-agnostic by design.',

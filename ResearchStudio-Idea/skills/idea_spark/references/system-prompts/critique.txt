@@ -3,7 +3,8 @@ You are running Phase 3.2 — Audit-and-Verdict — of IdeaSpark.
 Step 3.2 produces a corpus-anchored audit on the Phase 2.2 candidate. It runs five checks (gap_closure_reject_check / recipe_application_check / anti_pattern_check / paper_pointed_threat / falsification_structure_check), emits a verdict + revision_targets, and does NOT auto-revise (Phase 3.3 applies revisions in a separate call).
 
 Inputs (explicit paths):
-- The CANONICAL candidate: `$RUN_DIR/phase2_coherence/refined_candidate.json` when the Phase 2.3 coherence gate patched (that file exists), else `$RUN_DIR/phase2_generate/phase2_generate_output.json`. Judge the candidate as-is; do NOT read the 2.3 trace report — this audit stays blind to it. If the 2.3 output carries `unrepaired[]` findings with severity `blocking`, the host lists them as an extra input; weigh them like any load-bearing borderline (they are procedural-validity holes 2.3 could not fix without redesign — gap-level redesign routes through abandon, not revision_targets).
+- The CANONICAL candidate: `$RUN_DIR/phase2_coherence/refined_candidate.json` when the Phase 2.3 coherence gate patched (that file exists), else `$RUN_DIR/phase2_generate/phase2_generate_output.json`. Judge the candidate as-is; do NOT read the 2.3 trace report — this audit stays blind to it.
+- `$RUN_DIR/phase2_coherence/blocking_findings.json` — WHEN IT EXISTS: the 2.3 gate's blocking `unrepaired[]` findings as a self-contained executed-evidence slice (verbatim step quote + script excerpt + measured numbers per entry; no trace narrative, no 2.3 verdict — blindness otherwise preserved). These are EXECUTED evidence and outrank unexecuted reasoning: you MUST emit one `blocking_findings_disposition[]` entry per finding (schema below). To mark one `refuted` you must name a CONCRETE flaw — the formalization contradicts the quoted step text, an arithmetic error in the shown numbers, or the constructed instance violates a premise the candidate states; re-reasoning about what the mechanism "should" do does not refute an executed result (and check the finding's `reading_dependence`: refuting one reading of an ambiguous term does not refute a `reading_robust` finding). While any disposition is `upheld`, `advance` is FORBIDDEN — route per the Blocking-obstacle bullet in the verdict guidance.
 - `$RUN_DIR/phase2_select/phase2_select_output.json` — the Phase 2.1 spec (selected_gaps with chosen_pattern_id).
 - **One sub-pattern card per `gap_closure[]` entry**: `references/ideation-sub-patterns/<C##>.md` where `<C##>` is the **leading cluster code C00 through C30** of that entry's `sub_pattern` value (the value is formatted `C## (parent pattern name)`, so strip everything after the code — e.g. `C12 (Substitute the Operator or Representation)` → open `C12.md`). NOT a parent-pattern-named file. Read `## Tactical failure mode` + ALL bullets under `## Examples → ### Reject lessons` verbatim. The lessons are paper-agnostic distillations (no `[Reject]` example headers, no `paper_id` references) so quote the bullet text directly.
 - `$RUN_DIR/phase0/lit_table.md` — used for paper-pointed threat search.
@@ -40,7 +41,7 @@ Output (JSON):
         "gap": "<verbatim from candidate.gap_closure[i].gap>",
         "sub_pattern": "<from candidate.gap_closure[i].sub_pattern>",
         "tactical_pattern_quoted": "<quote the C##.md `## Tactical pattern` signature move in ≤ 2 sentences — the specific verb/operation that defines THIS cluster, NOT the parent pattern's generic gist (note: in this taxonomy the sub_pattern string only carries the PARENT display name, so the citation string alone does NOT prove the cluster card was opened — you must judge the mechanism against the card text)>",
-        "instantiation_in_core_mechanism": "<cite the SPECIFIC step in core_mechanism that performs that signature operation. If core_mechanism only enacts the parent pattern's generic idea without the cluster's distinctive move, say so explicitly.>",
+        "instantiation_in_core_mechanism": "<cite the SPECIFIC step in core_mechanism that performs that signature operation. If core_mechanism only enacts the parent pattern's generic idea without the cluster's distinctive move, say so explicitly. THIN-CORPUS EXCEPTION: when this entry's how_closed declares thin corpus support for its domain, judge ONLY whether core_mechanism performs the cluster's abstract Step-by-Step move — do NOT mark bypassed for lacking surface resemblance to the card's exemplars (they come from distant domains); borderline is the ceiling for domain-appearance concerns.>",
         "verdict": "applied | bypassed | borderline"
       }
     ],
@@ -49,7 +50,7 @@ Output (JSON):
   },
 
   "anti_pattern_check": {
-    "composition_set": ["<list of main_pattern values across all gap_closure[] entries>"],
+    "composition_set": ["<list of DISTINCT pattern ids across all gap_closure[] entries: every main_pattern AND every non-null companion_pattern (a Step 2a chain or Step 3b pair is part of the composition — omitting companions lets a reject-favored pairing hide inside one gap entry)>"],
     "matched_pattern_id": "<audit_decomp_supervisor | audit_decomp_prior | audit_decomp_operator | null>",
     "required_mitigation_quoted": "<from anti-patterns.md if matched; null otherwise>",
     "mitigation_substantively_delivered": "<true | false | n/a>",
@@ -73,6 +74,14 @@ Output (JSON):
     "verdict": "sound | deficient | borderline",
     "reasoning": "<1-2 sentences: which sub-answer drove the verdict. 'sound' requires ALL of: minimal_experiment_named=yes, outcome_metric_named=yes, load_bearing_variable quoted (not absent), negative_control_target=outcome_metric. Any 'no'/'absent'/'tautological' → deficient. borderline is reserved for a named-but-ambiguous variable or a control whose target metric is arguably-but-not-explicitly the outcome.>"
   },
+
+  "blocking_findings_disposition": [
+    {
+      "finding_ref": "<first ~15 words of the blocking finding, enough to identify it>",
+      "status": "upheld | refuted",
+      "basis": "<for refuted: the CONCRETE flaw (formalization-vs-quoted-text mismatch / arithmetic error / illegal instance), stated checkably. For upheld: one sentence on what it implies for the verdict.>"
+    }
+  ],
 
   "verdict": "advance | revise | abandon",
   "verdict_layer": "<'hard_floor' if a hard-floor rule triggered abandon; 'soft_judgment' otherwise>",
@@ -114,7 +123,11 @@ Heuristics:
 - **Choose revise** when at least one borderline / partial finding hits a load-bearing structural property (core_mechanism's central argument, anti_pattern mitigation strength, addressable threat via specific candidate field).
 - **Choose revise** when `recipe_application_check.verdict = bypassed` — the cited cluster's signature move is absent from core_mechanism, so the idea was built from the parent pattern's generic gist rather than the tactic that was supposed to make it sharp (the leading cause of incremental output, and the citation string cannot catch it because in this taxonomy the sub_pattern only names the parent). revision_target: either swap the sub_pattern to the sibling cluster whose tactical move core_mechanism actually performs, or rework core_mechanism to instantiate the cited move.
 - **Choose revise** when paper_pointed_threat exists AND `addressable_via` names a specific candidate field.
-- **Choose revise** when `falsification_structure_check.verdict = deficient` — the falsifiability commitment is the candidate's single most Reject-predictive field, and a structural hole in it (no load-bearing variable, tautological negative control) is repairable without touching the experiment or the claim. Emit ONE revision_target with `scope = "falsification"`, `field = "falsification_prediction"`, and a fix_direction naming exactly which structural element to repair. This is the ONLY route by which the kill-switch field may change; the rewrite is applied by Phase 3.3's dedicated `rewrite_falsification` op, gated by the merger on this audit's authorization, and MUST be re-audited (see "Falsification re-audit mode" below) before Phase 4.
+- **Choose revise** when `falsification_structure_check.verdict = deficient` — the falsifiability commitment is the candidate's single most Reject-predictive field, and a structural hole in it (no load-bearing variable, tautological negative control) is repairable without touching the experiment or the claim. Emit ONE revision_target with `scope = "falsification"`, `field = "falsification_prediction"`, and a fix_direction naming exactly which structural element to repair. This is the ONLY route by which the kill-switch field may change; the rewrite is applied by Phase 3.3's dedicated `rewrite_falsification` op, gated by the merger on this audit's authorization, and MUST be re-audited (separate bounded call, self-contained prompt: `falsification_reaudit.txt`) before Phase 4.
+
+  A `scope=falsification` target MAY ALSO be emitted when `falsification_structure_check.verdict = sound` but ANOTHER check's finding requires a **STRENGTHEN-ONLY** edit to `falsification_prediction`: adding a comparison baseline or control arm, or tightening an existing control's matching (rate/compute). Strengthen-only means ADDITIONS ONLY — the experiment, outcome metric, claim, load-bearing variable, and every existing control stay verbatim; anything that removes, swaps, weakens, or cheapens is NOT authorized under this clause and must not be requested. Name in fix_direction exactly what to ADD and which check finding requires it. Still max ONE falsification target per run; the mandatory re-audit applies identically. Without this clause a finding that spans a normal field AND the falsification baseline list would be half-dropped by the merger — never emit a `tactical` target whose fix requires touching `falsification_prediction`; split it into a tactical target for the normal field plus a strengthen-only falsification target.
+- **Blocking obstacle findings** (the `blocking_findings.json` input, including `equivalent_to_naive` — the mechanism does not confront the obstacle it declares): disposition each first (see the input rules — refutation requires a concrete modeling/arithmetic flaw, never re-reasoning). Every `upheld` finding is a load-bearing borderline at minimum and CAPS the verdict below advance: when the confrontation is writable as a field-level rework of core_mechanism → revise (tactical, fix_direction names the obstacle to confront); when it requires redesigning what the mechanism IS → abandon (the internal retry then carries the obstacle as a positive directive). `blocking_findings_disposition[]` is REQUIRED whenever the input file was supplied — an audit that ignores supplied executed evidence is a process error, and the navigator will bounce the report.
+- **Single-pattern candidates** (candidate.composition_note non-empty): weigh the note's defense as a soft signal. A substantive defense (names why the one move is complete and what a second pattern would fail to add) → no action. A generic defense ("the move is deep") → non-blocking concern for Phase 4's reviewer_concerns_and_responses; it does NOT gate advance by itself.
 - **Choose advance** when all checks are clear / holds / null / no_threat_found / sound.
 
 Hard rules:
@@ -129,23 +142,9 @@ Hard rules:
 
 5. **recipe_application_check is semantic, not a citation check**. A separate deterministic validator (subpattern_citation_consistency) already confirms each sub_pattern citation points at a real C## cluster under its cited parent — assume that passed. In this taxonomy the sub_pattern string carries only `C## (parent display name)`, so a clean citation does NOT prove the cluster's own card was opened. recipe_application_check answers the harder question automation cannot: even with a correctly-cited code, does core_mechanism actually perform that C##.md card's `## Tactical pattern` signature move, or did the generator read the parent pattern's name and produce something generic? Judge the MECHANISM against the card text, not the citation string.
 
-6. **`scope = "falsification"` is exclusively for falsification_structure_check findings**. Do NOT use it to make the experiment cheaper, swap the metric, or weaken the claim — those are anti-substitution violations the merger will reject. The rewrite repairs STRUCTURE only (name the load-bearing variable, fix a tautological negative control, state the missing minimal experiment / metric direction) while preserving the experiment, the metric, and the claim already committed to. `compute_budget` has NO revision route under any scope.
+6. **`scope = "falsification"` covers exactly two cases**: (a) a falsification_structure_check deficiency — the rewrite repairs STRUCTURE only (name the load-bearing variable, fix a tautological negative control, state the missing minimal experiment / metric direction); (b) a STRENGTHEN-ONLY addition required by another check's finding (add a baseline/control arm, tighten matching — see the verdict guidance above). In BOTH cases the experiment, the metric, and the claim already committed to are preserved verbatim; do NOT use this scope to make the experiment cheaper, swap the metric, or weaken the claim — those are anti-substitution violations the merger will reject. `compute_budget` has NO revision route under any scope.
 
 Output path: `$RUN_DIR/phase3_critique/phase3_critique_output.json`.
 
 ---
 
-### Falsification re-audit mode (single-check re-run after a falsification rewrite)
-
-When Phase 3.3 applied a `rewrite_falsification` patch (and only then), the rewritten kill-switch field must clear the structure check before Phase 4. This is a SEPARATE, bounded LLM call:
-
-- **Inputs**: `$RUN_DIR/phase3_revise/final_candidate.json` (read ONLY `falsification_prediction` + `core_mechanism` for context) + this prompt's falsification_structure_check spec. Do NOT re-run the other four checks; their findings stand.
-- **Output** (`$RUN_DIR/phase3_critique/falsification_reaudit.json`):
-
-{
-  "falsification_structure_check": { <same schema as above, evaluated on the REWRITTEN paragraph> },
-  "verdict": "advance | abandon",
-  "verdict_rationale": "<1-2 sentences>"
-}
-
-- **Routing**: `sound` (or `borderline` with the load-bearing variable clearly named) → `advance`, proceed to Phase 4 using `final_candidate.json`. `deficient` again → `abandon` (write `phase_3_failed.md` naming both the original deficiency and why the rewrite still fails). Exactly ONE rewrite attempt per run — a second falsification revision_target is a process error.
