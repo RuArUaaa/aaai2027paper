@@ -878,7 +878,23 @@ def main() -> int:
     if missing:
         print(f"[fetch_logos]   ✗ MISSING — WEB-SEARCH FALLBACK REQUIRED (Step 6): {', '.join(missing)}", file=sys.stderr)
 
-    print(json.dumps({"logos": results, "missing": missing}, indent=2))
+    # Persist the FULL manifest to disk as well as stdout. Callers sometimes
+    # pipe stdout through `tail`/`head` to save tokens, which silently drops
+    # early entries (e.g. the first institute's slug) — the agent then invents a
+    # wrong logo filename (msra -> 'microsoft-research-asia.png') instead of the
+    # mapped slug ('microsoft'). A stable file lets the poster stage read the
+    # correct slug regardless of any stdout truncation.
+    manifest = {"logos": results, "missing": missing}
+    try:
+        (logos_dir / "logos.json").write_text(
+            json.dumps(manifest, indent=2), encoding="utf-8"
+        )
+        print(f"[fetch_logos] manifest -> {layout.LOGOS}/logos.json "
+              f"({len(results)} logo(s))", file=sys.stderr)
+    except Exception as exc:  # noqa: BLE001
+        print(f"[fetch_logos] WARNING: could not write logos.json: {exc}", file=sys.stderr)
+
+    print(json.dumps(manifest, indent=2))
     return 0 if results else 1
 
 
