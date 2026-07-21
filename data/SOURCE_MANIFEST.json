@@ -1,0 +1,27 @@
+{
+  "created": "2026-07-21",
+  "purpose": "P1: make gates reproducible from a clean clone; fixtures are trimmed copies exported by scripts/export_gate_inputs.py",
+  "source_repo": {
+    "path": "/Users/zijian_nong/research/aaai2027",
+    "git_head": "ae77f91bb8baad5f77da1278abb1a20272660417",
+    "git_dirty": true,
+    "dirty_files_note": "contract/schema.py, pipelines/tracebuild_harness.py, pipelines/tests/test_tracebuild_harness.py modified but NOT used by any gate input",
+    "shareable": true,
+    "shareability_note": "derived benchmark outputs (HotpotQA/HumanEvalFix) from the owner's own prior project; no secrets",
+    "export_command": "python3 scripts/export_gate_inputs.py --src-root /Users/zijian_nong/research/aaai2027"
+  },
+  "files": [
+    {"relpath": "runs/pairs/taskA_e0_control.jsonl", "bytes": 80354, "sha256": "50aa772a6a3acac6d1e14cba263c3e7d0ac30730a86dd3db7b7212cc7c7c7f18", "used_by": ["gates/C3"]},
+    {"relpath": "runs/pairs/taskA_e0_identity_ctrl.jsonl", "bytes": 998792, "sha256": "9b076a2b531944eaeea1fa4bfdcd161de911e03f5fb3d6111175aad92a26ee40", "used_by": ["gates/C3", "gates/C6"]},
+    {"relpath": "runs/pairs/taskB_e0.jsonl", "bytes": 169759, "sha256": "6c78a6b9ef4b239070634757ac488d4020c59c7fa3956e4168910b9a7ddeaa8a", "used_by": ["gates/C3"]},
+    {"relpath": "runs/pairs/taskB_e0_identity_ctrl.jsonl", "bytes": 252202, "sha256": "44e75e99141fcd2f25d7f47a1897092429205f849d13a28ef8b37574ee25b2e5", "used_by": ["gates/C3"]},
+    {"relpath": "runs/traces/taskA_e0.jsonl", "bytes": 14116036, "sha256": "68411f28223eed76adef812d0749f6929149124748caa127a326295e727b7c0c", "used_by": ["gates/C6"]}
+  ],
+  "fixtures": [
+    {"path": "gates/C3/fixtures/taskA_e0_control.jsonl", "selection": "20 rows, seed 20260721"},
+    {"path": "gates/C3/fixtures/taskB_e0.jsonl", "selection": "all flip pairs + sampled non-flip = 30 rows, seed 20260721"},
+    {"path": "gates/C3/fixtures/taskB_e0_identity_ctrl.jsonl", "selection": "same 30 pair_ids"},
+    {"path": "gates/C6/fixtures/taskA_e0.jsonl", "selection": "first 2 traces, token-id arrays dropped"},
+    {"path": "gates/C6/fixtures/taskA_e0_identity_ctrl.jsonl", "selection": "pairs of those 2 traces"}
+  ]
+}

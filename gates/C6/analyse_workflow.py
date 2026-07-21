@@ -17,7 +17,7 @@ import statistics
 from collections import Counter, defaultdict
 
 TRACE_PATH = "/Users/zijian_nong/research/aaai2027/runs/traces/taskA_e0.jsonl"
-OUT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results.json")
+OUT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results_sentence_level.json")
 
 SEED = 20260721
 MAX_MUT_POSITIONS = 8
@@ -425,6 +425,13 @@ def repeated_consumer_coverage(trace_path):
 
 
 if __name__ == "__main__":
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--input", default=TRACE_PATH, help="taskA_e0.jsonl trace file")
+    ap.add_argument("--output", default=OUT_PATH)
+    args = ap.parse_args()
+    TRACE_PATH = args.input
+    OUT_PATH = args.output
     res = analyse()
     print(json.dumps(res["criteria"], indent=2))
     print("mutation (substring):", json.dumps({

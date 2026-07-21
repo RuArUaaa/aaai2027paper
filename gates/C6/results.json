@@ -1,6 +1,7 @@
 {
   "meta": {
-    "note": "merged by chair: sentence-level (subagent, repaired) + doc-level citation channel (chair)"
+    "note": "deterministic merge via merge_results.py (P1)",
+    "root": "/Users/zijian_nong/research/aaai2027/runs"
   },
   "sentence_level": {
     "meta": {

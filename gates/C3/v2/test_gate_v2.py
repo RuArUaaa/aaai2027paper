@@ -7,9 +7,12 @@ D = Path(__file__).parent
 
 
 def setup():
-    subprocess.run([sys.executable, str(D / "reanalyse_v2.py")],
+    out = D.parent / "fixtures" / "results_v2_fixture.json"
+    subprocess.run([sys.executable, str(D / "reanalyse_v2.py"),
+                    "--input-root", str(D.parent / "fixtures"),
+                    "--output", str(out)],
                    check=True, capture_output=True)
-    return json.loads((D / "results_v2.json").read_text())
+    return json.loads(out.read_text())
 
 
 R = setup()

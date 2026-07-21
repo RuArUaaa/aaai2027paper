@@ -6,20 +6,20 @@ degenerate (see results.json: sentence_level). Usage here = the workflow's own
 citation addressing scheme ("refer to it by its title in parentheses"), not a
 post-hoc text heuristic.
 """
-import json, random, re
+import json, random, re, argparse
 from collections import defaultdict
+from pathlib import Path
 
-TRACE = "/Users/zijian_nong/research/aaai2027/runs/traces/taskA_e0.jsonl"
-PAIRS = "/Users/zijian_nong/research/aaai2027/runs/pairs/taskA_e0_identity_ctrl.jsonl"
-OUT = "/Users/zijian_nong/research/aaai2027-new/gates/C6/results_doc_level.json"
+DEFAULT_ROOT = "/Users/zijian_nong/research/aaai2027/runs"
+DEFAULT_OUT = str(Path(__file__).parent / "results_doc_level.json")
 SEED = 20260721
 TITLE_RE = re.compile(r"^Document \(([^)]+)\):")
 
 CONSUMERS = ("reader", "verifier", "writer")  # retriever = producer
 
 
-def load_traces():
-    with open(TRACE) as f:
+def load_traces(path):
+    with open(path) as f:
         return [json.loads(l) for l in f if l.strip()]
 
 
@@ -33,8 +33,8 @@ def doc_titles(agent_blocks):
     return out
 
 
-def analyse():
-    traces = load_traces()
+def analyse(trace_path):
+    traces = load_traces(trace_path)
     rng = random.Random(SEED)
 
     n_traces = 0
@@ -96,7 +96,7 @@ def analyse():
                     qr_cost += cost
 
     res = {
-        "meta": {"trace_path": TRACE, "seed": SEED, "n_traces": n_traces,
+        "meta": {"trace_path": trace_path, "seed": SEED, "n_traces": n_traces,
                  "usage_semantics": "citation channel: '(Title)' appears in consumer output_text (the workflow's own addressing rule)"},
         "artifacts": {
             "doc_total": total_docs,
@@ -133,13 +133,13 @@ def analyse():
     return res
 
 
-def validate_against_real_flips():
+def validate_against_real_flips(trace_path, pairs_path):
     """Exploratory: does citation predict real downstream flips per (block, receiver)?"""
     flips = defaultdict(lambda: [0, 0])  # cited -> [flips, n]; not-cited -> same
     # build usage per (trace, block) from traces
-    traces = {t["trace_id"]: t for t in load_traces()}
+    traces = {t["trace_id"]: t for t in load_traces(trace_path)}
     n_pairs = 0
-    with open(PAIRS) as f:
+    with open(pairs_path) as f:
         for line in f:
             r = json.loads(line)
             tr = traces.get(r["trace_id"])
@@ -166,8 +166,19 @@ def validate_against_real_flips():
 
 
 if __name__ == "__main__":
-    res = analyse()
-    res["validation_vs_real_flips"] = validate_against_real_flips()
-    with open(OUT, "w") as f:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--input-root", default=DEFAULT_ROOT,
+                    help="dir containing taskA_e0.jsonl (under traces/) and taskA_e0_identity_ctrl.jsonl (under pairs/), or the fixtures dir layout")
+    ap.add_argument("--output", default=DEFAULT_OUT)
+    args = ap.parse_args()
+    root = Path(args.input_root)
+    trace_path = root / "traces/taskA_e0.jsonl"
+    pairs_path = root / "pairs/taskA_e0_identity_ctrl.jsonl"
+    if not trace_path.exists():   # fixture layout: files flat in the dir
+        trace_path = root / "taskA_e0.jsonl"
+        pairs_path = root / "taskA_e0_identity_ctrl.jsonl"
+    res = analyse(str(trace_path))
+    res["validation_vs_real_flips"] = validate_against_real_flips(str(trace_path), str(pairs_path))
+    with open(args.output, "w") as f:
         json.dump(res, f, indent=2, ensure_ascii=False)
     print(json.dumps(res, indent=2, ensure_ascii=False))
