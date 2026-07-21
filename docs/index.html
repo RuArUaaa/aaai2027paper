@@ -13,8 +13,7 @@
       let theme;
       try { theme = localStorage.getItem('researchstudio-theme'); } catch (_) {}
       if (theme !== 'light' && theme !== 'dark') {
-        const localHour = new Date().getHours();
-        theme = localHour >= 7 && localHour < 19 ? 'light' : 'dark';
+        theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
       }
       document.documentElement.dataset.theme = theme;
     })();
@@ -237,6 +236,15 @@
           applyTheme(option.dataset.themeOption, true);
           modeControl.open = false;
         });
+      });
+
+      const browserTheme = window.matchMedia('(prefers-color-scheme: dark)');
+      browserTheme.addEventListener('change', event => {
+        let savedTheme;
+        try { savedTheme = localStorage.getItem('researchstudio-theme'); } catch (_) {}
+        if (savedTheme !== 'light' && savedTheme !== 'dark') {
+          applyTheme(event.matches ? 'dark' : 'light');
+        }
       });
 
       modeControl.addEventListener('toggle', () => {
