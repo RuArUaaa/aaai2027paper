@@ -899,3 +899,15 @@ html[data-theme="dark"] .cover-card--reel .cover-card__cta { color: var(--brand-
     text-align: left;
   }
 }
+
+
+/* Keep the fixed Theme/Language controls clear of the navigation at high zoom. */
+@media (max-width: 1540px) {
+  .topbar { padding-right: clamp(24px, calc(776px - 50vw), 190px); }
+}
+@media (max-width: 760px) {
+  .topbar { padding-right: 140px; }
+}
+@media (max-width: 520px) {
+  .brand span { display: none; }
+}
