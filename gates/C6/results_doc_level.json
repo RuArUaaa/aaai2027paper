@@ -1,0 +1,61 @@
+{
+  "meta": {
+    "trace_path": "/Users/zijian_nong/research/aaai2027/runs/traces/taskA_e0.jsonl",
+    "seed": 20260721,
+    "n_traces": 100,
+    "usage_semantics": "citation channel: '(Title)' appears in consumer output_text (the workflow's own addressing rule)"
+  },
+  "artifacts": {
+    "doc_total": 992,
+    "per_trace_mean": 9.92
+  },
+  "incidence": {
+    "doc_consumer_edges": 2976,
+    "doc_cited_edges": 260,
+    "citation_rate": 0.08736559139784947
+  },
+  "usage_per_consumer_per_trace": {
+    "reader": {
+      "mean": 1.33,
+      "max": 5
+    },
+    "verifier": {
+      "mean": 0.95,
+      "max": 4
+    },
+    "writer": {
+      "mean": 0.32,
+      "max": 4
+    }
+  },
+  "multi_consumer": {
+    "docs_cited_ge2_frac": 0.08870967741935484,
+    "docs_cited_ge1_frac": 0.15221774193548387,
+    "docs_dead_frac": 0.8477822580645161
+  },
+  "mutation_sim_doc_level": {
+    "n_mutations": 992,
+    "exact_invalidations": 2976,
+    "query_relative_invalidations": 260,
+    "exact_mean_per_mutation": 3.0,
+    "qr_mean_per_mutation": 0.2620967741935484,
+    "count_reduction": 0.9126344086021505,
+    "exact_cost": 212070,
+    "qr_cost": 22483,
+    "cost_reduction": 0.8939831187815344,
+    "note": "exact/identity replay invalidates all 3 downstream consumers of a mutated doc; query-relative invalidates only citers. BIAS: citation undercounts true usage (agents may use without citing) -> qr invalidations are a LOWER bound -> reductions are OPTIMISTIC."
+  },
+  "title_missing": 136,
+  "validation_vs_real_flips": {
+    "n_pairs": 1000,
+    "not_cited": {
+      "n": 947,
+      "real_flip_repair_rate": 0.050686378035902854
+    },
+    "cited": {
+      "n": 53,
+      "real_flip_repair_rate": 0.0
+    },
+    "note": "exploratory validation of the citation usage signal against E0 real-perturbation downstream flips (per pair); not a pre-registered criterion"
+  }
+}

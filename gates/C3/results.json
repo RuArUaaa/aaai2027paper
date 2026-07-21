@@ -1,0 +1,206 @@
+{
+  "meta": {
+    "pairs_dir": "/Users/zijian_nong/research/aaai2027/runs/pairs/",
+    "rollback_overhead": 0.01,
+    "v_grid": [
+      0.001,
+      0.01,
+      0.1,
+      0.5
+    ],
+    "semantics": "gates/C3/protocol.md"
+  },
+  "taskA": {
+    "n": 100,
+    "baseline_acc": 0.04,
+    "baseline_rho": 0.96,
+    "data_quality": "DEGENERATE outcome verifier: final answers are truncated in E0 control, EM acc = 0.04; rho_outcome not interpretable as task difficulty",
+    "reuse": {
+      "acc": 0.01,
+      "rho_outcome": 0.99,
+      "rho_blame": 0.04,
+      "rho_blame_CI": [
+        0.01,
+        0.08
+      ],
+      "rescue": 0.01
+    },
+    "repair": {
+      "acc": 0.01,
+      "rho_outcome": 0.99,
+      "rho_blame": 0.04,
+      "rho_blame_CI": [
+        0.01,
+        0.08
+      ],
+      "rescue": 0.01
+    }
+  },
+  "taskB": {
+    "n": 164,
+    "baseline_acc": 0.6341463414634146,
+    "baseline_rho": 0.36585365853658536,
+    "sanity_identity_pass_eq_orig_frac": 0.926829268292683,
+    "reuse": {
+      "acc_reconstructed": 0.6036585365853658,
+      "rho_outcome": 0.39634146341463417,
+      "rho_outcome_CI": [
+        0.323170731707317,
+        0.4695121951219512
+      ],
+      "rho_blame": 0.042682926829268296,
+      "rho_blame_CI": [
+        0.012195121951219513,
+        0.07926829268292683
+      ],
+      "rescue": 0.012195121951219513
+    },
+    "repair": {
+      "acc_reconstructed": 0.6097560975609756,
+      "rho_outcome": 0.3902439024390244,
+      "rho_outcome_CI": [
+        0.31707317073170727,
+        0.46341463414634143
+      ],
+      "rho_blame": 0.042682926829268296,
+      "rho_blame_CI": [
+        0.012195121951219513,
+        0.07926829268292683
+      ],
+      "rescue": 0.018292682926829267
+    },
+    "cost": {
+      "flops_full": 1.0,
+      "flops_reuse_mean": 0.8560049369421016,
+      "flops_repair_mean": 0.8776041964007872,
+      "S_reuse": 0.14399506305789844,
+      "S_repair": 0.12239580359921276
+    }
+  },
+  "economics": {
+    "taskB_reuse_rho_outcome": {
+      "rho": 0.39634146341463417,
+      "S": 0.14399506305789844,
+      "per_v": {
+        "0.001": {
+          "delta_over_full": -0.25730981499088207,
+          "breakeven_rho_star": 0.14157927035435489,
+          "spec_beats_full": false
+        },
+        "0.01": {
+          "delta_over_full": -0.2663098149908821,
+          "breakeven_rho_star": 0.13266837926524597,
+          "spec_beats_full": false
+        },
+        "0.1": {
+          "delta_over_full": -0.3563098149908821,
+          "breakeven_rho_star": 0.04355946837415687,
+          "spec_beats_full": false
+        },
+        "0.5": {
+          "delta_over_full": -0.756309814990882,
+          "breakeven_rho_star": -0.35248013558623914,
+          "spec_beats_full": false
+        }
+      }
+    },
+    "taskB_repair_rho_outcome": {
+      "rho": 0.3902439024390244,
+      "S": 0.12239580359921276,
+      "per_v": {
+        "0.001": {
+          "delta_over_full": -0.2727505378642019,
+          "breakeven_rho_star": 0.1201938649497156,
+          "spec_beats_full": false
+        },
+        "0.01": {
+          "delta_over_full": -0.2817505378642019,
+          "breakeven_rho_star": 0.11128297386060669,
+          "spec_beats_full": false
+        },
+        "0.1": {
+          "delta_over_full": -0.37175053786420187,
+          "breakeven_rho_star": 0.02217406296951758,
+          "spec_beats_full": false
+        },
+        "0.5": {
+          "delta_over_full": -0.7717505378642019,
+          "breakeven_rho_star": -0.37386554099087843,
+          "spec_beats_full": false
+        }
+      }
+    },
+    "taskB_reuse_rho_blame": {
+      "rho": 0.042682926829268296,
+      "S": 0.14399506305789844,
+      "per_v": {
+        "0.001": {
+          "delta_over_full": 0.09988530696033746,
+          "breakeven_rho_star": 0.14157927035435489,
+          "spec_beats_full": true
+        },
+        "0.01": {
+          "delta_over_full": 0.09088530696033745,
+          "breakeven_rho_star": 0.13266837926524597,
+          "spec_beats_full": true
+        },
+        "0.1": {
+          "delta_over_full": 0.0008853069603374578,
+          "breakeven_rho_star": 0.04355946837415687,
+          "spec_beats_full": true
+        },
+        "0.5": {
+          "delta_over_full": -0.3991146930396625,
+          "breakeven_rho_star": -0.35248013558623914,
+          "spec_beats_full": false
+        }
+      }
+    },
+    "taskB_repair_rho_blame": {
+      "rho": 0.042682926829268296,
+      "S": 0.12239580359921276,
+      "per_v": {
+        "0.001": {
+          "delta_over_full": 0.07828604750165177,
+          "breakeven_rho_star": 0.1201938649497156,
+          "spec_beats_full": true
+        },
+        "0.01": {
+          "delta_over_full": 0.06928604750165179,
+          "breakeven_rho_star": 0.11128297386060669,
+          "spec_beats_full": true
+        },
+        "0.1": {
+          "delta_over_full": -0.020713952498348225,
+          "breakeven_rho_star": 0.02217406296951758,
+          "spec_beats_full": false
+        },
+        "0.5": {
+          "delta_over_full": -0.4207139524983482,
+          "breakeven_rho_star": -0.37386554099087843,
+          "spec_beats_full": false
+        }
+      }
+    }
+  },
+  "criteria": {
+    "a_verifier_executable_ge_0.95": {
+      "value": 1.0,
+      "pass": true,
+      "note": "EM/tests computable on all attempts; Task A EM degenerate (data quality)"
+    },
+    "b_rho_blame_5x_below_rho_star_v0.5": {
+      "value": null,
+      "pass": false,
+      "rho_star_v0.5": -0.35248013558623914,
+      "rho_blame_taskB_reuse": 0.042682926829268296,
+      "note": "rho*(v=0.5) < 0 \u2014 criterion unsatisfiable; even at v=0.01 margin is only ~3.1x (< 5x)"
+    },
+    "c_accept_and_blameworthy_rollback_cases": {
+      "accept_taskB": 0.6036585365853658,
+      "blameworthy_taskB_per_arm": 7.000000000000001,
+      "pass": true
+    },
+    "overall": "FAIL"
+  }
+}

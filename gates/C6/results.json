@@ -1,0 +1,255 @@
+{
+  "meta": {
+    "note": "merged by chair: sentence-level (subagent, repaired) + doc-level citation channel (chair)"
+  },
+  "sentence_level": {
+    "meta": {
+      "trace_path": "/Users/zijian_nong/research/aaai2027/runs/traces/taskA_e0.jsonl",
+      "seed": 20260721,
+      "max_mutation_positions": 8,
+      "min_sentence_words": 8,
+      "jaccard_threshold": 0.5,
+      "n_traces": 100
+    },
+    "nodes": {
+      "by_class": {
+        "sys": 100,
+        "cite": 100,
+        "doc": 992,
+        "plan": 100,
+        "evid": 100,
+        "verify": 100
+      },
+      "non_sys_total": 1392,
+      "per_trace_mean": {
+        "sys": 1.0,
+        "cite": 1.0,
+        "doc": 9.92,
+        "plan": 1.0,
+        "evid": 1.0,
+        "verify": 1.0
+      }
+    },
+    "edges": {
+      "by_class": {
+        "sys": 400,
+        "cite": 400,
+        "doc": 3968,
+        "plan": 300,
+        "evid": 200,
+        "verify": 100
+      },
+      "non_sys_total": 4968,
+      "per_trace_mean": 53.68
+    },
+    "repeated_consumer_coverage": {
+      "non_sys": 0.9281609195402298,
+      "n_ge2": 1292,
+      "n_total": 1392,
+      "by_class": {
+        "cite": 1.0,
+        "doc": 1.0,
+        "plan": 1.0,
+        "evid": 1.0,
+        "verify": 0.0
+      }
+    },
+    "incidence_density": 0.8922413793103449,
+    "used_region": {
+      "substring": {
+        "mutation_classes": {
+          "n_pairs": 4368,
+          "median": 0.0,
+          "p90": 0.0,
+          "frac_zero_use": 0.9903846153846154
+        },
+        "other": {
+          "n_pairs": 600,
+          "median": 0.0,
+          "p90": 0.0,
+          "frac_zero_use": 0.9116666666666666
+        },
+        "all": {
+          "n_pairs": 4968,
+          "median": 0.0,
+          "p90": 0.0,
+          "frac_zero_use": 0.980877616747182
+        }
+      },
+      "jaccard": {
+        "mutation_classes": {
+          "n_pairs": 4368,
+          "median": 0.0,
+          "p90": 0.0,
+          "frac_zero_use": 0.983058608058608
+        },
+        "other": {
+          "n_pairs": 600,
+          "median": 0.0,
+          "p90": 0.3333333333333333,
+          "frac_zero_use": 0.7666666666666667
+        },
+        "all": {
+          "n_pairs": 4968,
+          "median": 0.0,
+          "p90": 0.0,
+          "frac_zero_use": 0.9569243156199678
+        }
+      }
+    },
+    "mutation": {
+      "substring": {
+        "n_mutations": 4297,
+        "exact_total_invalidations": 17188,
+        "qr_total_invalidations": 47,
+        "exact_mean_per_mutation": 4.0,
+        "qr_mean_per_mutation": 0.010937863625785431,
+        "exact_total_cost": 1330967,
+        "qr_total_cost": 4512,
+        "exact_mean_cost_per_mutation": 309.74330928554804,
+        "qr_mean_cost_per_mutation": 1.0500349080754015,
+        "count_reduction": 0.9972655340935537,
+        "cost_reduction": 0.9966099835683379,
+        "dead_region_freq": 0.990225738887596,
+        "dead_region_freq_measurable_only": 0.9892224788298691,
+        "n_measurable_positions": 3897,
+        "per_class": {
+          "cite": {
+            "n_mutations": 100,
+            "exact_mean_per_mutation": 4.0,
+            "qr_mean_per_mutation": 0.0,
+            "cost_reduction": 1.0,
+            "dead_region_freq": 1.0
+          },
+          "doc": {
+            "n_mutations": 4197,
+            "exact_mean_per_mutation": 4.0,
+            "qr_mean_per_mutation": 0.011198475101262807,
+            "cost_reduction": 0.9965292601370296,
+            "dead_region_freq": 0.9899928520371694
+          }
+        }
+      },
+      "jaccard": {
+        "n_mutations": 4297,
+        "exact_total_invalidations": 17188,
+        "qr_total_invalidations": 86,
+        "exact_mean_per_mutation": 4.0,
+        "qr_mean_per_mutation": 0.020013963230160577,
+        "exact_total_cost": 1330967,
+        "qr_total_cost": 7930,
+        "exact_mean_cost_per_mutation": 309.74330928554804,
+        "qr_mean_cost_per_mutation": 1.8454735862229463,
+        "count_reduction": 0.9949965091924599,
+        "cost_reduction": 0.9940419259080052,
+        "dead_region_freq": 0.9830114033046311,
+        "dead_region_freq_measurable_only": 0.9812676417757249,
+        "n_measurable_positions": 3897,
+        "per_class": {
+          "cite": {
+            "n_mutations": 100,
+            "exact_mean_per_mutation": 4.0,
+            "qr_mean_per_mutation": 0.0,
+            "cost_reduction": 1.0,
+            "dead_region_freq": 1.0
+          },
+          "doc": {
+            "n_mutations": 4197,
+            "exact_mean_per_mutation": 4.0,
+            "qr_mean_per_mutation": 0.02049082678103407,
+            "cost_reduction": 0.9939000516149479,
+            "dead_region_freq": 0.9826066237788896
+          }
+        }
+      }
+    },
+    "oracle": {
+      "present": 100,
+      "rate": 1.0
+    },
+    "data_quality": {
+      "block_text_mismatches_within_trace": 0,
+      "pairs_skipped_no_measurable_sentence": 0
+    },
+    "criteria": {
+      "a_coverage_ge_0.30": {
+        "value": 0.9281609195402298,
+        "pass": true
+      },
+      "b_cost_reduction_ge_0.20": {
+        "value": 0.9966099835683379,
+        "pass": true
+      },
+      "c_oracle_ge_0.95": {
+        "value": 1.0,
+        "pass": true
+      },
+      "d_used_region_nondegenerate": {
+        "value": 0.0,
+        "pass": false
+      },
+      "overall": "FAIL_MEASUREMENT"
+    }
+  },
+  "doc_level_citation": {
+    "meta": {
+      "trace_path": "/Users/zijian_nong/research/aaai2027/runs/traces/taskA_e0.jsonl",
+      "seed": 20260721,
+      "n_traces": 100,
+      "usage_semantics": "citation channel: '(Title)' appears in consumer output_text (the workflow's own addressing rule)"
+    },
+    "artifacts": {
+      "doc_total": 992,
+      "per_trace_mean": 9.92
+    },
+    "incidence": {
+      "doc_consumer_edges": 2976,
+      "doc_cited_edges": 260,
+      "citation_rate": 0.08736559139784947
+    },
+    "usage_per_consumer_per_trace": {
+      "reader": {
+        "mean": 1.33,
+        "max": 5
+      },
+      "verifier": {
+        "mean": 0.95,
+        "max": 4
+      },
+      "writer": {
+        "mean": 0.32,
+        "max": 4
+      }
+    },
+    "multi_consumer": {
+      "docs_cited_ge2_frac": 0.08870967741935484,
+      "docs_cited_ge1_frac": 0.15221774193548387,
+      "docs_dead_frac": 0.8477822580645161
+    },
+    "mutation_sim_doc_level": {
+      "n_mutations": 992,
+      "exact_invalidations": 2976,
+      "query_relative_invalidations": 260,
+      "exact_mean_per_mutation": 3.0,
+      "qr_mean_per_mutation": 0.2620967741935484,
+      "count_reduction": 0.9126344086021505,
+      "exact_cost": 212070,
+      "qr_cost": 22483,
+      "cost_reduction": 0.8939831187815344,
+      "note": "exact/identity replay invalidates all 3 downstream consumers of a mutated doc; query-relative invalidates only citers. BIAS: citation undercounts true usage (agents may use without citing) -> qr invalidations are a LOWER bound -> reductions are OPTIMISTIC."
+    },
+    "title_missing": 136,
+    "validation_vs_real_flips": {
+      "n_pairs": 1000,
+      "not_cited": {
+        "n": 947,
+        "real_flip_repair_rate": 0.050686378035902854
+      },
+      "cited": {
+        "n": 53,
+        "real_flip_repair_rate": 0.0
+      },
+      "note": "exploratory validation of the citation usage signal against E0 real-perturbation downstream flips (per pair); not a pre-registered criterion"
+    }
+  }
+}

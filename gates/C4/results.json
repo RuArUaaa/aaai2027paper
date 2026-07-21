@@ -1,0 +1,23 @@
+{
+  "gate": "C4",
+  "date": "2026-07-21",
+  "executed": false,
+  "status": "REQUIRES_AUTHORIZATION",
+  "static_feasibility": {
+    "p6_code_available": false,
+    "p6_note": "arXiv:2606.17107 无公开代码,机制需独立复现(3-5 天工程估计)",
+    "model_requirement": "1x 80GB GPU + 开源 8B 级模型(CoT 开关)",
+    "real_mutation_sources": [
+      {"source": "tau2-bench state transitions", "available": true, "note": "P6 已用,需自行实现"},
+      {"source": "ToolSandbox world-state changes", "available": true, "note": "公开代码存在(github.com/apple/ToolSandbox)"},
+      {"source": "旧仓库 Task A 扰动 trace", "available": true, "note": "冻结数据,只读"}
+    ],
+    "blocking_item": "GPU/模型调用授权",
+    "non_blocking_items": "mutation 语料、协议、控制组设计均已完成"
+  },
+  "controls_preregistered": {
+    "positive": "结构化记录 QA 单字段值 mutation;suffix-repair 应 100% decision-identical",
+    "negative_NC1": "intent mutation;选择性 repair 应失败并正确回退 full recompute",
+    "negative_NC2": "CacheBlend-selector arm;按 P6 证据预期失败(机制鉴别,不设通过线)"
+  }
+}
