@@ -244,7 +244,17 @@ def _load_captions(outdir: Path) -> dict[int, dict]:
     except Exception:
         return {}
     by_num = {}
+    # extract_pdf may emit either a list of {label,text,page} dicts or a
+    # {"Figure N": "text"} mapping. Handle both.
+    if isinstance(caps, dict):
+        for label, text in caps.items():
+            m = re.search(r"(\d+)", str(label))
+            if m and str(label).lower().startswith("figure"):
+                by_num[int(m.group(1))] = {"label": label, "text": text, "page": 0}
+        return by_num
     for c in caps:
+        if not isinstance(c, dict):
+            continue
         m = re.search(r"(\d+)", c.get("label", ""))
         if m:
             by_num[int(m.group(1))] = c
