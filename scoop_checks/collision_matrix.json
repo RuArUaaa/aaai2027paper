@@ -1,0 +1,63 @@
+{
+  "date": "2026-07-21",
+  "adjudicator": "主协调代理/科学主席(独立裁决;证据表来自 CP1 子代理)",
+  "scale": ["SAME", "STRICT_SUBSET", "STRICT_SUPERSET", "ORTHOGONAL", "UNCLEAR"],
+  "candidates": {
+    "C3": {
+      "novelty_status": "NARROW_GAP",
+      "closest_works": {
+        "Sherlock (arXiv:2511.00330, MLSys 在审)": {
+          "overlap": "DIRECT(执行骨架);ORTHOGONAL(问题/失效源/estimand)",
+          "axes": {"problem":"ORTHOGONAL","reuse_object":"ORTHOGONAL","producer_consumer":"SAME","mutation_model":"STRICT_SUPERSET","validity":"ORTHOGONAL","verify_timing":"SAME","rollback":"SAME(结构)","correctness":"SAME","mechanism":"SAME","testbed":"ORTHOGONAL","estimand":"ORTHOGONAL","oracle":"SAME","engineering":"STRICT_SUPERSET","positive_claim":"ORTHOGONAL","null_value":"ORTHOGONAL"}
+        },
+        "Speculative Actions (arXiv:2510.04371, ICLR 2026 Oral)": {
+          "overlap": "PARTIAL(前向预测,方向相反)",
+          "axes": {"problem":"ORTHOGONAL","reuse_object":"ORTHOGONAL","producer_consumer":"SAME","mutation_model":"STRICT_SUPERSET","validity":"ORTHOGONAL","verify_timing":"SAME","rollback":"STRICT_SUPERSET","correctness":"SAME","mechanism":"STRICT_SUPERSET","testbed":"ORTHOGONAL","estimand":"ORTHOGONAL","oracle":"SAME","engineering":"STRICT_SUPERSET","positive_claim":"ORTHOGONAL","null_value":"ORTHOGONAL"}
+        },
+        "AgentReuse (arXiv:2512.21309, JCRD 2024)": {
+          "overlap": "PARTIAL(事前判定,对照极)",
+          "axes": {"problem":"SAME","reuse_object":"STRICT_SUBSET","producer_consumer":"SAME","mutation_model":"STRICT_SUPERSET","validity":"ORTHOGONAL","verify_timing":"ORTHOGONAL","rollback":"STRICT_SUPERSET","correctness":"STRICT_SUPERSET","mechanism":"ORTHOGONAL","testbed":"ORTHOGONAL","estimand":"ORTHOGONAL","oracle":"SAME","engineering":"STRICT_SUPERSET","positive_claim":"ORTHOGONAL","null_value":"ORTHOGONAL"}
+        }
+      },
+      "kill_experiment": "mutation 全梯度下复用型投机期望成本 ≥ 事前判定基线,或 ρ 与 Sherlock m_i 同分布"
+    },
+    "C6": {
+      "novelty_status": "CLEAR_GAP(附条件)",
+      "closest_works": {
+        "Execution Lineage (arXiv:2605.06365, arXiv-only)": {
+          "overlap": "PARTIAL(identity replay 基线本身)",
+          "axes": {"problem":"ORTHOGONAL","reuse_object":"SAME","producer_consumer":"SAME","mutation_model":"STRICT_SUPERSET","validity":"ORTHOGONAL","verify_timing":"ORTHOGONAL","rollback":"STRICT_SUPERSET","correctness":"STRICT_SUPERSET","mechanism":"STRICT_SUPERSET","testbed":"STRICT_SUPERSET","estimand":"ORTHOGONAL","oracle":"STRICT_SUBSET(它无)","engineering":"SAME","positive_claim":"ORTHOGONAL","null_value":"ORTHOGONAL"}
+        },
+        "Durable Intermediate Artifacts (arXiv:2605.12087, arXiv-only)": {
+          "overlap": "PARTIAL(数据模型层)",
+          "axes": {"problem":"ORTHOGONAL","reuse_object":"SAME","producer_consumer":"SAME","mutation_model":"STRICT_SUPERSET","validity":"STRICT_SUPERSET","verify_timing":"ORTHOGONAL","rollback":"STRICT_SUPERSET","correctness":"STRICT_SUPERSET","mechanism":"STRICT_SUPERSET","testbed":"ORTHOGONAL","estimand":"STRICT_SUPERSET","oracle":"STRICT_SUBSET(它无)","engineering":"SAME","positive_claim":"ORTHOGONAL","null_value":"ORTHOGONAL"}
+        },
+        "ToolCacheAgent (OpenReview tX3YcbNa5w, ICLR 2026 在审)": {
+          "overlap": "PARTIAL(identity 缓存+成对失效;自述 hidden-dependency 失败)",
+          "axes": {"problem":"ORTHOGONAL","reuse_object":"SAME","producer_consumer":"SAME","mutation_model":"STRICT_SUPERSET","validity":"STRICT_SUPERSET","verify_timing":"ORTHOGONAL","rollback":"STRICT_SUPERSET","correctness":"STRICT_SUPERSET","mechanism":"STRICT_SUPERSET","testbed":"ORTHOGONAL","estimand":"ORTHOGONAL","oracle":"STRICT_SUPERSET","engineering":"SAME","positive_claim":"ORTHOGONAL","null_value":"ORTHOGONAL"}
+        }
+      },
+      "kill_experiment": "workflow 依赖全稠密;query-relative 增量 coverage 恒为 0;同 mutation 不同 verdict 在真实 trace 中零出现",
+      "conditions": ["P6/P7 同团队扩展的时间窗口风险", "无群结构文本 artifact 的 delta 语义必须落地定义"]
+    },
+    "C4": {
+      "novelty_status": "HIGH_COLLISION(残余 NARROW,不足以支撑主候选)",
+      "closest_works": {
+        "Models Take Notes at Prefill (arXiv:2606.17107, arXiv-only)": {
+          "overlap": "DIRECT(SAME 轴 13/15)",
+          "axes": {"problem":"SAME","reuse_object":"SAME","producer_consumer":"SAME","mutation_model":"STRICT_SUBSET(C4 更窄)","validity":"SAME","verify_timing":"SAME","rollback":"SAME","correctness":"SAME","mechanism":"SAME","testbed":"SAME","estimand":"SAME","oracle":"SAME","engineering":"SAME","positive_claim":"SAME","null_value":"SAME"}
+        },
+        "KEEP (arXiv:2602.23592, arXiv-only)": {
+          "overlap": "PARTIAL(强;agent-stage mutation 选择性重算,显式胜 CacheBlend)",
+          "axes": {"problem":"SAME","reuse_object":"SAME","producer_consumer":"SAME","mutation_model":"SAME","validity":"STRICT_SUBSET","verify_timing":"SAME","rollback":"STRICT_SUBSET","correctness":"STRICT_SUBSET","mechanism":"STRICT_SUBSET","testbed":"SAME","estimand":"SAME","oracle":"STRICT_SUBSET","engineering":"SAME","positive_claim":"SAME(部分)","null_value":"STRICT_SUBSET"}
+        },
+        "CacheBlend (EuroSys 2025)": {
+          "overlap": "PARTIAL(机制同族,触发为 chunk 重组合;P6 已证其选择器在 mutation 场景失效)",
+          "axes": {"problem":"ORTHOGONAL","reuse_object":"SAME","producer_consumer":"SAME","mutation_model":"ORTHOGONAL","validity":"SAME","verify_timing":"SAME","rollback":"STRICT_SUBSET","correctness":"SAME","mechanism":"SAME(家族)","testbed":"STRICT_SUBSET","estimand":"SAME","oracle":"SAME","engineering":"SAME","positive_claim":"STRICT_SUBSET","null_value":"STRICT_SUBSET"}
+        }
+      },
+      "residual": "receiver×mutation 联合条件化;task-conditioned 修复;跨 mutation 结构统一分类学",
+      "kill_experiment": "交叉格修复需求不随 receiver 变化,或 P6 新版已覆盖交叉格"
+    }
+  }
+}
