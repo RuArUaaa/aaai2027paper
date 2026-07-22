@@ -1,19 +1,50 @@
 # RESEARCHSTUDIO_HANDOFF
 
-CURRENT_PHASE: Academic Pipeline Stage 2.5 COMPLETE / PASS_WITH_NOTES;已到 mandatory owner checkpoint,不得进入 Stage 3
-LAST_COMPLETED: 21-key 一手引用核验;三组描述性计数独立复算与一轮更正;匿名 Code/Data Supplement;checklist 提交处置;zero-context integrity review
-ACTIVE_WORKERS: 主协调代理;Stage 2.5 citation/raw-count/supplement/最终复审子代理均已完成并退出
+CURRENT_PHASE: Academic Pipeline Stage 3 SUBMISSION_PREPARATION;Stage 2.5 PASS_WITH_NOTES 已获负责人接受;远端备份完成;等待隔夜冷读
+LAST_COMPLETED: GitHub main fast-forward push并核验 local HEAD=origin/main=remote main=e3867d7;Stage 3 scope/date/artifact gate 与提交记录模板落盘
+ACTIVE_WORKERS: 主协调代理;当前无执行子代理;冷读不得早于 2026-07-24
 CURRENT_CANDIDATES: PRIMARY=MEASURE_BEFORE_YOU_REUSE_MEASUREMENT_PAPER;ACTUAL_SKIP_HUMANEVALFIX=INELIGIBLE_AS_PROPOSED;AutoGen handoff=Q1/CODE_ONLY;LangGraph two-consumer fixture=Q0/CODE_ONLY;RetryAgent Preselector=Q1/CODE_ONLY
-CURRENT_VERDICT: STAGE2_5=PASS_WITH_NOTES;C6_STRONG_TESTBED=NOT_FOUND;C3_DIRECTED_VERIFIER_CANDIDATE=NOT_FOUND;C3_GATE_EFFECT=UNCHANGED;C6_GATE_EFFECT=UNCHANGED;PRIMARY_PAPER_ROUTE=PURE_MEASUREMENT_AND_METHODOLOGY;EXPERIMENT_AUTHORIZATION=NONE
-BLOCKERS: 需负责人接受 Stage 2.5 checkpoint;匿名 supplement 不分发全部 aggregate raw inputs;Q rubric 尚无独立 inter-rater validation;无 TRACE_CONFIRMED Q2/Q3 正例;模型/GPU/正式实验继续 BLOCK
-LAST_COMMIT: e0f19f500407b72469b3d4052f2306445176b95c docs: record Stage 2 manuscript checkpoint
-NEXT_ACTION: 停止并等待负责人接受 Stage 2.5;接受后才可规划 Stage 3,且不会自动授权模型/GPU/正式实验
-DECISION_REQUIRED: 是(接受 Stage 2.5 PASS_WITH_NOTES 并授权进入 Stage 3,或要求第二轮定向更正)
+CURRENT_VERDICT: STAGE2_5=ACCEPTED_PASS_WITH_NOTES;STAGE3_SCOPE=SUBMISSION_PREPARATION_ONLY;C6_STRONG_TESTBED=NOT_FOUND;C3_DIRECTED_VERIFIER_CANDIDATE=NOT_FOUND;PRIMARY_PAPER_ROUTE=PURE_MEASUREMENT_AND_METHODOLOGY;EXPERIMENT_AUTHORIZATION=NONE
+BLOCKERS: 无科学或仓库 blocker;全文上传按负责人要求主动延迟至冷读后;匿名 supplement 仍不分发全部 aggregate raw inputs;模型/GPU/正式实验继续 BLOCK
+LAST_COMMIT: e3867d7b929bbbd7491da2ba27031d7589a3a571 paper: complete Stage 2.5 integrity review
+NEXT_ACTION: 2026-07-24至07-25对 manuscript/build/main.pdf 做隔夜冷读;只记录和处理表述/排版问题;最迟2026-07-27 18:00+08:00完成三件套上传
+DECISION_REQUIRED: 否;仅当冷读发现需改变数字/主张/方法/引用解释的问题时升级负责人裁决
 REPO_PATH: /Users/zijian_nong/research/aaai2027-new(远端 https://github.com/RuArUaaa/aaai2027paper)
 BRANCH: main
-HEAD: e0f19f500407b72469b3d4052f2306445176b95c(Stage 2.5 package commit 的 parent)
-GIT_STATUS: Stage 2.5 修订与审计产物待提交;任务前 .agents/ .claude/ .codex/ 保持未跟踪且不纳入提交
-LAST_UPDATED: 2026-07-22T19:21:56+08:00
+HEAD: e3867d7b929bbbd7491da2ba27031d7589a3a571(Stage 3 planning commit 的 parent;已与远端同步)
+GIT_STATUS: Stage 3 planning/handoff 文档待提交;任务前 .agents/ .claude/ .codex/ 保持未跟踪且不纳入提交
+LAST_UPDATED: 2026-07-23T00:29:40+08:00
+
+## Stage 3 owner authorization and remote-backup checkpoint (2026-07-23)
+
+CURRENT_PHASE: Stage 3 SUBMISSION_PREPARATION / ACTIVE
+OWNER_DECISION: ACCEPT_STAGE2_5_PASS_WITH_NOTES_AND_AUTHORIZE_STAGE3
+AUTHORIZED_SCOPE: push;overnight cold-read polish limited to wording/layout;main PDF+checklist PDF+Code/Data Supplement ZIP upload;submission record archival
+FORBIDDEN_SCOPE: all experiments;studied-system model/API calls;GPU;new trajectories;ToolSandbox D0-bis;new testbed search;new citations;changes to numbers,claims,methods,or frozen gate verdicts
+PUSH_STATUS: COMPLETE
+PUSH_TRANSPORT: GitHub SSH over port 443 after local HTTPS connection timeout;fast-forward only;history unchanged
+PUSHED_RANGE: 92d7e91f55f8e2a8dfe786951f98d7fa7639ae5a..e3867d7b929bbbd7491da2ba27031d7589a3a571
+REMOTE_VERIFICATION: local HEAD=origin/main=GitHub refs/heads/main=e3867d7b929bbbd7491da2ba27031d7589a3a571
+PREEXISTING_UNTRACKED: .agents/;.claude/;.codex/ preserved and excluded
+OFFICIAL_FULL_DEADLINE: 2026-07-28T23:59:00-12:00(2026-07-29T19:59:00+08:00)
+OFFICIAL_SUPPLEMENT_DEADLINE: 2026-07-31T23:59:00-12:00(2026-08-01T19:59:00+08:00)
+INTERNAL_UPLOAD_TARGET: 2026-07-27T18:00:00+08:00;all three artifacts;at least 48h full-paper buffer
+COLD_READ_WINDOW: 2026-07-24 through 2026-07-25;PDF-first;read-only findings before edits
+BASELINE_MAIN_PDF: manuscript/build/main.pdf;320391 bytes;sha256=c80e67e694e448a1b4aa3a2a2002c969059cf3dd2df72bdbfa69eb9fe235bb68
+BASELINE_CHECKLIST_PDF: manuscript/build/reproducibility_checklist.pdf;95691 bytes;sha256=d3a68508bc0e0eaabcb654c32944ed3e744f840d2f259dee22014fc5d782cba5
+BASELINE_SUPPLEMENT_ZIP: manuscript/supplement/aaai27_code_data_supplement.zip;76847 bytes;sha256=d73c6fa6949e70c3f5a97c19f163247bf2190ed990b422a563f78fdbd5e3629d
+OPENREVIEW_SUBMISSION_NUMBER: 44503
+UPLOAD_STATUS: NOT_STARTED_BY_DESIGN;do not upload on 2026-07-23
+STAGE3_PLAN: docs/STAGE3_SUBMISSION_PLAN.md
+SUBMISSION_RECORD: docs/AAAI27_FULL_SUBMISSION_RECORD.md
+EXPERIMENT_AUTHORIZATION: NONE
+MODEL_EXPERIMENT_CALLS: 0
+GPU_RUNS: 0
+NEW_AGENT_TRAJECTORIES: 0
+LARGE_EXPERIMENTS: 0
+NEXT_ACTION: wait overnight;then create manuscript/stage3/cold_read_report.md from rendered-PDF cold read before any wording/layout edit
+NEXT_DECISION: only substantive cold-read findings require owner adjudication;otherwise proceed to final build/upload gate
+LAST_UPDATED: 2026-07-23T00:29:40+08:00
 
 ## Stage 2.5 integrity checkpoint (2026-07-22)
 

@@ -32,6 +32,7 @@ and both checklist TeX files. Its manifest and test record the anonymity scan.
 
 AAAI-27 treats the optional supplementary document and Code/Data archive as
 separate uploads. The conference page states a July 31, 2026 AoE supplementary
-deadline and requires anonymity and no external web pointers inside the
-submission artifact:
+deadline, requires anonymity, and prohibits directing reviewers to
+supplementary material hosted on the web. This does not remove pinned
+third-party source locators used for provenance:
 <https://aaai.org/conference/aaai/aaai-27/supplementary-material/>.
