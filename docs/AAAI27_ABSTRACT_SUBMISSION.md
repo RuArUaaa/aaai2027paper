@@ -6,7 +6,7 @@ OWNER_DECISION = OPTION_A
 PAPER_TYPE = MEASUREMENT_AND_METHODOLOGY
 OPENREVIEW_SUBMISSION = NOT_PERFORMED
 EXPERIMENT_AUTHORIZATION = NONE
-LAST_UPDATED = 2026-07-22T12:44:00+08:00
+LAST_UPDATED = 2026-07-22T15:14:55+08:00
 ```
 
 This file supersedes the proposed submission text in
@@ -23,45 +23,56 @@ substantive title or abstract change may lead to rejection without review:
 
 ## Title
 
-> **Measure Before You Reuse: An Identifiability-First Study of Computation
-> Reuse in LLM Agent Workflows**
+> **Measure Before You Reuse: Qualifying Computation-Reuse Claims in LLM
+> Agent Workflows**
+
+Revision note (2026-07-22T15:14:55+08:00, owner-confirmed): title option B was
+accepted and the Fable 5 wording was narrowed after claim audit, before any
+OpenReview submission. The final text scopes the proxy failures to the tested
+analyses, names the precise SWE-agent component, makes the verifier distinction
+conditional, and describes D0 as an executed static gate rather than a
+validated end-to-end experiment. No numerical result or new contribution was
+added.
 
 ## TL;DR
 
-> We show why final-text proxies alone do not identify native use or
-> reuse-caused effects,
-> provide a preregistered evidence ladder and bounded framework audit, and
-> formalize verifier-aware reuse economics together with an outcome-grounded
-> measurement protocol.
+> In our analyses, final-text proxies did not validate native use or
+> reuse-caused effects. We provide an evidence ladder, a pinned three-framework
+> audit, verifier-aware economics, and an outcome-grounded protocol with an
+> executed static gate.
 
 ## Abstract
 
-> Reusing previously completed computation can reduce the cost of LLM agent
-> workflows, but a reuse claim is meaningful only if one can identify what was
-> delivered, what was accessed, what execution was skipped, and whether reuse
-> changed the outcome. We study this measurement problem. First, our gate
-> analyses show that text-based similarity, normalized overlap, and citation
-> signals did not provide validated evidence for the equivalence or
-> downstream-dependence claims tested. Second, we
-> introduce a preregistered evidence ladder that separates non-delivery, typed
-> projection, and read-level access, and apply it at pinned commits to three
-> open-source agent frameworks. Within this bounded audit, none provides public
-> runtime traces sufficient for a strong selective-consumption testbed. Third,
-> we derive a cost model for speculative reuse that makes verifier cost and
-> post-hoc blame attribution explicit. Finally, we specify an outcome-grounded
-> protocol for measuring realized computation skips, validation overhead, and
-> outcome agreement under controlled reuse, without treating final-text
-> similarity as evidence of use. Together, these results provide an auditable
-> standard for deciding when an agent-workflow reuse claim is
-> supported, when it is only code-possible, and when the available measurement
-> cannot identify the claim.
+> Reusing previously completed computation—such as cached tool results, recorded
+> model responses, or repaired intermediate state—can reduce the cost of LLM
+> agent workflows. Yet a reuse claim is meaningful only if one can identify
+> what was delivered, what was actually accessed, which executions were
+> skipped, at what validation cost, and whether reuse changed the outcome. We
+> study this measurement problem. First, across three proxy analyses, output
+> similarity, lexical overlap, and citation mentions did not provide validated
+> evidence for the equivalence or downstream-dependence claims tested. Second,
+> we introduce a preregistered evidence ladder that separates non-delivery,
+> typed projection, and read-level access, and apply it at pinned commits to
+> AutoGen, LangGraph, and SWE-agent's RetryAgent; within this bounded audit,
+> none of the located public artifacts provides a qualifying runtime trace for
+> a strong selective-consumption testbed. Third, we derive a cost model for
+> speculative reuse that shows that the feasible cost regime depends on
+> verifier cost and on whether a verifier can distinguish reuse-induced damage
+> from baseline error. Finally, we specify an outcome-grounded protocol for
+> measuring realized skips, validation overhead, and outcome agreement, and
+> apply its static qualification gate, which rejects a proposed testbed as
+> ineligible under the stated counterfactual and implementation criteria.
+> Together, these results provide an auditable standard for deciding when an
+> agent-workflow reuse claim is supported, when it is only code-possible, and
+> when the available measurement cannot identify the claim.
 
 ## Topics and keywords
 
-- Primary topic: Intelligent Agents / LLM-based Agents — evaluation and
-  analysis, using the closest available OpenReview taxonomy label.
-- Secondary topics: Evaluation and Benchmarks; Reproducibility; ML Systems and
-  efficiency.
+- Primary topic: `MAS: LLM-based Agents & Agentic Systems`.
+- Secondary topics:
+  - `ML: Evaluation, Benchmarking, Datasets & Analysis`;
+  - `ML: Efficient, Edge, Green & Hardware-aware ML`;
+  - `MAS: Tool Use, Orchestration & Multi-Agent Coordination for LLMs`.
 - Keywords: LLM agents; computation reuse; measurement validity; testbed
   qualification; verification cost; reproducibility.
 
@@ -70,10 +81,11 @@ substantive title or abstract change may lead to rejection without review:
 The submission text commits to four contributions that already have repository
 evidence or an authorized design artifact:
 
-1. failures of final-text usage proxies;
+1. three bounded failure analyses of final-text usage proxies;
 2. the Q0–Q3/QX evidence ladder and bounded three-framework audit;
 3. the verifier-cost and post-hoc attribution model;
-4. an outcome-grounded measurement protocol.
+4. an outcome-grounded measurement protocol, together with its executed
+   static qualification gate (D0).
 
 It does **not** claim that:
 
@@ -85,7 +97,7 @@ It does **not** claim that:
 
 A later controlled run, if separately authorized, is an evaluation of the
 fourth contribution rather than a new primary contribution. Failure to run it
-does not require deleting an empirical contribution claim from this abstract.
+does not change the executed D0 qualification-gate claim in this abstract.
 
 ## Manual submission checklist
 
