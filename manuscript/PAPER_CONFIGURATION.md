@@ -1,7 +1,7 @@
 # Paper Configuration
 
 ```text
-PIPELINE_STAGE = 2_WRITE
+PIPELINE_STAGE = 2_COMPLETE_AWAITING_2_5
 MODE = FULL
 VENUE = AAAI-27_MAIN_TECHNICAL_TRACK
 PAPER_TYPE = MEASUREMENT_AND_METHODOLOGY
@@ -21,11 +21,11 @@ execution, cost, outcome, and causal attribution.
 
 The paper does not introduce a cache or reuse mechanism. It does not claim a
 strong selective-consumption testbed, a runtime directed verifier, or a new
-actual-skip experiment. The three-framework audit is a frozen, bounded sample
-and is not an ecosystem census.
+actual-skip experiment. The three native-path audit units are a prospectively
+frozen, bounded sample and are not framework-wide classifications or an
+ecosystem census.
 
 The OpenReview title and abstract are authoritative. Any copy in `main.tex`
 must remain semantically and numerically identical through the full-paper
 deadline. Stage 2 ends at a complete compiled draft; Stage 2.5 is a separate
 mandatory integrity gate.
-

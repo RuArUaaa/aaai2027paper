@@ -1,0 +1,35 @@
+{
+  "schema_version": "aaai27-figure-manifest/v1",
+  "generated_at": "2026-07-22T17:24:00+08:00",
+  "figure": "figures/verifier_cost_sign_map.png",
+  "role": "presentation-only verifier-cost sign map for Figure 2",
+  "input": {
+    "path": "../gates/C3/v2_1/results_v2_1.json",
+    "sha256": "e689dde56e4b2c4276a4f9c0c5c9d1ef060079b8ab1dadd0e7afe385d6032b87"
+  },
+  "generator": {
+    "path": "figures/make_economics_figure.py",
+    "sha256": "3bd245c0323b8c576f7d7f3854a7b4d779ef33620399cf57eaffb75cd6bcac9e",
+    "runtime": "Python 3 + Pillow; CPU only",
+    "model_calls": 0,
+    "gpu_runs": 0
+  },
+  "output": {
+    "sha256": "7e6db87846de3cb9d660266e0d0d8a347c2abb3ec26ddf9ef1fb1af1c5d82f12",
+    "pixels": [1995, 640],
+    "declared_dpi": [300, 300],
+    "embedded_pdf_ppi": [300, 300],
+    "color_space": "RGB"
+  },
+  "accessibility": {
+    "white_background_contrast_ratios": {
+      "#0072B2": 5.185,
+      "#A33F00": 6.425,
+      "#666666": 5.742,
+      "#7A3000": 9.332
+    },
+    "minimum_ratio": 5.185,
+    "line_styles": "solid versus dashed, in addition to color"
+  },
+  "scientific_scope": "No new result is computed. The script maps committed s, rho_outcome, rho_blame, and RB values through the committed cost equation."
+}
