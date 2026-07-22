@@ -1,19 +1,41 @@
 # RESEARCHSTUDIO_HANDOFF
 
-CURRENT_PHASE: Academic Pipeline Stage 2 WRITE 已由负责人授权;AAAI-27 measurement/methodology manuscript 正在构建
-LAST_COMPLETED: 负责人已手工提交 OpenReview abstract,Submission Number=44503;权威标题、摘要与 topics 已冻结
-ACTIVE_WORKERS: 主协调代理 + Stage 2 architecture/citation/LaTeX 只读执行子代理
-CURRENT_CANDIDATES: PRIMARY=MEASURE_BEFORE_YOU_REUSE_MEASUREMENT_PAPER;ACTUAL_SKIP_HUMANEVALFIX=INELIGIBLE_AS_PROPOSED;AutoGen=Q1/CODE_ONLY;LangGraph=Q0/CODE_ONLY;SWE-agent=Q1/CODE_ONLY
+CURRENT_PHASE: Academic Pipeline Stage 2 COMPLETE;完整 AAAI-27 draft 已编译并提交仓库,等待负责人授权 mandatory Stage 2.5 integrity gate
+LAST_COMPLETED: commit 13be818 完成 main.tex、19-key bibliography、Figure 2、独立 reproducibility checklist、build report 与自动检查;7页内容+第8页纯 references
+ACTIVE_WORKERS: 主协调代理;Stage 2 architecture/citation/claim/format/reviewer 子代理均已完成并退出
+CURRENT_CANDIDATES: PRIMARY=MEASURE_BEFORE_YOU_REUSE_MEASUREMENT_PAPER;ACTUAL_SKIP_HUMANEVALFIX=INELIGIBLE_AS_PROPOSED;AutoGen handoff=Q1/CODE_ONLY;LangGraph two-consumer fixture=Q0/CODE_ONLY;RetryAgent Preselector=Q1/CODE_ONLY
 CURRENT_VERDICT: C6_STRONG_TESTBED=NOT_FOUND;C3_DIRECTED_VERIFIER_CANDIDATE=NOT_FOUND;C3_GATE_EFFECT=UNCHANGED;C6_GATE_EFFECT=UNCHANGED;PRIMARY_PAPER_ROUTE=PURE_MEASUREMENT_AND_METHODOLOGY;EXPERIMENT_AUTHORIZATION=NONE
-BLOCKERS: manuscript 尚不存在;仓库外 gate 原始数据尚未形成匿名可发布 bundle;Fable 5 Route C 已在 D0 停止;模型/GPU/正式实验维持 BLOCK
-LAST_COMMIT: df4127c docs: finalize AAAI-27 abstract submission text
-NEXT_ACTION: 构建七页 spine、claim-evidence matrix、官方 AAAI LaTeX 工程与完整 manuscript v0;随后进入 Stage 2.5 integrity gate
-DECISION_REQUIRED: 否(Stage 2 已授权;Stage 2 完成后必须停在用户确认 checkpoint)
+BLOCKERS: mandatory Stage 2.5 尚未执行;仓库外 aggregate raw files 尚未形成匿名可发布 bundle;无 TRACE_CONFIRMED Q2/Q3 正例;模型/GPU/正式实验继续 BLOCK
+LAST_COMMIT: 13be8182d89c99ee53db5224b066c3d0707796eb paper: add complete AAAI-27 Stage 2 draft
+NEXT_ACTION: 经负责人确认后启动 formal Stage 2.5 zero-context integrity review;在此之前不改实验状态、不启动模型/GPU
+DECISION_REQUIRED: 是(是否授权进入 Stage 2.5;Stage 2 已按 gate 要求停止)
 REPO_PATH: /Users/zijian_nong/research/aaai2027-new(远端 https://github.com/RuArUaaa/aaai2027paper)
 BRANCH: main
-HEAD: df4127c471043f2614cf15629167d55867092d5d(Stage 2 start edits 的 parent)
-GIT_STATUS: Stage 2 submission-state 与 manuscript 产物在建;任务前 .agents/ .claude/ .codex/ 不纳入研究提交
-LAST_UPDATED: 2026-07-22T16:08:58+08:00
+HEAD: 13be8182d89c99ee53db5224b066c3d0707796eb(Stage 2 completion handoff commit 的 parent)
+GIT_STATUS: 本 handoff 更新待提交;任务前 .agents/ .claude/ .codex/ 保持未跟踪且不纳入提交
+LAST_UPDATED: 2026-07-22T17:16:44+08:00
+
+## Stage 2 manuscript completion checkpoint (2026-07-22)
+
+CURRENT_PHASE: Stage 2 COMPLETE / AWAITING STAGE 2.5 AUTHORIZATION
+LAST_COMPLETED: complete anonymous AAAI-27 measurement/methodology draft committed as 13be818;OpenReview Submission Number 44503 title and abstract remain locked
+CURRENT_HEAD: 13be8182d89c99ee53db5224b066c3d0707796eb
+MANUSCRIPT: manuscript/main.tex;8 pages total;pages 1--7 content;page 8 references only;19 cited keys;official AAAI-27 submission style
+CHECKLIST: manuscript/reproducibility_checklist.tex;31/31 response slots completed;standalone 2-page US Letter PDF compiled locally
+SCIENTIFIC_POSITIONING: reuse-specific claim-qualification protocol, not general provenance taxonomy, cache mechanism, framework census, deployed saving, or actual-skip experiment
+AUDIT_UNIT_SCOPE: AutoGen handoff example=Q1/CODE_ONLY;LangGraph two-consumer fixture=Q0/CODE_ONLY;RetryAgent optional Preselector=Q1/CODE_ONLY
+INDEPENDENT_STAGE2_AUDITS: reviewer initial weak-reject/major-revision findings addressed;claim-evidence audit P0=0 with all six P1 corrections incorporated;format P0 fixed(color contrast,300 ppi,fresh build,completed checklist)
+BUILD_CHECKS: title/abstract lock PASS;anonymous source PASS;19/19 citation keys resolved;8-page PDF PASS;page 8 reference-only PASS;US Letter PASS;embedded non-Type-3 fonts PASS;Figure 2 300 ppi+manifest hashes PASS;no overfull/undefined warnings PASS
+FOCUSED_TESTS: C3 v2.1 6/6 PASS;C6 5/5 PASS;selective audit 6/6 PASS;D0 3/3 PASS;D0 source hashes 10/10 PASS;git diff --check PASS
+REPRODUCIBILITY_BOUNDARY: tracked code/fixtures reproduce paths and invariants;aggregate statistics, historical diff JSON, and VRAA injection bundle still require separately preserved SHA-bound external raw files
+EXPERIMENT_AUTHORIZATION: NONE
+MODEL_EXPERIMENT_CALLS: 0
+GPU_RUNS: 0
+NEW_AGENT_TRAJECTORIES: 0
+LARGE_EXPERIMENTS: 0
+NEXT_ACTION: owner authorization for mandatory formal Stage 2.5 zero-context integrity verification
+NEXT_DECISION: proceed to Stage 2.5, or request targeted Stage 2 wording changes first;do not authorize experiments through this checkpoint
+LAST_UPDATED: 2026-07-22T17:16:44+08:00
 
 ## OpenReview submission and Stage 2 WRITE checkpoint (2026-07-22)
 
