@@ -4,7 +4,7 @@
   "protocol": "audits/selective_consumption/protocol.md",
   "protocol_commit": "74f9c1407735121837becb91169adddd4f94c16f",
   "candidate_universe_commit": "74f9c1407735121837becb91169adddd4f94c16f",
-  "collected_at": "2026-07-22T11:05:00+08:00",
+  "collected_at": "2026-07-22T10:43:00+08:00",
   "collection_counters": {
     "model_experiment_calls": 0,
     "gpu_runs": 0,
