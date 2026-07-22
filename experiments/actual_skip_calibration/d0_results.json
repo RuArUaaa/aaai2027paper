@@ -1,0 +1,72 @@
+{
+  "schema_version": "actual-skip-d0-results/v1",
+  "status": "complete",
+  "verdict": "INELIGIBLE_AS_PROPOSED",
+  "source_repository_head": "ae77f91bb8baad5f77da1278abb1a20272660417",
+  "native_workflow": {
+    "llm_nodes": [
+      "planner",
+      "coder",
+      "reviewer",
+      "fixer"
+    ],
+    "llm_calls_per_full_workflow": 4,
+    "test_execution": "host_side_sandbox",
+    "interactive_agent_tools_present": false,
+    "explicit_executed_boolean_present": false,
+    "skip_encoded_as_artifact_injection": true,
+    "source_and_test_in_every_llm_prompt": true,
+    "native_response_tool_2x2_present": false
+  },
+  "data": {
+    "humanevalfix_tasks": 164,
+    "historical_trace_rows": 164,
+    "historical_certificate_matches": 164,
+    "historical_certificate_total": 164,
+    "project_level_pristine_tasks": 0
+  },
+  "fable5_budget_reconstruction": {
+    "tasks": 164,
+    "arms": 4,
+    "conditions": 3,
+    "optimistic_scenario_assumptions": [
+      "exactly two model calls per condition cell",
+      "only identity produces exact response hits",
+      "both stages hit in A10 and A11",
+      "A01 tool-only replay saves no model call",
+      "no interactive tool-loop calls"
+    ],
+    "condition_cells": 1968,
+    "hypothetical_two_stage_calls_per_cell": 2,
+    "hypothetical_two_stage_no_hit_calls": 3936,
+    "optimistic_identity_response_hits_saved_calls": 656,
+    "optimistic_two_stage_executed_calls": 3280,
+    "separate_warmup_calls": 328,
+    "optimistic_two_stage_with_separate_warmup_calls": 3608,
+    "native_four_node_no_hit_calls": 7872,
+    "fable5_cap": 2000,
+    "fable5_cap_sufficient": false
+  },
+  "historical_actual_skip": {
+    "vraa_traces": 40,
+    "vraa_workflows": 200,
+    "vraa_generation_records": 720,
+    "derived_artifact_injection_events": 80,
+    "derived_plan_skips": 40,
+    "derived_patch_skips": 40,
+    "comparator_discriminating_traces": 0,
+    "comparator_total_traces": 40,
+    "scientific_verdict": "NO_GO_FOR_VRAA_AAAI"
+  },
+  "gate_effects": {
+    "c3": "UNCHANGED_NEED_NEW_VERIFIER",
+    "c6": "UNCHANGED_STRONG_TESTBED_NOT_FOUND"
+  },
+  "authorization_and_usage": {
+    "experiment_authorization": "NONE",
+    "model_experiment_calls": 0,
+    "gpu_runs": 0,
+    "new_agent_trajectories": 0,
+    "experimental_mutations": 0
+  }
+}

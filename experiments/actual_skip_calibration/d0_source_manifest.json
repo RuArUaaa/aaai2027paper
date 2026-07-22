@@ -1,0 +1,73 @@
+{
+  "schema_version": "actual-skip-d0-source-manifest/v1",
+  "created_at": "2026-07-22T12:44:00+08:00",
+  "source_repository": "/Users/zijian_nong/research/aaai2027",
+  "source_repository_head": "ae77f91bb8baad5f77da1278abb1a20272660417",
+  "source_repository_mode": "read_only_dirty_worktree_preserved",
+  "clean_clone_reproduction": "Only entries marked tracked_at_source_head are available from a clean clone. Historical traces and VRAA files marked external_local_artifact require the separately preserved files at the recorded SHA-256 values.",
+  "verdict": "INELIGIBLE_AS_PROPOSED",
+  "files": [
+    {
+      "path": "pipelines/task_b.py",
+      "sha256": "ae9b8df302d9d9122e455c627f6f11b70db25cf72fc53ce4ac36fccbd77c7486",
+      "availability": "tracked_at_source_head",
+      "role": "tracked four-agent HumanEvalFix workflow and prompt assembly"
+    },
+    {
+      "path": "pipelines/run_taskb_pilot.py",
+      "sha256": "4c07431f65304263e305473b2dc02715a0e5c30db3cc36ca6ffc136174f423ce",
+      "availability": "tracked_at_source_head",
+      "role": "dataset loader without pinned dataset revision"
+    },
+    {
+      "path": "runs/traces/taskB_e0.jsonl",
+      "sha256": "b104ef381228ac1decb8cc6f744f8611a4f1c89b5edfc913b8fb9365e70cd399",
+      "line_count": 164,
+      "availability": "external_local_artifact_not_in_clean_clone",
+      "role": "historical full-benchmark traces"
+    },
+    {
+      "path": "runs/tracebuild_discovery/EXPERIMENT_AUDIT.json",
+      "sha256": "26c6e47017d255154aab412cfa0940bef458cda751362b615dc9cab9db61a545",
+      "availability": "tracked_at_source_head",
+      "role": "full-prefix and zero-selective-read negative evidence"
+    },
+    {
+      "path": "runs/phase0_validator/validator_feasibility.json",
+      "sha256": "a40ec1b68220e26703491037178eb09e4c2c0075799d7be2b6c7acd6af28034d",
+      "availability": "tracked_at_source_head",
+      "role": "task-native certificate agreement and diagnostic timing"
+    },
+    {
+      "path": "runs/vraa/pilot/SOURCE_MANIFEST.json",
+      "sha256": "e34486de00547067476f64d35e5b12c9344536903a64e4874779b9c4d47f8d9d",
+      "aggregate_sha256_declared": "8d7e58e00679051d1676fa28f1affc4f1f9d09018460c42baaf215e2a134157b",
+      "availability": "external_local_artifact_not_in_clean_clone",
+      "role": "frozen VRAA source-bundle manifest"
+    },
+    {
+      "path": "runs/vraa/pilot/SOURCE_SNAPSHOT/pipelines/tracebuild_harness.py",
+      "sha256": "4e5fb101e3c421f657f2d1e0ce45b0dc9bf2b35210c762afbc09c5a79d89eb5a",
+      "availability": "external_local_artifact_not_in_clean_clone",
+      "role": "frozen artifact-injection execution seam and event schema"
+    },
+    {
+      "path": "runs/vraa/pilot/SOURCE_SNAPSHOT/pipelines/vraa_pilot_cpu.py",
+      "sha256": "5c41c5c1795e0f835d8f6ca93c86b0353644b1aeb02cbb3767e8a01c2ff67945",
+      "availability": "external_local_artifact_not_in_clean_clone",
+      "role": "frozen five-workflow-per-trace orchestration"
+    },
+    {
+      "path": "runs/vraa/pilot/MERGE_COMPLETE.json",
+      "sha256": "a29dd02b7f33b46e42e0fedbf04c5b20ab2919d678425f529ba3b908cf7d1b95",
+      "availability": "external_local_artifact_not_in_clean_clone",
+      "role": "frozen merged counts"
+    },
+    {
+      "path": "runs/vraa/m4_result_review/REPORT.md",
+      "sha256": "e56a646e33fb9df6abcbbbeb399cc6ecd60f30fe4b3aaca6ed90d0028738b343",
+      "availability": "external_local_artifact_not_in_clean_clone",
+      "role": "independent VRAA comparator and claim-limit review"
+    }
+  ]
+}
