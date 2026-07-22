@@ -1,19 +1,19 @@
 # RESEARCHSTUDIO_HANDOFF
 
 CURRENT_PHASE: selective-consumption 审计 verdict 完成;重大决定事件 3;等待负责人裁决
-LAST_COMPLETED: framework matrix + verdict + owner decision memo 已完成,待最终 audit commit
+LAST_COMPLETED: framework matrix + verdict + owner decision memo;commit d3ad56e
 ACTIVE_WORKERS: 无
 CURRENT_CANDIDATES: AutoGen=Q1/CODE_ONLY;LangGraph=Q0/CODE_ONLY;SWE-agent=Q1/CODE_ONLY
 CURRENT_VERDICT: C6_STRONG_TESTBED=NOT_FOUND;C3_DIRECTED_VERIFIER_CANDIDATE=NOT_FOUND;PRIMARY_CANDIDATE=NONE_PENDING_OWNER_DECISION;EXPERIMENT_AUTHORIZATION=NONE
 BLOCKERS: 重大决定事件 3 已触发;继续研究方向需要负责人在 measurement/position paper 与 bounded direction reset 间授权;模型/GPU/正式实验维持 BLOCK
-LAST_COMMIT: 356e9bd audit: refresh raw integration fact
-NEXT_ACTION: 提交最终 verdict 包后停止;等待负责人审查并选择 Option A(推荐)或 Option B
+LAST_COMMIT: d3ad56e audit: conclude selective-consumption qualification
+NEXT_ACTION: 停止并等待负责人审查;选择 Option A(推荐)或 Option B
 DECISION_REQUIRED: 是(ALL_FROZEN_CANDIDATES_ARE_Q0_Q1_OR_CODE_ONLY)
 REPO_PATH: /Users/zijian_nong/research/aaai2027-new(远端 https://github.com/RuArUaaa/aaai2027paper)
 BRANCH: main
-HEAD: 356e9bd8ab5350e7163a23efeb5bc9d7e41ba5fb(verdict commit parent)
-GIT_STATUS: framework_matrix/verdict/decision memo/handoff 待最终 audit commit;任务前 .agents/ .claude/ .codex/ 未跟踪且禁止纳入提交
-LAST_UPDATED: 2026-07-22T10:56:32+08:00
+HEAD: d3ad56e5ea57c9ac719301de34f54b74bd169baf(verdict commit;本 handoff 同步提交的 parent)
+GIT_STATUS: verdict commit 后仅任务前 .agents/ .claude/ .codex/ 未跟踪;本 handoff/decision memo 同步修改待提交
+LAST_UPDATED: 2026-07-22T10:58:44+08:00
 
 ## TAKEOVER checkpoint (2026-07-22)
 
@@ -144,15 +144,15 @@ OPTIONS:
 - B:关闭当前 C3/C6 strong 形式,授权有界重新选题;任何实验前另立 protocol/prereg
 RECOMMENDATION: Option A;保留 B 作为负责人判断 measurement gap 不足以投稿时的 fallback
 REQUESTED_AUTHORIZATION: 负责人选择 A 或 B;本 checkpoint 不请求模型/GPU/正式实验授权
-CURRENT_HEAD: 356e9bd8ab5350e7163a23efeb5bc9d7e41ba5fb(verdict package parent)
-WORKTREE_STATUS: verdict package + handoff 待提交;任务前 .agents/.claude/.codex 原样未跟踪
+CURRENT_HEAD: d3ad56e5ea57c9ac719301de34f54b74bd169baf(verdict package commit;本 handoff 同步提交的 parent)
+WORKTREE_STATUS: verdict package 已提交;提交后仅任务前 .agents/.claude/.codex 原样未跟踪
 HANDOFF: docs/RESEARCHSTUDIO_HANDOFF.md
 MODEL_EXPERIMENT_CALLS: 0
 GPU_RUNS: 0
 NEW_AGENT_TRAJECTORIES: 0
 LARGE_EXPERIMENTS: 0
-NEXT_ACTION: final commit 后停止并等待负责人
-LAST_UPDATED: 2026-07-22T10:56:32+08:00
+NEXT_ACTION: 停止并等待负责人
+LAST_UPDATED: 2026-07-22T10:58:44+08:00
 
 ## 评审裁决落实表(2026-07-21 REQUEST_CHANGES)
 
@@ -171,9 +171,9 @@ LAST_UPDATED: 2026-07-22T10:56:32+08:00
 ## 当前有效结论(以此为准,v1 冲突处以 v2 为准)
 
 - C3:naive 投机微利窗 v≲8%(不是 v1 说的判死);定向 verifier 存在则窗至 v≤13.7%;**定向 verifier 是否存在 = 核心未决问题**(NEG-11 封死文本启发式)。
-- C6:机制未判死也未证实;文本 usage 代理第三次失效(测量层成立,机制层不成立);合法 testbed 特征 = 原生选择性路由。
+- C6:机制未判死也未证实;文本 usage 代理第三次失效;本轮 frozen universe 中 C6 strong testbed=NOT_FOUND,仅 Q1 weak selective routing direction=POSSIBLE。
 - C4:维持 HIGH_COLLISION 拒绝(C4-P6 DIRECT)。
-- 唯一先决未知量:公开真实 agent workflow 中是否存在原生选择性消费。
+- 当前 owner 决策点:采用 measurement/testbed position-paper idea card(推荐),或关闭当前 C3/C6 strong 形式后有界重新选题。
 
 ## 冻结资产与纪律
 

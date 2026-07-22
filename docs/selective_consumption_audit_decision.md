@@ -83,8 +83,8 @@ measurement/testbed gap as publication-worthy.
 ```text
 REQUESTED_AUTHORIZATION = Approve Option A for a bounded idea card/position-paper preregistration, or explicitly choose Option B. Do not authorize model/GPU/formal C3/C6 experiments at this checkpoint.
 
-CURRENT_HEAD = dee550be49ee3cc250bfc32354718f8fdafc7ed8 (decision-package parent before the verdict commit)
-WORKTREE_STATUS = verdict/matrix/decision/handoff files pending the final audit commit; pre-existing .agents/ .claude/ .codex/ remain untracked and untouched
+CURRENT_HEAD = d3ad56e5ea57c9ac719301de34f54b74bd169baf (verdict-package commit; this decision/handoff synchronization commit's parent)
+WORKTREE_STATUS = verdict package committed; only pre-existing .agents/ .claude/ .codex/ were untracked before this synchronization edit and remain untouched
 HANDOFF = docs/RESEARCHSTUDIO_HANDOFF.md
 ```
 
