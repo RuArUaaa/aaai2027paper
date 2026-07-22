@@ -343,4 +343,3 @@ Stop and send the owner a decision package when any of these first occurs:
 - evidence requires a model, GPU, framework modification, or large container;
 - a more direct work covers current C6 novelty;
 - load-bearing source and public trace evidence remain materially inconsistent.
-

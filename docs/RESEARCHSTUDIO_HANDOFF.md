@@ -1,19 +1,19 @@
 # RESEARCHSTUDIO_HANDOFF
 
-CURRENT_PHASE: C3 v2.1 非 verdict 分析更正完成;准备冻结 selective-consumption protocol/candidate universe
-LAST_COMPLETED: gates/C3/v2_1/ 更正+focused tests;data/SOURCE_MANIFEST.json 可复现性边界收紧
+CURRENT_PHASE: selective-consumption protocol/candidate universe 已冻结;准备逐框架取证
+LAST_COMPLETED: audits/selective_consumption/protocol.md + candidate_universe.json;commit 74f9c14
 ACTIVE_WORKERS: 无
 CURRENT_CANDIDATES: C3(NARROW_GAP + NEED_NEW_VERIFIER)/ C6(NARROW_GAP|CONDITIONAL_CLEAR_GAP + FAIL_MEASUREMENT)/ C4(REJECTED)
 CURRENT_VERDICT: PRIMARY_CANDIDATE=PENDING_GATE_REAUDIT;EXPERIMENT_AUTHORIZATION=NONE
 BLOCKERS: 无;本 Prompt 已授权有边界的选择性消费现象/testbed 资格审计;模型/GPU/正式实验维持 BLOCK
-LAST_COMMIT: ce08e71a5ed5d0f3f945214a589cfe4fc71f6c67(C3 v2.1 checkpoint 正在形成提交)
-NEXT_ACTION: 预筛并冻结 2–3 个候选;单独提交 audits/selective_consumption/protocol.md + candidate_universe.json,不得含结果
+LAST_COMMIT: 74f9c14 audit: freeze selective-consumption protocol and candidates
+NEXT_ACTION: 只读获取 AutoGen/LangGraph/SWE-agent pinned source 与既有 public traces;一框架一执行代理;主代理抽核每框架至少两个 load-bearing locators
 DECISION_REQUIRED: 否(尚未触发重大决定事件)
 REPO_PATH: /Users/zijian_nong/research/aaai2027-new(远端 https://github.com/RuArUaaa/aaai2027paper)
 BRANCH: main
-HEAD: ce08e71a5ed5d0f3f945214a589cfe4fc71f6c67
-GIT_STATUS: C3 v2.1 checkpoint 待提交;任务前 .agents/ .claude/ .codex/ 未跟踪且禁止纳入提交
-LAST_UPDATED: 2026-07-22T09:51:43+08:00
+HEAD: 74f9c1407735121837becb91169adddd4f94c16f
+GIT_STATUS: protocol checkpoint handoff 待提交;任务前 .agents/ .claude/ .codex/ 未跟踪且禁止纳入提交
+LAST_UPDATED: 2026-07-22T10:02:00+08:00
 
 ## TAKEOVER checkpoint (2026-07-22)
 
@@ -67,6 +67,23 @@ C3_CURRENT_STATUS: NARROW_GAP + NEED_NEW_VERIFIER;directed runtime verifier abse
 TESTS: C3 v2.1 6/6 PASS;C6 focused 5/5 PASS;non-corrected metric equality PASS;git diff --check PASS;frozen gates/C3/v2 diff empty
 NEXT_ACTION: 冻结 selective-consumption audit protocol 与 2–3 candidate universe
 LAST_UPDATED: 2026-07-22T09:51:43+08:00
+
+## Selective-consumption protocol freeze checkpoint (2026-07-22)
+
+CURRENT_PHASE: protocol/candidate universe frozen;source/trace evidence 尚未开始
+LAST_COMPLETED: result-free protocol commit 74f9c14
+CURRENT_HEAD: 74f9c1407735121837becb91169adddd4f94c16f
+CURRENT_CANDIDATES:
+- autogen@027ecf0a379bcc1d09956d46d12d44a3ad9cee14(event/message routing + delivery log)
+- langgraph@31f90df3e6b0268fa77fd2d118a917d420b84a68(typed state + Send projection + task/debug stream)
+- swe_agent@3ea751c087f32b16e039a2233dd6eefecef325d5(RetryAgent attempt/reviewer/chooser + public .traj)
+PRESCREEN_EXCLUDED: mini-swe-agent(single consumer);ToolSandbox(no multi-consumer delivery path);Route A+/AutoCodeRover(frozen/harness mismatch)
+FREEZE_RULE: 不替换;不添加第四候选;trace 缺失只降为 CODE_ONLY_CANDIDATE
+RESULTS_PRESENT: NO
+Q_LEVELS_ASSIGNED: NO
+EXPERIMENT_AUTHORIZATION: NONE
+NEXT_ACTION: 为每个 frozen candidate 定位 artifact creation/routing/consumer input/raw bypass/access log/trace serialization 与既有 public trace 实例
+LAST_UPDATED: 2026-07-22T10:02:00+08:00
 
 ## 评审裁决落实表(2026-07-21 REQUEST_CHANGES)
 
