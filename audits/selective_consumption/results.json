@@ -1,0 +1,123 @@
+{
+  "c3_directed_verifier_verdict": null,
+  "c6_qualification": null,
+  "candidate_order": [
+    "autogen",
+    "langgraph",
+    "swe_agent"
+  ],
+  "candidate_results": [
+    {
+      "access_record_observed": null,
+      "all_required_source_roles_present": true,
+      "consumer_edge_count": null,
+      "consumer_inputs": [],
+      "evidence_gaps": [
+        "MessageEvent cannot bind delivery to both stable message and consumer identity.",
+        "No committed/exported OTEL process trace for the audited handoff path.",
+        "No native outcome oracle or read-level log."
+      ],
+      "framework_modification_required": false,
+      "id": "autogen",
+      "machine_readable_trace_count": 0,
+      "native_c3_certificate_present": false,
+      "outcome_oracle_possible": false,
+      "pinned_commit": "027ecf0a379bcc1d09956d46d12d44a3ad9cee14",
+      "producer_artifact_count": null,
+      "public_trace_count": 2,
+      "raw_bypass_status": "ABSENT",
+      "repeated_artifact_count": null,
+      "repeated_consumer_count": null,
+      "repository": "https://github.com/microsoft/autogen",
+      "selective_non_delivery_observed": null,
+      "source_locator_count": 7,
+      "source_role_coverage": {
+        "artifact_creation": true,
+        "consumer_input": true,
+        "raw_bypass": true,
+        "routing_or_projection": true,
+        "trace_serialization": true
+      },
+      "trace_observed": false,
+      "typed_projection_observed": null,
+      "unresolved_identity_count": 0
+    },
+    {
+      "access_record_observed": null,
+      "all_required_source_roles_present": true,
+      "consumer_edge_count": null,
+      "consumer_inputs": [],
+      "evidence_gaps": [
+        "No archived task/checkpoint/debug trace with concrete task IDs for the selective path.",
+        "No generic task-correctness oracle.",
+        "No stable native link from a parent producer artifact to every Send projection in public evidence.",
+        "Shared-state raw reads are possible but not logged."
+      ],
+      "framework_modification_required": true,
+      "id": "langgraph",
+      "machine_readable_trace_count": 0,
+      "native_c3_certificate_present": false,
+      "outcome_oracle_possible": true,
+      "pinned_commit": "31f90df3e6b0268fa77fd2d118a917d420b84a68",
+      "producer_artifact_count": null,
+      "public_trace_count": 2,
+      "raw_bypass_status": "PRESENT_UNMODELLED",
+      "repeated_artifact_count": null,
+      "repeated_consumer_count": null,
+      "repository": "https://github.com/langchain-ai/langgraph",
+      "selective_non_delivery_observed": null,
+      "source_locator_count": 7,
+      "source_role_coverage": {
+        "artifact_creation": true,
+        "consumer_input": true,
+        "raw_bypass": true,
+        "routing_or_projection": true,
+        "trace_serialization": true
+      },
+      "trace_observed": false,
+      "typed_projection_observed": null,
+      "unresolved_identity_count": 0
+    },
+    {
+      "access_record_observed": null,
+      "all_required_source_roles_present": true,
+      "consumer_edge_count": null,
+      "consumer_inputs": [],
+      "evidence_gaps": [
+        "No tracked RetryAgent .traj among 22 public trajectories.",
+        "No typed projection, field/read log, or causal reuse certificate.",
+        "Reviewer and chooser are mutually exclusive, not two consumers of one artifact in one run.",
+        "Shipped chooser config has one logical downstream chooser and no preselector."
+      ],
+      "framework_modification_required": true,
+      "id": "swe_agent",
+      "machine_readable_trace_count": 0,
+      "native_c3_certificate_present": false,
+      "outcome_oracle_possible": true,
+      "pinned_commit": "3ea751c087f32b16e039a2233dd6eefecef325d5",
+      "producer_artifact_count": null,
+      "public_trace_count": 1,
+      "raw_bypass_status": "PRESENT_MODELLED",
+      "repeated_artifact_count": null,
+      "repeated_consumer_count": null,
+      "repository": "https://github.com/SWE-agent/SWE-agent",
+      "selective_non_delivery_observed": null,
+      "source_locator_count": 7,
+      "source_role_coverage": {
+        "artifact_creation": true,
+        "consumer_input": true,
+        "raw_bypass": true,
+        "routing_or_projection": true,
+        "trace_serialization": true
+      },
+      "trace_observed": false,
+      "typed_projection_observed": null,
+      "unresolved_identity_count": 0
+    }
+  ],
+  "interpretation": null,
+  "protocol": "audits/selective_consumption/protocol.md",
+  "protocol_commit": "74f9c1407735121837becb91169adddd4f94c16f",
+  "q_levels": null,
+  "schema_version": "1.0"
+}
