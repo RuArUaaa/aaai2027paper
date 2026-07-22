@@ -1,19 +1,19 @@
 # RESEARCHSTUDIO_HANDOFF
 
-CURRENT_PHASE: selective-consumption protocol/candidate universe 已冻结;准备逐框架取证
-LAST_COMPLETED: audits/selective_consumption/protocol.md + candidate_universe.json;commit 74f9c14
+CURRENT_PHASE: selective-consumption 审计 verdict 完成;重大决定事件 3;等待负责人裁决
+LAST_COMPLETED: framework matrix + verdict + owner decision memo 已完成,待最终 audit commit
 ACTIVE_WORKERS: 无
-CURRENT_CANDIDATES: C3(NARROW_GAP + NEED_NEW_VERIFIER)/ C6(NARROW_GAP|CONDITIONAL_CLEAR_GAP + FAIL_MEASUREMENT)/ C4(REJECTED)
-CURRENT_VERDICT: PRIMARY_CANDIDATE=PENDING_GATE_REAUDIT;EXPERIMENT_AUTHORIZATION=NONE
-BLOCKERS: 无;本 Prompt 已授权有边界的选择性消费现象/testbed 资格审计;模型/GPU/正式实验维持 BLOCK
-LAST_COMMIT: 74f9c14 audit: freeze selective-consumption protocol and candidates
-NEXT_ACTION: 只读获取 AutoGen/LangGraph/SWE-agent pinned source 与既有 public traces;一框架一执行代理;主代理抽核每框架至少两个 load-bearing locators
-DECISION_REQUIRED: 否(尚未触发重大决定事件)
+CURRENT_CANDIDATES: AutoGen=Q1/CODE_ONLY;LangGraph=Q0/CODE_ONLY;SWE-agent=Q1/CODE_ONLY
+CURRENT_VERDICT: C6_STRONG_TESTBED=NOT_FOUND;C3_DIRECTED_VERIFIER_CANDIDATE=NOT_FOUND;PRIMARY_CANDIDATE=NONE_PENDING_OWNER_DECISION;EXPERIMENT_AUTHORIZATION=NONE
+BLOCKERS: 重大决定事件 3 已触发;继续研究方向需要负责人在 measurement/position paper 与 bounded direction reset 间授权;模型/GPU/正式实验维持 BLOCK
+LAST_COMMIT: 356e9bd audit: refresh raw integration fact
+NEXT_ACTION: 提交最终 verdict 包后停止;等待负责人审查并选择 Option A(推荐)或 Option B
+DECISION_REQUIRED: 是(ALL_FROZEN_CANDIDATES_ARE_Q0_Q1_OR_CODE_ONLY)
 REPO_PATH: /Users/zijian_nong/research/aaai2027-new(远端 https://github.com/RuArUaaa/aaai2027paper)
 BRANCH: main
-HEAD: 74f9c1407735121837becb91169adddd4f94c16f
-GIT_STATUS: protocol checkpoint handoff 待提交;任务前 .agents/ .claude/ .codex/ 未跟踪且禁止纳入提交
-LAST_UPDATED: 2026-07-22T10:02:00+08:00
+HEAD: 356e9bd8ab5350e7163a23efeb5bc9d7e41ba5fb(verdict commit parent)
+GIT_STATUS: framework_matrix/verdict/decision memo/handoff 待最终 audit commit;任务前 .agents/ .claude/ .codex/ 未跟踪且禁止纳入提交
+LAST_UPDATED: 2026-07-22T10:56:32+08:00
 
 ## TAKEOVER checkpoint (2026-07-22)
 
@@ -84,6 +84,75 @@ Q_LEVELS_ASSIGNED: NO
 EXPERIMENT_AUTHORIZATION: NONE
 NEXT_ACTION: 为每个 frozen candidate 定位 artifact creation/routing/consumer input/raw bypass/access log/trace serialization 与既有 public trace 实例
 LAST_UPDATED: 2026-07-22T10:02:00+08:00
+
+## Selective-consumption source/trace evidence checkpoint (2026-07-22)
+
+CURRENT_PHASE: frozen 三候选源码与既有公开 artifact 取证完成;尚未赋 Q 等级
+LAST_COMPLETED: evidence commit d2b30c5 + timestamp correction fd6d7d7
+CURRENT_HEAD: fd6d7d769c4facbb5947aca535013c0a276e63f9
+CURRENT_CANDIDATES:
+- autogen@027ecf0a379bcc1d09956d46d12d44a3ad9cee14:topic subscription 原生 non-delivery;完整 UserTask 直送;MessageEvent 缺 message_id/consumer binding;无公开 OTEL export
+- langgraph@31f90df3e6b0268fa77fd2d118a917d420b84a68:Send/PULL 输入组装与 task identity 可定位;CONFIG_KEY_READ raw bypass 存在且无 read log;公开材料仅测试期望
+- swe_agent@3ea751c087f32b16e039a2233dd6eefecef325d5:Reviewer/Chooser 为互斥 retry-loop;shipped chooser config 无 preselector;22 个 tracked .traj 均非 RetryAgent
+PUBLIC_MECHANISM_TRACE_COUNTS: autogen=0;langgraph=0;swe_agent=0
+TRACE_DERIVED_COUNTS: 全部保持 null;静态拓扑数字不得解释为运行 coverage
+MAIN_AGENT_SPOT_CHECK:
+- AutoGen:_single_threaded_agent_runtime.py envelope/publish/delivery + logging.py MessageEvent + sample consumer input
+- LangGraph:types.py Send + _algo.py PUSH task/input identity + _read.py raw shared-state access + debug fixture
+- SWE-agent:agents.py ReviewSubmission/serialization + reviewer.py alternative consumer inputs/config union + tracked .traj negative control
+MODEL_EXPERIMENT_CALLS: 0
+GPU_RUNS: 0
+NEW_AGENT_TRAJECTORIES: 0
+LARGE_EXPERIMENTS: 0
+NEXT_ACTION: 生成、校验并单独提交未经解释的 results.json
+LAST_UPDATED: 2026-07-22T10:44:34+08:00
+
+## Selective-consumption raw-results checkpoint (2026-07-22)
+
+CURRENT_PHASE: raw descriptive analysis complete;scientific interpretation stored only in later verdict artifacts
+LAST_COMPLETED: initial results commit dee550b;consumer-universe locator refresh 97c1272/94525e7;SWE integration-fact refresh 2782fbd/356e9bd
+CURRENT_HEAD: 356e9bd8ab5350e7163a23efeb5bc9d7e41ba5fb
+RAW_RESULT_INVARIANTS:
+- q_levels=null
+- interpretation=null
+- c6_qualification=null
+- c3_directed_verifier_verdict=null
+- autogen/langgraph/swe_agent machine_readable_trace_count=0
+- trace-derived producer_artifact_count/consumer_edge_count/repeated_consumer_count 全部 null
+TESTS: audit parser 6/6 PASS;JSON validation PASS;git diff --check PASS
+NEXT_ACTION: 主代理依据 raw evidence 与 frozen decision rules 裁决;若所有候选仅 Q0/Q1/QX/CODE_ONLY,触发 DECISION_EVENT 3 并停止等待负责人
+LAST_UPDATED: 2026-07-22T10:56:32+08:00
+
+## Selective-consumption verdict checkpoint (2026-07-22)
+
+DECISION_EVENT: ALL_FROZEN_CANDIDATES_ARE_Q0_Q1_OR_CODE_ONLY
+CURRENT_PHASE: bounded phenomenon/testbed qualification complete
+VERDICT: AutoGen=Q1/CODE_ONLY;LangGraph=Q0/CODE_ONLY;SWE-agent=Q1/CODE_ONLY;C6_STRONG_TESTBED=NOT_FOUND;C3_DIRECTED_VERIFIER_CANDIDATE=NOT_FOUND
+EVIDENCE:
+- AutoGen:三 agent consumer universe + topic-specific non-delivery 在 pinned source 中成立;公开 history/测试不是 message-id→consumer trace
+- LangGraph:具体双 consumer fixture 接收相同完整 state;单一 Send destination 不足以证明真实 nonrecipient;CONFIG_KEY_READ bypass 无 read log
+- SWE-agent:原生 optional Preselector→Chooser 对未选 submission 构成 Q1 non-delivery;shipped config 未启用;22 个公开 .traj 均非 RetryAgent
+- 三候选 machine_readable mechanism trace count 均为 0;所有 trace-derived counts 保持 null
+FRAMEWORK_RESULTS:
+- candidate:autogen;q_level:Q1;evidence_level:CODE_ONLY_CANDIDATE;key_locator:_single_threaded_agent_runtime.py:557-609;main_limit:no public message-id/consumer delivery trace
+- candidate:langgraph;q_level:Q0;evidence_level:CODE_ONLY_CANDIDATE;key_locator:test_large_cases.py:3939-4168;main_limit:full-state fan-out + unlogged raw bypass
+- candidate:swe_agent;q_level:Q1;evidence_level:CODE_ONLY_CANDIDATE;key_locator:reviewer.py:242-371;main_limit:no public RetryAgent trace;Preselector disabled in shipped config
+C3_IMPACT: UNCHANGED;NARROW_GAP + NEED_NEW_VERIFIER;selective routing does not attribute reuse damage
+C6_IMPACT: strong testbed not found;strong form does not restart;weak selective-routing direction only
+OPTIONS:
+- A:关闭 strong C6 testbed 搜索,形成 selective-consumption measurement/testbed position-paper idea card/prereg(推荐)
+- B:关闭当前 C3/C6 strong 形式,授权有界重新选题;任何实验前另立 protocol/prereg
+RECOMMENDATION: Option A;保留 B 作为负责人判断 measurement gap 不足以投稿时的 fallback
+REQUESTED_AUTHORIZATION: 负责人选择 A 或 B;本 checkpoint 不请求模型/GPU/正式实验授权
+CURRENT_HEAD: 356e9bd8ab5350e7163a23efeb5bc9d7e41ba5fb(verdict package parent)
+WORKTREE_STATUS: verdict package + handoff 待提交;任务前 .agents/.claude/.codex 原样未跟踪
+HANDOFF: docs/RESEARCHSTUDIO_HANDOFF.md
+MODEL_EXPERIMENT_CALLS: 0
+GPU_RUNS: 0
+NEW_AGENT_TRAJECTORIES: 0
+LARGE_EXPERIMENTS: 0
+NEXT_ACTION: final commit 后停止并等待负责人
+LAST_UPDATED: 2026-07-22T10:56:32+08:00
 
 ## 评审裁决落实表(2026-07-21 REQUEST_CHANGES)
 
