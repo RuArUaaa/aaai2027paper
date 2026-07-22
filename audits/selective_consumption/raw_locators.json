@@ -111,6 +111,16 @@
           "fact": "The runtime resolves only matching subscribed recipients, suppresses the sender, and builds a context carrying the envelope message_id."
         },
         {
+          "id": "autogen-consumer-universe",
+          "role": "consumer_universe",
+          "path": "python/samples/core_streaming_handoffs_fastapi/app.py",
+          "symbol": "register_agent_and_runtime",
+          "start_line": 73,
+          "end_line": 158,
+          "sha256": "8129fc756bd1b23ee72a58f90d647787cc1523850e2a9233b3ca400a0ae02e42",
+          "fact": "The application registers Triage, Sales, and Issues/Repairs agents and subscribes each only to its own agent-specific topic."
+        },
+        {
           "id": "autogen-consumer-input",
           "role": "consumer_input",
           "path": "python/packages/autogen-core/src/autogen_core/_single_threaded_agent_runtime.py",
@@ -508,6 +518,16 @@
           "end_line": 237,
           "sha256": "881580a98eef5942d9e3be759fa6a7901c162b9fe1279d9beb334e969688ad10",
           "fact": "One configuration selects either chooser or score retry loop; reviewer and chooser are not simultaneous consumers."
+        },
+        {
+          "id": "swe-preselector-nondelivery",
+          "role": "consumer_universe",
+          "path": "sweagent/agent/reviewer.py",
+          "symbol": "Preselector.choose; Chooser.choose",
+          "start_line": 242,
+          "end_line": 371,
+          "sha256": "881580a98eef5942d9e3be759fa6a7901c162b9fe1279d9beb334e969688ad10",
+          "fact": "When configured with more than two eligible submissions, the Preselector consumes their rendered records and returns indices; the Chooser then receives only the selected subset, so omitted submissions are not delivered to the Chooser."
         },
         {
           "id": "swe-consumer-input",
