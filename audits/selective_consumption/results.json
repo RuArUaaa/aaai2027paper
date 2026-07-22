@@ -30,7 +30,7 @@
       "repeated_consumer_count": null,
       "repository": "https://github.com/microsoft/autogen",
       "selective_non_delivery_observed": null,
-      "source_locator_count": 7,
+      "source_locator_count": 8,
       "source_role_coverage": {
         "artifact_creation": true,
         "consumer_input": true,
@@ -102,7 +102,7 @@
       "repeated_consumer_count": null,
       "repository": "https://github.com/SWE-agent/SWE-agent",
       "selective_non_delivery_observed": null,
-      "source_locator_count": 7,
+      "source_locator_count": 8,
       "source_role_coverage": {
         "artifact_creation": true,
         "consumer_input": true,
