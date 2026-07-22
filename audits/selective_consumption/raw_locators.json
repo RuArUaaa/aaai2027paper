@@ -587,9 +587,9 @@
         "details": "SWE-bench tests can provide an application outcome in principle, but the public traces audited here contain no RetryAgent path or matching labels."
       },
       "integration": {
-        "framework_modification_required": true,
+        "framework_modification_required": false,
         "coarse_cost": "HIGH",
-        "details": "A qualifying multi-consumer public instance is absent. Producing one would require a new model-backed RetryAgent execution and configuring an optional consumer path; this audit is not authorized to manufacture it."
+        "details": "The optional Preselector path is native and needs no framework-code modification, but a qualifying public instance is absent. Producing one would require a new model-backed RetryAgent execution and configuration change; this audit is not authorized to manufacture it."
       },
       "c3_directed_verifier": {
         "native_certificate_present": false,
