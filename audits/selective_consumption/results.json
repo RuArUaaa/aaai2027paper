@@ -89,7 +89,7 @@
         "Reviewer and chooser are mutually exclusive, not two consumers of one artifact in one run.",
         "Shipped chooser config has one logical downstream chooser and no preselector."
       ],
-      "framework_modification_required": true,
+      "framework_modification_required": false,
       "id": "swe_agent",
       "machine_readable_trace_count": 0,
       "native_c3_certificate_present": false,
