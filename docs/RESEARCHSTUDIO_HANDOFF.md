@@ -1,19 +1,35 @@
 # RESEARCHSTUDIO_HANDOFF
 
-CURRENT_PHASE: 负责人已选择 Option A;measurement/methodology paper idea card、保守摘要与 D0 static qualification 完成
-LAST_COMPLETED: Fable 5 review disposition;AAAI-27 submission text;claim-driven idea card/prereg;HumanEvalFix D0 source audit 与调用账
-ACTIVE_WORKERS: 无
+CURRENT_PHASE: Academic Pipeline Stage 2 WRITE 已由负责人授权;AAAI-27 measurement/methodology manuscript 正在构建
+LAST_COMPLETED: 负责人已手工提交 OpenReview abstract,Submission Number=44503;权威标题、摘要与 topics 已冻结
+ACTIVE_WORKERS: 主协调代理 + Stage 2 architecture/citation/LaTeX 只读执行子代理
 CURRENT_CANDIDATES: PRIMARY=MEASURE_BEFORE_YOU_REUSE_MEASUREMENT_PAPER;ACTUAL_SKIP_HUMANEVALFIX=INELIGIBLE_AS_PROPOSED;AutoGen=Q1/CODE_ONLY;LangGraph=Q0/CODE_ONLY;SWE-agent=Q1/CODE_ONLY
 CURRENT_VERDICT: C6_STRONG_TESTBED=NOT_FOUND;C3_DIRECTED_VERIFIER_CANDIDATE=NOT_FOUND;C3_GATE_EFFECT=UNCHANGED;C6_GATE_EFFECT=UNCHANGED;PRIMARY_PAPER_ROUTE=PURE_MEASUREMENT_AND_METHODOLOGY;EXPERIMENT_AUTHORIZATION=NONE
-BLOCKERS: OpenReview 摘要尚未由负责人手工提交;Fable 5 Route C 需要新两阶段 harness 且调用账超出 2,000,已在 D0 停止;模型/GPU/正式实验维持 BLOCK
-LAST_COMMIT: 74d8660 research: adopt measurement route and close actual-skip D0
-NEXT_ACTION: 负责人在 2026-07-22 19:59 北京时间前手工提交 docs/AAAI27_ABSTRACT_SUBMISSION.md;审查 D0 verdict 后决定是否只进入 manuscript drafting
-DECISION_REQUIRED: 是(D0_INELIGIBLE_AS_PROPOSED;MANUAL_ABSTRACT_SUBMISSION_AND_MANUSCRIPT_STAGE)
+BLOCKERS: manuscript 尚不存在;仓库外 gate 原始数据尚未形成匿名可发布 bundle;Fable 5 Route C 已在 D0 停止;模型/GPU/正式实验维持 BLOCK
+LAST_COMMIT: df4127c docs: finalize AAAI-27 abstract submission text
+NEXT_ACTION: 构建七页 spine、claim-evidence matrix、官方 AAAI LaTeX 工程与完整 manuscript v0;随后进入 Stage 2.5 integrity gate
+DECISION_REQUIRED: 否(Stage 2 已授权;Stage 2 完成后必须停在用户确认 checkpoint)
 REPO_PATH: /Users/zijian_nong/research/aaai2027-new(远端 https://github.com/RuArUaaa/aaai2027paper)
 BRANCH: main
-HEAD: 74d8660b27e32288603580951c9c157a3a2ee213(本 handoff synchronization commit 的 parent)
-GIT_STATUS: Option A/D0 package 已提交;仅任务前 .agents/ .claude/ .codex/ 未跟踪;本 handoff synchronization 待提交
-LAST_UPDATED: 2026-07-22T13:08:02+08:00
+HEAD: df4127c471043f2614cf15629167d55867092d5d(Stage 2 start edits 的 parent)
+GIT_STATUS: Stage 2 submission-state 与 manuscript 产物在建;任务前 .agents/ .claude/ .codex/ 不纳入研究提交
+LAST_UPDATED: 2026-07-22T16:08:58+08:00
+
+## OpenReview submission and Stage 2 WRITE checkpoint (2026-07-22)
+
+CURRENT_PHASE: Academic Pipeline Stage 2 WRITE / academic-paper full mode
+LAST_COMPLETED: Responsible author manually submitted the frozen abstract to OpenReview as Submission Number 44503
+CURRENT_HEAD: df4127c471043f2614cf15629167d55867092d5d(Stage 2 start edits 的 parent)
+PAPER_CONFIGURATION: AAAI-27 main technical track;measurement+methodology conference paper;English;official LaTeX;7 content pages+up to 2 reference pages;author-year AAAI bibliography style
+ABSTRACT_LOCK: docs/AAAI27_ABSTRACT_SUBMISSION.md;qualitatively unchanged through full-paper deadline
+AUTHORIZED_SCOPE: manuscript architecture/drafting;verified citation integration;CPU-only tables/figures;LaTeX compilation;artifact packaging from existing data
+FORBIDDEN_SCOPE: studied-system model/API calls;GPU;new trajectories;new harness;cache/replay execution;fourth-framework search;changing frozen C3/C6/C4 results
+STAGE2_DELIVERABLES: manuscript/spine.md;manuscript/claims_matrix.md;AAAI LaTeX source+bibliography;complete draft v0;core tables/figures;compile log
+NEXT_GATE: Stage 2 completion checkpoint, followed by mandatory Stage 2.5 integrity verification
+MODEL_EXPERIMENT_CALLS: 0
+GPU_RUNS: 0
+NEW_AGENT_TRAJECTORIES: 0
+LAST_UPDATED: 2026-07-22T16:08:58+08:00
 
 ## Owner decision A and D0 checkpoint (2026-07-22)
 

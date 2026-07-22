@@ -4,9 +4,10 @@
 STATUS = READY_FOR_MANUAL_SUBMISSION
 OWNER_DECISION = OPTION_A
 PAPER_TYPE = MEASUREMENT_AND_METHODOLOGY
-OPENREVIEW_SUBMISSION = NOT_PERFORMED
+OPENREVIEW_SUBMISSION = SUBMITTED_BY_RESPONSIBLE_AUTHOR
+OPENREVIEW_SUBMISSION_NUMBER = 44503
 EXPERIMENT_AUTHORIZATION = NONE
-LAST_UPDATED = 2026-07-22T15:14:55+08:00
+LAST_UPDATED = 2026-07-22T16:08:58+08:00
 ```
 
 This file supersedes the proposed submission text in
@@ -103,10 +104,11 @@ does not change the executed D0 qualification-gate claim in this abstract.
 
 - [ ] All authors and author order confirmed by the responsible author.
 - [ ] Title, abstract, TL;DR, topics, and keywords pasted exactly.
-- [ ] OpenReview submission ID recorded.
+- [x] OpenReview submission number recorded: `44503`.
 - [ ] Saved submission reopened and checked for truncation or encoding damage.
 - [ ] Confirmation retained outside the repository if it contains identity or
   account information.
 
-No assistant has opened, edited, or submitted an OpenReview record in this
-stage.
+The responsible author reported manual submission to OpenReview as submission
+number `44503` on 2026-07-22. No assistant opened, edited, or submitted the
+record.
