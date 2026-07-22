@@ -1,0 +1,198 @@
+{
+  "meta": {
+    "protocol": "gates/C3/v2/protocol.md",
+    "correction": "gates/C3/v2_1/analysis_correction.md",
+    "input_root": "/Users/zijian_nong/research/aaai2027/runs/pairs",
+    "formula": "\u0394/C_full = s - v - rho(s + RB)",
+    "C_full": 1.0,
+    "v_semantics": "verifier_cost_fraction_of_full_run",
+    "economic_metric": "net_saving_fraction_of_full_run",
+    "RB": 0.01,
+    "v_grid": [
+      0.001,
+      0.01,
+      0.1
+    ]
+  },
+  "taskA": {
+    "baseline_acc": 0.04,
+    "data_quality": "EM degenerate (truncated answers); rho_outcome not interpretable; excluded from economics",
+    "reuse": {
+      "n": 100,
+      "acc": 0.01,
+      "rho_outcome": 0.99,
+      "rho_outcome_CI": [
+        0.97,
+        1.0
+      ],
+      "rho_blame": 0.04,
+      "rho_blame_CI": [
+        0.01,
+        0.08
+      ],
+      "rescue": 0.01,
+      "recompute_still_wrong": 0.95
+    },
+    "repair": {
+      "n": 100,
+      "acc": 0.01,
+      "rho_outcome": 0.99,
+      "rho_outcome_CI": [
+        0.97,
+        1.0
+      ],
+      "rho_blame": 0.04,
+      "rho_blame_CI": [
+        0.01,
+        0.08
+      ],
+      "rescue": 0.01,
+      "recompute_still_wrong": 0.95
+    }
+  },
+  "taskB": {
+    "baseline_acc": 0.6341463414634146,
+    "verifier_executable_rate": 1.0,
+    "sanity_identity_pass_eq_orig_frac": 0.926829268292683,
+    "reuse": {
+      "n": 164,
+      "acc": 0.6036585365853658,
+      "rho_outcome": 0.39634146341463417,
+      "rho_outcome_CI": [
+        0.323170731707317,
+        0.4695121951219512
+      ],
+      "rho_blame": 0.042682926829268296,
+      "rho_blame_CI": [
+        0.012195121951219513,
+        0.07926829268292683
+      ],
+      "rescue": 0.012195121951219513,
+      "recompute_still_wrong": 0.35365853658536583
+    },
+    "repair": {
+      "n": 164,
+      "acc": 0.6097560975609756,
+      "rho_outcome": 0.3902439024390244,
+      "rho_outcome_CI": [
+        0.31707317073170727,
+        0.46341463414634143
+      ],
+      "rho_blame": 0.042682926829268296,
+      "rho_blame_CI": [
+        0.012195121951219513,
+        0.07926829268292683
+      ],
+      "rescue": 0.018292682926829267,
+      "recompute_still_wrong": 0.3475609756097561
+    },
+    "cost": {
+      "flops_reuse_mean": 0.8560049369421016,
+      "flops_repair_mean": 0.8776041964007872,
+      "s_reuse": 0.14399506305789844,
+      "s_repair": 0.12239580359921276
+    }
+  },
+  "economics": {
+    "taskB_reuse": {
+      "rho_outcome": {
+        "rho": 0.39634146341463417,
+        "s": 0.14399506305789844,
+        "metric": "net_saving_fraction_of_full_run",
+        "per_v": {
+          "0.001": {
+            "delta_over_full": 0.0819604344069021,
+            "breakeven_rho": 0.9285691386361894,
+            "positive": true
+          },
+          "0.01": {
+            "delta_over_full": 0.07296043440690209,
+            "breakeven_rho": 0.8701257066112535,
+            "positive": true
+          },
+          "0.1": {
+            "delta_over_full": -0.017039565593097904,
+            "breakeven_rho": 0.2856913863618949,
+            "positive": false
+          }
+        }
+      },
+      "rho_blame": {
+        "rho": 0.042682926829268296,
+        "s": 0.14399506305789844,
+        "metric": "net_saving_fraction_of_full_run",
+        "per_v": {
+          "0.001": {
+            "delta_over_full": 0.1364221030493296,
+            "breakeven_rho": 0.9285691386361894,
+            "positive": true
+          },
+          "0.01": {
+            "delta_over_full": 0.1274221030493296,
+            "breakeven_rho": 0.8701257066112535,
+            "positive": true
+          },
+          "0.1": {
+            "delta_over_full": 0.0374221030493296,
+            "breakeven_rho": 0.2856913863618949,
+            "positive": true
+          }
+        }
+      }
+    },
+    "taskB_repair": {
+      "rho_outcome": {
+        "rho": 0.3902439024390244,
+        "s": 0.12239580359921276,
+        "metric": "net_saving_fraction_of_full_run",
+        "per_v": {
+          "0.001": {
+            "delta_over_full": 0.06972914853610535,
+            "breakeven_rho": 0.916915795659966,
+            "positive": true
+          },
+          "0.01": {
+            "delta_over_full": 0.060729148536105344,
+            "breakeven_rho": 0.8489378102908473,
+            "positive": true
+          },
+          "0.1": {
+            "delta_over_full": -0.029270851463894666,
+            "breakeven_rho": 0.1691579565996601,
+            "positive": false
+          }
+        }
+      },
+      "rho_blame": {
+        "rho": 0.042682926829268296,
+        "s": 0.12239580359921276,
+        "metric": "net_saving_fraction_of_full_run",
+        "per_v": {
+          "0.001": {
+            "delta_over_full": 0.11574476320168539,
+            "breakeven_rho": 0.916915795659966,
+            "positive": true
+          },
+          "0.01": {
+            "delta_over_full": 0.10674476320168538,
+            "breakeven_rho": 0.8489378102908473,
+            "positive": true
+          },
+          "0.1": {
+            "delta_over_full": 0.01674476320168538,
+            "breakeven_rho": 0.1691579565996601,
+            "positive": true
+          }
+        }
+      }
+    }
+  },
+  "verdict_inputs": {
+    "overall": "NEED_NEW_VERIFIER",
+    "GO_NAIVE": false,
+    "GO_CONDITIONAL": true,
+    "a_verifier_executable": true,
+    "c_cases_present": true,
+    "note": "GO_CONDITIONAL \u7684\u6761\u4ef6\u6027:rho_blame \u4f9d\u8d56 baseline \u6807\u7b7e,\u8fd0\u884c\u65f6\u5b9a\u5411 verifier \u5f53\u524d\u4e0d\u5b58\u5728(NEG-11)"
+  }
+}

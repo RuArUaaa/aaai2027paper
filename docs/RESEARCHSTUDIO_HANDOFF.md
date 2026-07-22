@@ -1,19 +1,72 @@
 # RESEARCHSTUDIO_HANDOFF
 
-CURRENT_PHASE: CP4 v2 完成(评审 REQUEST_CHANGES 已逐项落实,等待负责人对"修订后的选择性消费审计"授权)
-LAST_COMPLETED: CP4 v2 — PRIMARY=PENDING_GATE_REAUDIT;docs/final_research_direction_decision_v2.md
+CURRENT_PHASE: C3 v2.1 非 verdict 分析更正完成;准备冻结 selective-consumption protocol/candidate universe
+LAST_COMPLETED: gates/C3/v2_1/ 更正+focused tests;data/SOURCE_MANIFEST.json 可复现性边界收紧
 ACTIVE_WORKERS: 无
 CURRENT_CANDIDATES: C3(NARROW_GAP + NEED_NEW_VERIFIER)/ C6(NARROW_GAP|CONDITIONAL_CLEAR_GAP + FAIL_MEASUREMENT)/ C4(REJECTED)
 CURRENT_VERDICT: PRIMARY_CANDIDATE=PENDING_GATE_REAUDIT;EXPERIMENT_AUTHORIZATION=NONE
-BLOCKERS: 等待负责人授权"修订后的选择性消费审计"(CPU-only);模型/GPU/正式实验维持 BLOCK
-LAST_COMMIT: 见 git log(评审整改批次)
-NEXT_ACTION: 负责人授权后,按 protocol→raw→verdict 三 commit 流程执行选择性消费审计
-DECISION_REQUIRED: 是(授权审计 or 转测量论文归档)
+BLOCKERS: 无;本 Prompt 已授权有边界的选择性消费现象/testbed 资格审计;模型/GPU/正式实验维持 BLOCK
+LAST_COMMIT: ce08e71a5ed5d0f3f945214a589cfe4fc71f6c67(C3 v2.1 checkpoint 正在形成提交)
+NEXT_ACTION: 预筛并冻结 2–3 个候选;单独提交 audits/selective_consumption/protocol.md + candidate_universe.json,不得含结果
+DECISION_REQUIRED: 否(尚未触发重大决定事件)
 REPO_PATH: /Users/zijian_nong/research/aaai2027-new(远端 https://github.com/RuArUaaa/aaai2027paper)
 BRANCH: main
-HEAD: 评审整改批次最新 commit
-GIT_STATUS: 干净(仅 .agents/ .claude/ 未跟踪)
-LAST_UPDATED: 2026-07-21T15:20Z
+HEAD: ce08e71a5ed5d0f3f945214a589cfe4fc71f6c67
+GIT_STATUS: C3 v2.1 checkpoint 待提交;任务前 .agents/ .claude/ .codex/ 未跟踪且禁止纳入提交
+LAST_UPDATED: 2026-07-22T09:51:43+08:00
+
+## TAKEOVER checkpoint (2026-07-22)
+
+TAKEOVER_AGENT: Codex 主协调代理 / 独立科学审查者 / 最终交接负责人
+TAKEOVER_HEAD: ce08e71a5ed5d0f3f945214a589cfe4fc71f6c67
+TAKEOVER_BRANCH: main
+TAKEOVER_STATUS: PASS — repo root、origin、branch、HEAD 全部与接管基线一致;任务前三个未跟踪目录保持原样
+FILES_READ:
+- docs/RESEARCHSTUDIO_HANDOFF.md
+- docs/final_research_direction_decision_v2.md
+- docs/process_provenance_addendum.md
+- gates/C3/v2/protocol.md
+- gates/C3/v2/results_v2.json
+- gates/C3/v2/verdict_v2.md
+- gates/C3/v2/reanalyse_v2.py
+- gates/C3/v2/test_gate_v2.py
+- gates/C6/verdict_v2.md
+- scoop_checks/C6_novelty_revision.md
+- data/SOURCE_MANIFEST.json
+- inputs/route_a_plus_negative_evidence_dossier.md
+- inputs/researchstudio_idea_seed_brief.md
+- reports/idea_landscape_2026-07-21.md
+- literature/fulltext/C3_fulltext_review.md
+- literature/fulltext/C6_fulltext_review.md
+- literature/fulltext/C4_fulltext_review.md
+- scoop_checks/C3_scoop_check.md
+- scoop_checks/C6_scoop_check.md
+- scoop_checks/C4_scoop_check.md
+CURRENT_SCIENTIFIC_STATE: C3=NARROW_GAP+NEED_NEW_VERIFIER(v1 经济性判死撤回;rho_blame 仅条件分析);C6=NARROW_GAP|CONDITIONAL_CLEAR_GAP+FAIL_MEASUREMENT(TEXT_USAGE_PROXY INVALID;自然选择性消费 UNRESOLVED);C4=HIGH_COLLISION+REJECTED;PRIMARY=PENDING_GATE_REAUDIT
+AUTHORIZED_SCOPE: CPU-only;只读公开源码和已有公开 trace/event log;静态调用链与小型解析;选择性消费 phenomenon/testbed qualification
+FORBIDDEN_SCOPE: 模型调用;推理服务;GPU;新 Agent 框架;修改候选框架;正式 mutation/cache/reuse 实验;最终文本 usage 代理;修改旧 Route A+ frozen evidence
+NEXT_ACTION: 完成并提交 C3 v2.1 非 verdict 更正,随后单独冻结 selective-consumption protocol 与 candidate universe
+LAST_UPDATED: 2026-07-22T09:45:23+08:00
+
+## C3 v2.1 correction checkpoint (2026-07-22)
+
+CURRENT_PHASE: C3 v2.1 非 verdict 更正完成
+LAST_COMPLETED: recompute_still_wrong 语义修复;经济性归一化标签修正;reproducibility scope 收紧;tempfile-safe focused test
+CURRENT_HEAD: ce08e71a5ed5d0f3f945214a589cfe4fc71f6c67(C3 v2.1 commit 的 parent)
+FILES:
+- gates/C3/v2_1/analysis_correction.md
+- gates/C3/v2_1/reanalyse_v2_1.py
+- gates/C3/v2_1/results_v2_1.json
+- gates/C3/v2_1/test_gate_v2_1.py
+- gates/C3/v2_1/verdict_addendum.md
+- data/SOURCE_MANIFEST.json
+CORRECTED_COUNTS: TaskA reuse=95/100;TaskA repair=95/100;TaskB reuse=58/164;TaskB repair=57/164
+UNCHANGED_FIELDS: rho_outcome;rho_blame;rescue;all economic values/signs;GO_NAIVE=false;GO_CONDITIONAL=true
+C3_GATE_EFFECT: UNCHANGED
+C3_CURRENT_STATUS: NARROW_GAP + NEED_NEW_VERIFIER;directed runtime verifier absent
+TESTS: C3 v2.1 6/6 PASS;C6 focused 5/5 PASS;non-corrected metric equality PASS;git diff --check PASS;frozen gates/C3/v2 diff empty
+NEXT_ACTION: 冻结 selective-consumption audit protocol 与 2–3 candidate universe
+LAST_UPDATED: 2026-07-22T09:51:43+08:00
 
 ## 评审裁决落实表(2026-07-21 REQUEST_CHANGES)
 

@@ -1,6 +1,16 @@
 {
   "created": "2026-07-21",
   "purpose": "P1: make gates reproducible from a clean clone; fixtures are trimmed copies exported by scripts/export_gate_inputs.py",
+  "reproducibility_scope": {
+    "clean_clone_can_reproduce": [
+      "analysis code paths",
+      "fixture-level focused tests",
+      "structural invariants"
+    ],
+    "clean_clone_cannot_reproduce": "The complete aggregate gate statistics cannot be reproduced from the committed fixtures alone.",
+    "full_gate_statistics_require": "Use every original file listed in files below and verify its exact SHA-256 before running the full analysis.",
+    "fixture_sampling_warning": "Fixtures are deliberately small path-testing subsets, not population-representative samples and not substitutes for the full gate inputs."
+  },
   "source_repo": {
     "path": "/Users/zijian_nong/research/aaai2027",
     "git_head": "ae77f91bb8baad5f77da1278abb1a20272660417",
@@ -18,10 +28,10 @@
     {"relpath": "runs/traces/taskA_e0.jsonl", "bytes": 14116036, "sha256": "68411f28223eed76adef812d0749f6929149124748caa127a326295e727b7c0c", "used_by": ["gates/C6"]}
   ],
   "fixtures": [
-    {"path": "gates/C3/fixtures/taskA_e0_control.jsonl", "selection": "20 rows, seed 20260721"},
-    {"path": "gates/C3/fixtures/taskB_e0.jsonl", "selection": "all flip pairs + sampled non-flip = 30 rows, seed 20260721"},
+    {"path": "gates/C3/fixtures/taskA_e0_control.jsonl", "selection": "20 of 100 rows, seed 20260721; fixture-level tests only"},
+    {"path": "gates/C3/fixtures/taskB_e0.jsonl", "selection": "all 10 flip cases + 20 sampled non-flip = 30 of 164 rows, seed 20260721; intentionally enriched for flips and not representative of aggregate rates"},
     {"path": "gates/C3/fixtures/taskB_e0_identity_ctrl.jsonl", "selection": "same 30 pair_ids"},
-    {"path": "gates/C6/fixtures/taskA_e0.jsonl", "selection": "first 2 traces, token-id arrays dropped"},
-    {"path": "gates/C6/fixtures/taskA_e0_identity_ctrl.jsonl", "selection": "pairs of those 2 traces"}
+    {"path": "gates/C6/fixtures/taskA_e0.jsonl", "selection": "first 2 of 100 source-ordered traces, not random or representative, token-id arrays dropped; code-path and structural tests only"},
+    {"path": "gates/C6/fixtures/taskA_e0_identity_ctrl.jsonl", "selection": "25 pairs belonging to those 2 traces; code-path and structural tests only"}
   ]
 }
