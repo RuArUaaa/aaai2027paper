@@ -6,34 +6,34 @@ ACTIVE_WORKERS: 无
 CURRENT_CANDIDATES: PRIMARY=MEASURE_BEFORE_YOU_REUSE_MEASUREMENT_PAPER;ACTUAL_SKIP_HUMANEVALFIX=INELIGIBLE_AS_PROPOSED;AutoGen=Q1/CODE_ONLY;LangGraph=Q0/CODE_ONLY;SWE-agent=Q1/CODE_ONLY
 CURRENT_VERDICT: C6_STRONG_TESTBED=NOT_FOUND;C3_DIRECTED_VERIFIER_CANDIDATE=NOT_FOUND;C3_GATE_EFFECT=UNCHANGED;C6_GATE_EFFECT=UNCHANGED;PRIMARY_PAPER_ROUTE=PURE_MEASUREMENT_AND_METHODOLOGY;EXPERIMENT_AUTHORIZATION=NONE
 BLOCKERS: OpenReview 摘要尚未由负责人手工提交;Fable 5 Route C 需要新两阶段 harness 且调用账超出 2,000,已在 D0 停止;模型/GPU/正式实验维持 BLOCK
-LAST_COMMIT: 3f7406e docs: synchronize selective-consumption handoff
+LAST_COMMIT: 74d8660 research: adopt measurement route and close actual-skip D0
 NEXT_ACTION: 负责人在 2026-07-22 19:59 北京时间前手工提交 docs/AAAI27_ABSTRACT_SUBMISSION.md;审查 D0 verdict 后决定是否只进入 manuscript drafting
 DECISION_REQUIRED: 是(D0_INELIGIBLE_AS_PROPOSED;MANUAL_ABSTRACT_SUBMISSION_AND_MANUSCRIPT_STAGE)
 REPO_PATH: /Users/zijian_nong/research/aaai2027-new(远端 https://github.com/RuArUaaa/aaai2027paper)
 BRANCH: main
-HEAD: 3f7406e03a6caea81c046056a6b62bd9234b642a(本 Option A 文档提交的 parent)
-GIT_STATUS: 任务前三个工具目录保持未跟踪;5 份 Fable 5 review input 与本轮 Option A/D0 文档待提交
-LAST_UPDATED: 2026-07-22T12:58:59+08:00
+HEAD: 74d8660b27e32288603580951c9c157a3a2ee213(本 handoff synchronization commit 的 parent)
+GIT_STATUS: Option A/D0 package 已提交;仅任务前 .agents/ .claude/ .codex/ 未跟踪;本 handoff synchronization 待提交
+LAST_UPDATED: 2026-07-22T13:08:02+08:00
 
 ## Owner decision A and D0 checkpoint (2026-07-22)
 
 CURRENT_PHASE: Option A 文档阶段完成;D0 static feasibility gate 已关闭 proposed HumanEvalFix actual-skip route
 LAST_COMPLETED: 摘要去实验承诺;Fable 5 disposition;measurement idea card;design-only prereg;read-only D0 audit;source SHA manifest;experiment plan/tracker
-CURRENT_HEAD: 3f7406e03a6caea81c046056a6b62bd9234b642a(待提交文档的 parent)
-UNCOMMITTED_FILES: docs/FABLE5_*.md;docs/AAAI27_ABSTRACT_SUBMISSION.md;idea_cards/measure_before_reuse.md;experiments/actual_skip_calibration/*;refine-logs/*;本 handoff
+CURRENT_HEAD: 74d8660b27e32288603580951c9c157a3a2ee213(本 handoff synchronization commit 的 parent)
+UNCOMMITTED_FILES: docs/RESEARCHSTUDIO_HANDOFF.md only;任务前三个工具目录不纳入研究提交
 CURRENT_CANDIDATES: paper=MEASURE_BEFORE_YOU_REUSE;HumanEvalFix exact response/tool 2x2=INELIGIBLE_AS_PROPOSED
 CURRENT_Q_LEVELS: AutoGen=Q1/CODE_ONLY;LangGraph=Q0/CODE_ONLY;SWE-agent=Q1/CODE_ONLY;无 Q2/Q3 TRACE_CONFIRMED
 CURRENT_SCIENTIFIC_STATE: HumanEvalFix native pipeline=Planner→Coder→Reviewer→Fixer + host certificate,非 proposed two-stage tool loop;source/test 在所有 LLM prompt 中;不存在 native tool-result consumer;历史 VRAA 已有 80 producer-node skips,但 comparator 40/40 未形成差异;1,968 是 condition cells,非模型调用;在 identity-only hit+每 cell 两次调用假设下 optimistic two-stage=3,280 calls
 AUTHORIZED_SCOPE: 摘要与论文设计文档;只读历史源码/已有 results;CPU-only static checks
 FORBIDDEN_SCOPE: 模型/API call;GPU;新 trajectory;新 harness;cache/replay arm 实现;mutation treatment;OpenReview 外部提交
-NEXT_COMMAND: focused documentation validation + git diff --check;随后形成 Option A/D0 logical commit
+NEXT_COMMAND: git diff --check;提交 handoff synchronization;push main
 OPEN_QUESTIONS: 负责人是否已手工提交摘要;是否授权下一阶段 manuscript drafting;不建议为本周期寻找新的 actual-skip testbed
 NEXT_DECISION: 接受 D0 no-go 并按 pure measurement/methodology 写作,或另立全新 testbed decision(需要新 prereg 与授权)
 MODEL_EXPERIMENT_CALLS: 0
 GPU_RUNS: 0
 NEW_AGENT_TRAJECTORIES: 0
 LARGE_EXPERIMENTS: 0
-LAST_UPDATED: 2026-07-22T12:58:59+08:00
+LAST_UPDATED: 2026-07-22T13:08:02+08:00
 
 ## TAKEOVER checkpoint (2026-07-22)
 
