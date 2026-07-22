@@ -1,0 +1,599 @@
+{
+  "schema_version": "1.0",
+  "audit_id": "selective_consumption_v1",
+  "protocol": "audits/selective_consumption/protocol.md",
+  "protocol_commit": "74f9c1407735121837becb91169adddd4f94c16f",
+  "candidate_universe_commit": "74f9c1407735121837becb91169adddd4f94c16f",
+  "collected_at": "2026-07-22T11:05:00+08:00",
+  "collection_counters": {
+    "model_experiment_calls": 0,
+    "gpu_runs": 0,
+    "new_agent_trajectories": 0,
+    "large_experiments": 0,
+    "candidate_framework_executions": 0,
+    "candidate_framework_modifications": 0
+  },
+  "candidates": [
+    {
+      "id": "autogen",
+      "framework": "Microsoft AutoGen",
+      "repository": "https://github.com/microsoft/autogen",
+      "pinned_commit": "027ecf0a379bcc1d09956d46d12d44a3ad9cee14",
+      "publication_or_project_source": "https://github.com/microsoft/autogen/tree/027ecf0a379bcc1d09956d46d12d44a3ad9cee14",
+      "deep_review_status": "SOURCE_AUDITED_PUBLIC_TRACE_GAP",
+      "public_trace_or_event_log_source": [
+        "python/samples/core_streaming_handoffs_fastapi/chat_history/history-wile_e_coyote_1.json",
+        "python/packages/autogen-core/tests/test_runtime.py"
+      ],
+      "producer_artifact": {
+        "type": "UserTask",
+        "payload": "context: list[LLMMessage]",
+        "producer_node": "FastAPI chat endpoint or currently active AIAgent handoff handler",
+        "creation": "The application constructs UserTask and publishes it to exactly one agent-specific TopicId."
+      },
+      "artifact_stable_identity": {
+        "native": true,
+        "scheme": "UUID message_id on PublishMessageEnvelope and MessageContext",
+        "public_instance_observed": false,
+        "limitation": "MessageEvent omits message_id and the committed history file omits the runtime envelope."
+      },
+      "downstream_consumers": [
+        {
+          "consumer": "TriageAgent AIAgent handler",
+          "routing_condition": "triage topic subscription",
+          "actual_input": "Complete UserTask object; message.context is passed in full to the model client."
+        },
+        {
+          "consumer": "SalesAgent AIAgent handler",
+          "routing_condition": "sales topic subscription",
+          "actual_input": "Complete UserTask object; message.context is passed in full to the model client."
+        },
+        {
+          "consumer": "IssuesAndRepairsAgent AIAgent handler",
+          "routing_condition": "issues-and-repairs topic subscription",
+          "actual_input": "Complete UserTask object; message.context is passed in full to the model client."
+        }
+      ],
+      "static_topology": {
+        "potential_downstream_consumer_count": 3,
+        "matching_consumers_per_agent_topic_publication": 1,
+        "nonmatching_consumers_per_agent_topic_publication": 2,
+        "consumer_edge_count_is_trace_derived": false
+      },
+      "typed_projection": {
+        "present": false,
+        "details": "The selected subscriber receives the same complete message object; topic filtering is non-delivery, not projection."
+      },
+      "field_or_read_access_log": {
+        "present": false,
+        "details": "MessageEvent is a transport event and has neither message_id nor field-read records. OTEL process attributes can serialize the message and context but no exported public trace was found."
+      },
+      "semantic_proxy_used": false,
+      "measurement_signals": [
+        "native_topic_subscription",
+        "native_message_envelope",
+        "native_consumer_dispatch",
+        "source_level_delivery_event_schema"
+      ],
+      "raw_bypass": {
+        "status": "ABSENT",
+        "details": "For the audited application route, the two nonmatching agent consumers receive no envelope through another application path. The matching consumer's full input is the primary delivery, not a projection bypass. Telemetry sinks are not scientific consumers."
+      },
+      "source_locators": [
+        {
+          "id": "autogen-user-task-create",
+          "role": "artifact_creation",
+          "path": "python/samples/core_streaming_handoffs_fastapi/agent_base.py",
+          "symbol": "AIAgent.handle_task",
+          "start_line": 82,
+          "end_line": 104,
+          "sha256": "0c9be0e3848e950edea89998904b7d24da6bfd9bbeb17c4b11da6de6c81a85ef",
+          "fact": "A handoff creates a new UserTask from delegate_messages and publishes it to the selected agent topic."
+        },
+        {
+          "id": "autogen-envelope-id",
+          "role": "artifact_identity",
+          "path": "python/packages/autogen-core/src/autogen_core/_single_threaded_agent_runtime.py",
+          "symbol": "PublishMessageEnvelope; SingleThreadedAgentRuntime.publish_message",
+          "start_line": 57,
+          "end_line": 67,
+          "sha256": "b7579b335e10af51b5dcb06b76dee2e41ae2ed44c2046693c822b7ef617eac52",
+          "fact": "The publish envelope has message_id; publish_message generates a UUID when none is supplied at lines 387-428."
+        },
+        {
+          "id": "autogen-topic-routing",
+          "role": "routing_or_projection",
+          "path": "python/packages/autogen-core/src/autogen_core/_single_threaded_agent_runtime.py",
+          "symbol": "SingleThreadedAgentRuntime._process_publish",
+          "start_line": 557,
+          "end_line": 589,
+          "sha256": "b7579b335e10af51b5dcb06b76dee2e41ae2ed44c2046693c822b7ef617eac52",
+          "fact": "The runtime resolves only matching subscribed recipients, suppresses the sender, and builds a context carrying the envelope message_id."
+        },
+        {
+          "id": "autogen-consumer-input",
+          "role": "consumer_input",
+          "path": "python/packages/autogen-core/src/autogen_core/_single_threaded_agent_runtime.py",
+          "symbol": "SingleThreadedAgentRuntime._process_publish._on_message",
+          "start_line": 590,
+          "end_line": 609,
+          "sha256": "b7579b335e10af51b5dcb06b76dee2e41ae2ed44c2046693c822b7ef617eac52",
+          "fact": "Each selected agent receives message_envelope.message unchanged plus MessageContext."
+        },
+        {
+          "id": "autogen-full-application-input",
+          "role": "raw_bypass",
+          "path": "python/samples/core_streaming_handoffs_fastapi/agent_base.py",
+          "symbol": "AIAgent.handle_task",
+          "start_line": 47,
+          "end_line": 54,
+          "sha256": "0c9be0e3848e950edea89998904b7d24da6bfd9bbeb17c4b11da6de6c81a85ef",
+          "fact": "The selected consumer passes the complete message.context to the model; there is no projected input for which a separate raw bypass must be hidden."
+        },
+        {
+          "id": "autogen-message-event-limit",
+          "role": "access_log",
+          "path": "python/packages/autogen-core/src/autogen_core/logging.py",
+          "symbol": "MessageEvent",
+          "start_line": 202,
+          "end_line": 234,
+          "sha256": "adab7e811ffbd97def75b191f065549811ae31d2d59f338f38d8a6b8de680216",
+          "fact": "The JSON event has payload, sender, receiver, kind, and delivery stage, but no message_id and no read-level fields."
+        },
+        {
+          "id": "autogen-otel-serialization",
+          "role": "trace_serialization",
+          "path": "python/packages/autogen-core/src/autogen_core/_single_threaded_agent_runtime.py",
+          "symbol": "SingleThreadedAgentRuntime._create_otel_attributes",
+          "start_line": 282,
+          "end_line": 329,
+          "sha256": "b7579b335e10af51b5dcb06b76dee2e41ae2ed44c2046693c822b7ef617eac52",
+          "fact": "OTEL process attributes can serialize recipient type, MessageContext including message_id, and the full message; no matching exported public span artifact is committed."
+        }
+      ],
+      "trace_instances": [
+        {
+          "trace_id": "autogen-handoff-history-negative-control",
+          "public_locator": "microsoft/autogen@027ecf0a379bcc1d09956d46d12d44a3ad9cee14:python/samples/core_streaming_handoffs_fastapi/chat_history/history-wile_e_coyote_1.json",
+          "format_machine_readable": true,
+          "machine_readable": false,
+          "sha256": "fc4879ea2c8ccbf26f7cda392602018518d21bd78c57d7a9c629af3efe71c198",
+          "reason_not_qualifying": "Conversation state lacks envelope message_id, topic, recipient, delivery stage, and consumer input; using source/title text to infer the edge is forbidden.",
+          "observations": []
+        },
+        {
+          "trace_id": "autogen-runtime-test-source-expectation",
+          "public_locator": "microsoft/autogen@027ecf0a379bcc1d09956d46d12d44a3ad9cee14:python/packages/autogen-core/tests/test_runtime.py:140-170",
+          "format_machine_readable": false,
+          "machine_readable": false,
+          "sha256": "a497481c886b22aa1335e0534185fb203f7fe9d11c2b619599e902f0196db664",
+          "reason_not_qualifying": "Executable test source declares one call and one noncall but stores no concrete runtime envelope or exported span instance.",
+          "observations": []
+        }
+      ],
+      "outcome_oracle": {
+        "possible": false,
+        "from_scratch_possible_in_principle": true,
+        "details": "The sample has no native deterministic task-correctness oracle; obtaining a comparison would require a new model-backed run and an application-specific oracle."
+      },
+      "integration": {
+        "framework_modification_required": false,
+        "coarse_cost": "MEDIUM",
+        "details": "A future OTEL exporter can observe topic delivery without changing core code, but doing so requires a new workflow/model execution. Typed projections or read logs would require changes."
+      },
+      "c3_directed_verifier": {
+        "native_certificate_present": false,
+        "certificate_input": null,
+        "certificate_output": null,
+        "execution_time": null,
+        "runs_every_execution": null,
+        "expected_cost": null,
+        "false_positive_modes": [
+          "Delivery success says nothing about task correctness."
+        ],
+        "false_negative_modes": [
+          "A delivered message can still cause reuse damage that transport telemetry cannot detect."
+        ],
+        "causal_attribution": "Transport routing cannot distinguish reuse-induced damage from baseline task error."
+      },
+      "evidence_gaps": [
+        "No committed/exported OTEL process trace for the audited handoff path.",
+        "MessageEvent cannot bind delivery to both stable message and consumer identity.",
+        "No native outcome oracle or read-level log."
+      ]
+    },
+    {
+      "id": "langgraph",
+      "framework": "LangGraph",
+      "repository": "https://github.com/langchain-ai/langgraph",
+      "pinned_commit": "31f90df3e6b0268fa77fd2d118a917d420b84a68",
+      "publication_or_project_source": "https://github.com/langchain-ai/langgraph/tree/31f90df3e6b0268fa77fd2d118a917d420b84a68",
+      "deep_review_status": "SOURCE_AUDITED_PUBLIC_TRACE_GAP",
+      "public_trace_or_event_log_source": [
+        "libs/langgraph/tests/test_large_cases.py",
+        "libs/langgraph/tests/test_pregel.py"
+      ],
+      "producer_artifact": {
+        "type": "checkpointed graph state or Send packet",
+        "payload": "State channels and/or Send.arg",
+        "producer_node": "A StateGraph node or conditional branch",
+        "creation": "A node update enters checkpoint channels; a branch may create Send(node, arg) packets for PUSH tasks."
+      },
+      "artifact_stable_identity": {
+        "native": "partial",
+        "scheme": "Checkpoint UUID plus deterministic task ID; Send itself has no parent artifact ID.",
+        "public_instance_observed": false,
+        "limitation": "Public source expectations replace task IDs with AnyStr and do not archive a concrete checkpoint/task/input bundle."
+      },
+      "downstream_consumers": [
+        {
+          "consumer": "Generic Send/PUSH Pregel task",
+          "routing_condition": "Send destination node",
+          "actual_input": "packet.arg verbatim"
+        },
+        {
+          "consumer": "Generic PULL Pregel task",
+          "routing_condition": "node trigger channels",
+          "actual_input": "Only channels declared by the PregelNode/input schema"
+        },
+        {
+          "consumer": "Native prebuilt v2 ToolNode task",
+          "routing_condition": "one Send per tool call",
+          "actual_input": "Tool call plus complete graph state, or a path that hydrates all channels"
+        }
+      ],
+      "static_topology": {
+        "full_state_fanout_fixture_consumer_count": 2,
+        "full_state_fanout_fixture_inputs_equal": true,
+        "map_reduce_send_declared_consumer_count": 2,
+        "map_reduce_send_distinct_node_types": 1,
+        "consumer_edge_count_is_trace_derived": false
+      },
+      "typed_projection": {
+        "present_in_framework": true,
+        "details": "PULL tasks can project declared state channels and Send can carry custom arg, but no public archived instance binds different projections of one stable parent artifact to two independently identified consumers.",
+        "same_artifact_multi_consumer_instance": false
+      },
+      "field_or_read_access_log": {
+        "present": false,
+        "details": "Task streams record task input/result, not actual field reads. versions_seen records trigger-channel versions only."
+      },
+      "semantic_proxy_used": false,
+      "measurement_signals": [
+        "native_send_packet",
+        "native_task_input_assembly",
+        "native_checkpoint_task_identity",
+        "source_level_debug_event_schema"
+      ],
+      "raw_bypass": {
+        "status": "PRESENT_UNMODELLED",
+        "details": "Every PUSH/PULL task config receives CONFIG_KEY_READ over shared channels. The native prebuilt v2 tool path explicitly carries or hydrates full state. No read log reveals whether a generic consumer exercised this capability."
+      },
+      "source_locators": [
+        {
+          "id": "langgraph-send-create",
+          "role": "artifact_creation",
+          "path": "libs/langgraph/langgraph/types.py",
+          "symbol": "Send",
+          "start_line": 664,
+          "end_line": 752,
+          "sha256": "8ba8895d3c1aec51e5ef24d09d983031f52c32939876fd5c63b92fabbb1a1fee",
+          "fact": "Send natively carries a destination and arbitrary custom state but no parent artifact identity."
+        },
+        {
+          "id": "langgraph-push-task-id",
+          "role": "artifact_identity",
+          "path": "libs/langgraph/langgraph/pregel/_algo.py",
+          "symbol": "prepare_push_task_send",
+          "start_line": 961,
+          "end_line": 1005,
+          "sha256": "29d54dc6704e4e4a0385d36317faa74f4fa2ceefd6836aca03f1938b9fa51fa5",
+          "fact": "The PUSH task ID is deterministically derived from checkpoint ID, namespace, step, destination node, and Send index."
+        },
+        {
+          "id": "langgraph-send-routing",
+          "role": "routing_or_projection",
+          "path": "libs/langgraph/langgraph/pregel/_algo.py",
+          "symbol": "prepare_push_task_send",
+          "start_line": 961,
+          "end_line": 1000,
+          "sha256": "29d54dc6704e4e4a0385d36317faa74f4fa2ceefd6836aca03f1938b9fa51fa5",
+          "fact": "The runtime retrieves one Send from the TASKS channel and selects only packet.node for the PUSH task."
+        },
+        {
+          "id": "langgraph-consumer-input",
+          "role": "consumer_input",
+          "path": "libs/langgraph/langgraph/pregel/_algo.py",
+          "symbol": "prepare_push_task_send",
+          "start_line": 1015,
+          "end_line": 1105,
+          "sha256": "29d54dc6704e4e4a0385d36317faa74f4fa2ceefd6836aca03f1938b9fa51fa5",
+          "fact": "PregelExecutableTask receives packet.arg verbatim at lines 1060-1063 and a stable task ID at line 1100."
+        },
+        {
+          "id": "langgraph-raw-read",
+          "role": "raw_bypass",
+          "path": "libs/langgraph/langgraph/pregel/_read.py",
+          "symbol": "ChannelRead.do_read",
+          "start_line": 25,
+          "end_line": 91,
+          "sha256": "3dd90dcf799147910fccb732672ba1d4c8df00a3928de49309f98fe06b275f51",
+          "fact": "A runnable can invoke the CONFIG_KEY_READ closure to select named shared-state channels outside its assembled input."
+        },
+        {
+          "id": "langgraph-no-read-log",
+          "role": "access_log",
+          "path": "libs/langgraph/langgraph/pregel/_algo.py",
+          "symbol": "apply_writes versions_seen update",
+          "start_line": 261,
+          "end_line": 292,
+          "sha256": "29d54dc6704e4e4a0385d36317faa74f4fa2ceefd6836aca03f1938b9fa51fa5",
+          "fact": "versions_seen is updated from trigger channels; it is not a record of fields actually read by consumer code."
+        },
+        {
+          "id": "langgraph-debug-event",
+          "role": "trace_serialization",
+          "path": "libs/langgraph/langgraph/pregel/debug.py",
+          "symbol": "map_debug_task_results; map_debug_tasks; map_debug_checkpoint",
+          "start_line": 41,
+          "end_line": 206,
+          "sha256": "2e86304ed87e79ea53ad89f565f1eefc1b3a192456a7c7fc33dfbdd9323c4251",
+          "fact": "Native debug payloads can contain task ID, name, input, result, error, and checkpoint state, but no concrete exported instance was found at the pinned tree."
+        }
+      ],
+      "trace_instances": [
+        {
+          "trace_id": "langgraph-full-state-debug-source-expectation",
+          "public_locator": "langchain-ai/langgraph@31f90df3e6b0268fa77fd2d118a917d420b84a68:libs/langgraph/tests/test_large_cases.py:3939-4168",
+          "format_machine_readable": false,
+          "machine_readable": false,
+          "sha256": "29d4ff08657bff81f2abfe8e31ea0ab1f7b658713770f7b69d35638705d4d6e6",
+          "reason_not_qualifying": "The source assertion describes two identical full-state deliveries, but task IDs and timestamps are AnyStr placeholders rather than archived runtime records.",
+          "declared_expectation": {
+            "producer": "rewrite_query state update",
+            "consumers": [
+              "retriever_one",
+              "retriever_two"
+            ],
+            "inputs_equal": true
+          },
+          "observations": []
+        },
+        {
+          "trace_id": "langgraph-map-reduce-source-expectation",
+          "public_locator": "langchain-ai/langgraph@31f90df3e6b0268fa77fd2d118a917d420b84a68:libs/langgraph/tests/test_pregel.py:1711-1750",
+          "format_machine_readable": false,
+          "machine_readable": false,
+          "sha256": "789aa2fdb1466aa202b2eebd35ef865ae102f1824f90e7e93a422eb5dd291224",
+          "reason_not_qualifying": "The test creates two Send args but stores no concrete checkpoint, parent artifact ID, task IDs, or serialized input events.",
+          "declared_expectation": {
+            "send_inputs": [
+              {
+                "location": "sf"
+              },
+              {
+                "location": "nyc"
+              }
+            ]
+          },
+          "observations": []
+        }
+      ],
+      "outcome_oracle": {
+        "possible": true,
+        "from_scratch_possible_in_principle": true,
+        "details": "A new thread/no reused checkpoint supplies a mechanical from-scratch path, but correctness remains application-defined and may require the application's model."
+      },
+      "integration": {
+        "framework_modification_required": true,
+        "coarse_cost": "HIGH",
+        "details": "Capturing task/checkpoint streams needs no core change; eliminating or completely observing raw shared-state reads requires restriction or instrumentation, and a qualifying existing trace is absent."
+      },
+      "c3_directed_verifier": {
+        "native_certificate_present": false,
+        "certificate_input": null,
+        "certificate_output": null,
+        "execution_time": null,
+        "runs_every_execution": null,
+        "expected_cost": null,
+        "false_positive_modes": [
+          "Task error can be an ordinary execution or baseline error."
+        ],
+        "false_negative_modes": [
+          "A successful task can still encode reuse-induced semantic damage."
+        ],
+        "causal_attribution": "Task/checkpoint status supports execution bookkeeping, not reuse-damage attribution."
+      },
+      "evidence_gaps": [
+        "No archived task/checkpoint/debug trace with concrete task IDs for the selective path.",
+        "No stable native link from a parent producer artifact to every Send projection in public evidence.",
+        "Shared-state raw reads are possible but not logged.",
+        "No generic task-correctness oracle."
+      ]
+    },
+    {
+      "id": "swe_agent",
+      "framework": "SWE-agent RetryAgent",
+      "repository": "https://github.com/SWE-agent/SWE-agent",
+      "pinned_commit": "3ea751c087f32b16e039a2233dd6eefecef325d5",
+      "publication_or_project_source": "https://github.com/SWE-agent/SWE-agent/tree/3ea751c087f32b16e039a2233dd6eefecef325d5",
+      "deep_review_status": "SOURCE_AUDITED_PUBLIC_RETRY_TRACE_GAP",
+      "public_trace_or_event_log_source": [
+        "22 tracked .traj files, all DefaultAgent rather than RetryAgent",
+        "tests/test_data/trajectories/gpt4__swe-agent-test-repo__default_from_url__t-0.00__p-0.95__c-3.00__install-1/6e44b9__sweagenttestrepo-1c2844.traj"
+      ],
+      "producer_artifact": {
+        "type": "ReviewSubmission for one completed DefaultAgent attempt",
+        "payload": "complete live trajectory, AgentInfo, and model stats",
+        "producer_node": "RetryAgent.run after a completed attempt",
+        "creation": "RetryAgent constructs one ReviewSubmission and passes it to exactly the configured retry-loop type."
+      },
+      "artifact_stable_identity": {
+        "native": "positional",
+        "scheme": "problem ID plus attempt_<index> path and list position",
+        "public_instance_observed": false,
+        "limitation": "No independent artifact UUID and no tracked RetryAgent root trajectory."
+      },
+      "downstream_consumers": [
+        {
+          "consumer": "ScoreRetryLoop Reviewer model",
+          "routing_condition": "retry_loop.type == score",
+          "actual_input": "System/user messages containing problem fields, flattened info, and a text-formatted trajectory"
+        },
+        {
+          "consumer": "ChooserRetryLoop Chooser model",
+          "routing_condition": "retry_loop.type == chooser",
+          "actual_input": "System/user messages containing rendered submission info; trajectory excluded"
+        },
+        {
+          "consumer": "Optional Chooser Preselector model",
+          "routing_condition": "chooser.preselector configured and more than two eligible submissions",
+          "actual_input": "Rendered submission info for candidate indices before subset selection"
+        }
+      ],
+      "static_topology": {
+        "configured_retry_loop_types_per_run": 1,
+        "score_and_chooser_simultaneous": false,
+        "shipped_config_retry_loop": "chooser",
+        "shipped_config_optional_preselector_enabled": false,
+        "tracked_retry_trajectory_count": 0,
+        "consumer_edge_count_is_trace_derived": false
+      },
+      "typed_projection": {
+        "present": false,
+        "details": "Reviewer and chooser receive configurable Jinja/text prompt renderings in mutually exclusive paths, not typed projections delivered to distinct consumers in one observed workflow."
+      },
+      "field_or_read_access_log": {
+        "present": false,
+        "details": "The root trajectory serializer can persist attempt and chooser output data, but no mechanism records fields or records actually read by reviewer/chooser models."
+      },
+      "semantic_proxy_used": false,
+      "measurement_signals": [
+        "native_review_submission_object",
+        "native_retry_loop_dispatch",
+        "source_level_model_input_assembly",
+        "native_trajectory_serialization_schema"
+      ],
+      "raw_bypass": {
+        "status": "PRESENT_MODELLED",
+        "details": "RetryAgent and retry-loop controller retain complete ReviewSubmission objects and root attempts even when model-facing prompts omit trajectory. The model consumers have no native artifact read tool in the audited paths, but no access log exists."
+      },
+      "source_locators": [
+        {
+          "id": "swe-review-submission-create",
+          "role": "artifact_creation",
+          "path": "sweagent/agent/agents.py",
+          "symbol": "RetryAgent.run",
+          "start_line": 413,
+          "end_line": 426,
+          "sha256": "d6cdf7ac66a6509ceba08e3541b856f0734acf79f9a485ed8a6e2c72f0d211a8",
+          "fact": "A completed attempt creates one ReviewSubmission with full trajectory, info, and model stats and passes it to the configured retry loop."
+        },
+        {
+          "id": "swe-attempt-identity",
+          "role": "artifact_identity",
+          "path": "sweagent/agent/agents.py",
+          "symbol": "RetryAgent.setup; RetryAgent._setup_agent",
+          "start_line": 290,
+          "end_line": 318,
+          "sha256": "d6cdf7ac66a6509ceba08e3541b856f0734acf79f9a485ed8a6e2c72f0d211a8",
+          "fact": "Root and per-attempt paths bind problem ID to positional attempt_<i_attempt>; no artifact UUID is assigned."
+        },
+        {
+          "id": "swe-alternative-routing",
+          "role": "routing_or_projection",
+          "path": "sweagent/agent/reviewer.py",
+          "symbol": "ChooserRetryLoopConfig; ScoreRetryLoopConfig; RetryLoopConfig",
+          "start_line": 180,
+          "end_line": 237,
+          "sha256": "881580a98eef5942d9e3be759fa6a7901c162b9fe1279d9beb334e969688ad10",
+          "fact": "One configuration selects either chooser or score retry loop; reviewer and chooser are not simultaneous consumers."
+        },
+        {
+          "id": "swe-consumer-input",
+          "role": "consumer_input",
+          "path": "sweagent/agent/reviewer.py",
+          "symbol": "Reviewer.format_messages; Chooser.build_messages",
+          "start_line": 307,
+          "end_line": 398,
+          "sha256": "881580a98eef5942d9e3be759fa6a7901c162b9fe1279d9beb334e969688ad10",
+          "fact": "Chooser prompts render info without trajectory; Reviewer prompts render flattened info plus formatted trajectory. These occur in alternative retry-loop paths."
+        },
+        {
+          "id": "swe-controller-retains-raw",
+          "role": "raw_bypass",
+          "path": "sweagent/agent/agents.py",
+          "symbol": "RetryAgent.get_trajectory_data",
+          "start_line": 351,
+          "end_line": 383,
+          "sha256": "d6cdf7ac66a6509ceba08e3541b856f0734acf79f9a485ed8a6e2c72f0d211a8",
+          "fact": "The controller retains complete per-attempt dictionaries under attempts and copies the chosen attempt to the root trace."
+        },
+        {
+          "id": "swe-no-access-log",
+          "role": "access_log",
+          "path": "sweagent/agent/reviewer.py",
+          "symbol": "ReviewSubmission.to_format_dict",
+          "start_line": 30,
+          "end_line": 56,
+          "sha256": "881580a98eef5942d9e3be759fa6a7901c162b9fe1279d9beb334e969688ad10",
+          "fact": "The schema separates trajectory from flattened info for prompt construction but emits no field/read access record."
+        },
+        {
+          "id": "swe-root-trace-serialization",
+          "role": "trace_serialization",
+          "path": "sweagent/agent/agents.py",
+          "symbol": "RetryAgent.get_trajectory_data; RetryAgent.save_trajectory",
+          "start_line": 358,
+          "end_line": 388,
+          "sha256": "d6cdf7ac66a6509ceba08e3541b856f0734acf79f9a485ed8a6e2c72f0d211a8",
+          "fact": "A RetryAgent root .traj would contain attempts, chosen attempt fields, best_attempt_idx, and chooser metadata, but no such public file exists in the pinned tree."
+        }
+      ],
+      "trace_instances": [
+        {
+          "trace_id": "swe-default-agent-negative-control",
+          "public_locator": "SWE-agent/SWE-agent@3ea751c087f32b16e039a2233dd6eefecef325d5:tests/test_data/trajectories/gpt4__swe-agent-test-repo__default_from_url__t-0.00__p-0.95__c-3.00__install-1/6e44b9__sweagenttestrepo-1c2844.traj",
+          "format_machine_readable": true,
+          "machine_readable": false,
+          "sha256": "dd79a193908492a51f532269ee126f3600da98b84551e2bdc1adacc7bf29ad67",
+          "reason_not_qualifying": "The public artifact is a DefaultAgent trace with five steps and ten history entries; attempts, reviewer, chooser, and best_attempt_idx are absent.",
+          "observations": []
+        }
+      ],
+      "outcome_oracle": {
+        "possible": true,
+        "from_scratch_possible_in_principle": true,
+        "details": "SWE-bench tests can provide an application outcome in principle, but the public traces audited here contain no RetryAgent path or matching labels."
+      },
+      "integration": {
+        "framework_modification_required": true,
+        "coarse_cost": "HIGH",
+        "details": "A qualifying multi-consumer public instance is absent. Producing one would require a new model-backed RetryAgent execution and configuring an optional consumer path; this audit is not authorized to manufacture it."
+      },
+      "c3_directed_verifier": {
+        "native_certificate_present": false,
+        "certificate_input": "Reviewer or chooser receives task/problem and rendered attempt material, not a reuse event or causal certificate.",
+        "certificate_output": "LLM-derived score or chosen patch index.",
+        "execution_time": "After an attempt or at final selection.",
+        "runs_every_execution": "Configuration-dependent; score reviewer runs per submission, chooser runs at final selection.",
+        "expected_cost": "Additional model calls; not a low-cost deterministic runtime certificate.",
+        "false_positive_modes": [
+          "A low score can be caused by baseline task failure rather than reuse damage.",
+          "LLM reviewer error can reject a correct attempt."
+        ],
+        "false_negative_modes": [
+          "A high score can miss reuse-induced damage.",
+          "Chooser can prefer a damaged attempt."
+        ],
+        "causal_attribution": "Neither path observes a reuse intervention, so neither separates reuse-induced damage from baseline error."
+      },
+      "evidence_gaps": [
+        "No tracked RetryAgent .traj among 22 public trajectories.",
+        "Shipped chooser config has one logical downstream chooser and no preselector.",
+        "Reviewer and chooser are mutually exclusive, not two consumers of one artifact in one run.",
+        "No typed projection, field/read log, or causal reuse certificate."
+      ]
+    }
+  ]
+}

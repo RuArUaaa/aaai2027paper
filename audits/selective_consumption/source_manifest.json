@@ -1,0 +1,219 @@
+{
+  "audit_id": "selective_consumption_v1",
+  "created": "2026-07-22",
+  "protocol": "audits/selective_consumption/protocol.md",
+  "protocol_commit": "74f9c1407735121837becb91169adddd4f94c16f",
+  "candidate_universe": "audits/selective_consumption/candidate_universe.json",
+  "candidate_universe_commit": "74f9c1407735121837becb91169adddd4f94c16f",
+  "collection_policy": {
+    "network_use": "Read-only source acquisition and public-artifact lookup only.",
+    "candidate_execution": false,
+    "model_calls": 0,
+    "gpu_runs": 0,
+    "new_agent_trajectories": 0,
+    "candidate_framework_modifications": 0,
+    "large_containers": 0,
+    "semantic_usage_proxies": 0,
+    "local_clone_note": "Local acquisition paths are ephemeral verification aids and are not required inputs to analyse.py. Reproduction uses the immutable repository, commit, path, and whole-file SHA-256 entries below."
+  },
+  "candidates": [
+    {
+      "id": "autogen",
+      "repository": "https://github.com/microsoft/autogen",
+      "pinned_commit": "027ecf0a379bcc1d09956d46d12d44a3ad9cee14",
+      "pin_verification": "Detached sparse checkout; git rev-parse HEAD matched the frozen commit.",
+      "project_source": "https://github.com/microsoft/autogen/tree/027ecf0a379bcc1d09956d46d12d44a3ad9cee14",
+      "local_acquisition": "/tmp/aaai2027-selective-consumption.0yzDag/autogen",
+      "source_files": [
+        {
+          "path": "python/packages/autogen-core/src/autogen_core/_single_threaded_agent_runtime.py",
+          "sha256": "b7579b335e10af51b5dcb06b76dee2e41ae2ed44c2046693c822b7ef617eac52",
+          "used_for": [
+            "artifact identity",
+            "subscription delivery",
+            "consumer invocation",
+            "delivery-event limitation",
+            "OTEL attribute construction"
+          ]
+        },
+        {
+          "path": "python/packages/autogen-core/src/autogen_core/_runtime_impl_helpers.py",
+          "sha256": "499645fef7e24af400f8619b82dcea561e71a2de499900786d1e1c1a831e8e2f",
+          "used_for": [
+            "subscription recipient resolution"
+          ]
+        },
+        {
+          "path": "python/packages/autogen-core/src/autogen_core/logging.py",
+          "sha256": "adab7e811ffbd97def75b191f065549811ae31d2d59f338f38d8a6b8de680216",
+          "used_for": [
+            "MessageEvent schema"
+          ]
+        },
+        {
+          "path": "python/samples/core_streaming_handoffs_fastapi/app.py",
+          "sha256": "8129fc756bd1b23ee72a58f90d647787cc1523850e2a9233b3ca400a0ae02e42",
+          "used_for": [
+            "three consumer registrations",
+            "topic-specific producer publication"
+          ]
+        },
+        {
+          "path": "python/samples/core_streaming_handoffs_fastapi/agent_base.py",
+          "sha256": "0c9be0e3848e950edea89998904b7d24da6bfd9bbeb17c4b11da6de6c81a85ef",
+          "used_for": [
+            "full UserTask consumer input",
+            "handoff artifact creation"
+          ]
+        },
+        {
+          "path": "python/packages/autogen-core/tests/test_runtime.py",
+          "sha256": "a497481c886b22aa1335e0534185fb203f7fe9d11c2b619599e902f0196db664",
+          "used_for": [
+            "committed executable routing expectation; not an archived trace"
+          ]
+        }
+      ],
+      "public_artifacts": [
+        {
+          "path": "python/samples/core_streaming_handoffs_fastapi/chat_history/history-wile_e_coyote_1.json",
+          "url": "https://github.com/microsoft/autogen/blob/027ecf0a379bcc1d09956d46d12d44a3ad9cee14/python/samples/core_streaming_handoffs_fastapi/chat_history/history-wile_e_coyote_1.json",
+          "bytes": 1650,
+          "sha256": "fc4879ea2c8ccbf26f7cda392602018518d21bd78c57d7a9c629af3efe71c198",
+          "git_blob": "fd6194b2650932b9487668d05849fecbbb9aafc9",
+          "format_machine_readable": true,
+          "qualifies_as_mechanism_trace": false,
+          "reason": "Persisted conversation output omits runtime message ID, topic/envelope, receiver, delivery stage, and consumer-input boundary."
+        }
+      ]
+    },
+    {
+      "id": "langgraph",
+      "repository": "https://github.com/langchain-ai/langgraph",
+      "pinned_commit": "31f90df3e6b0268fa77fd2d118a917d420b84a68",
+      "pin_verification": "Detached checkout; git rev-parse HEAD matched the frozen commit and the worktree was clean.",
+      "project_source": "https://github.com/langchain-ai/langgraph/tree/31f90df3e6b0268fa77fd2d118a917d420b84a68",
+      "local_acquisition": "/tmp/aaai2027-selective-consumption.0yzDag/langgraph",
+      "source_files": [
+        {
+          "path": "libs/langgraph/langgraph/types.py",
+          "sha256": "8ba8895d3c1aec51e5ef24d09d983031f52c32939876fd5c63b92fabbb1a1fee",
+          "used_for": [
+            "Send packet definition and custom state"
+          ]
+        },
+        {
+          "path": "libs/langgraph/langgraph/pregel/_algo.py",
+          "sha256": "29d54dc6704e4e4a0385d36317faa74f4fa2ceefd6836aca03f1938b9fa51fa5",
+          "used_for": [
+            "task identity",
+            "Send input assembly",
+            "shared-state read injection",
+            "trigger-version semantics"
+          ]
+        },
+        {
+          "path": "libs/langgraph/langgraph/pregel/_read.py",
+          "sha256": "3dd90dcf799147910fccb732672ba1d4c8df00a3928de49309f98fe06b275f51",
+          "used_for": [
+            "raw shared-channel read path"
+          ]
+        },
+        {
+          "path": "libs/prebuilt/langgraph/prebuilt/chat_agent_executor.py",
+          "sha256": "d3b98412c47daba13de4fca50fb7ab2e37f08705db6ab549f3ab8fab6600bc8d",
+          "used_for": [
+            "native prebuilt tool-call routing with full state"
+          ]
+        },
+        {
+          "path": "libs/langgraph/langgraph/pregel/debug.py",
+          "sha256": "2e86304ed87e79ea53ad89f565f1eefc1b3a192456a7c7fc33dfbdd9323c4251",
+          "used_for": [
+            "task/checkpoint event assembly"
+          ]
+        },
+        {
+          "path": "libs/langgraph/tests/test_large_cases.py",
+          "sha256": "29d4ff08657bff81f2abfe8e31ea0ab1f7b658713770f7b69d35638705d4d6e6",
+          "used_for": [
+            "committed full-state fan-out/debug expectation; not an archived trace"
+          ]
+        }
+      ],
+      "public_artifacts": [
+        {
+          "path": "libs/langgraph/tests/test_large_cases.py",
+          "url": "https://github.com/langchain-ai/langgraph/blob/31f90df3e6b0268fa77fd2d118a917d420b84a68/libs/langgraph/tests/test_large_cases.py#L3939-L4168",
+          "sha256": "29d4ff08657bff81f2abfe8e31ea0ab1f7b658713770f7b69d35638705d4d6e6",
+          "format_machine_readable": false,
+          "qualifies_as_mechanism_trace": false,
+          "reason": "Python test expectation uses AnyStr placeholders rather than archived concrete task IDs and is not a stored run artifact."
+        },
+        {
+          "path": "libs/langgraph/tests/test_pregel.py",
+          "url": "https://github.com/langchain-ai/langgraph/blob/31f90df3e6b0268fa77fd2d118a917d420b84a68/libs/langgraph/tests/test_pregel.py#L1711-L1750",
+          "sha256": "789aa2fdb1466aa202b2eebd35ef865ae102f1824f90e7e93a422eb5dd291224",
+          "format_machine_readable": false,
+          "qualifies_as_mechanism_trace": false,
+          "reason": "Committed map-reduce source assertion has no archived checkpoint/task IDs or serialized delivery records."
+        }
+      ]
+    },
+    {
+      "id": "swe_agent",
+      "repository": "https://github.com/SWE-agent/SWE-agent",
+      "pinned_commit": "3ea751c087f32b16e039a2233dd6eefecef325d5",
+      "pin_verification": "The partial read-only Git object database resolved the frozen object as a commit and exact paths were read with git show <commit>:<path>. A full worktree checkout was unavailable after bounded network retries; no alternate revision was substituted.",
+      "project_source": "https://github.com/SWE-agent/SWE-agent/tree/3ea751c087f32b16e039a2233dd6eefecef325d5",
+      "local_acquisition": "/tmp/aaai2027-selective-consumption.0yzDag/swe-agent",
+      "source_files": [
+        {
+          "path": "sweagent/agent/agents.py",
+          "bytes": 55804,
+          "sha256": "d6cdf7ac66a6509ceba08e3541b856f0734acf79f9a485ed8a6e2c72f0d211a8",
+          "used_for": [
+            "ReviewSubmission construction",
+            "attempt serialization",
+            "retry-loop selection"
+          ]
+        },
+        {
+          "path": "sweagent/agent/reviewer.py",
+          "bytes": 25829,
+          "sha256": "881580a98eef5942d9e3be759fa6a7901c162b9fe1279d9beb334e969688ad10",
+          "used_for": [
+            "reviewer input",
+            "preselector/chooser filtering",
+            "mutually exclusive retry-loop configuration"
+          ]
+        },
+        {
+          "path": "config/benchmarks/250212_sweagent_heavy_sbl.yaml",
+          "sha256": "0bede03427e05f517010696c66f0b5a7434c8e60a703eb0edf9d1bd27d4093f0",
+          "used_for": [
+            "shipped RetryAgent chooser configuration without optional preselector"
+          ]
+        }
+      ],
+      "public_artifacts": [
+        {
+          "path": "tests/test_data/trajectories/gpt4__swe-agent-test-repo__default_from_url__t-0.00__p-0.95__c-3.00__install-1/6e44b9__sweagenttestrepo-1c2844.traj",
+          "url": "https://github.com/SWE-agent/SWE-agent/blob/3ea751c087f32b16e039a2233dd6eefecef325d5/tests/test_data/trajectories/gpt4__swe-agent-test-repo__default_from_url__t-0.00__p-0.95__c-3.00__install-1/6e44b9__sweagenttestrepo-1c2844.traj",
+          "sha256": "dd79a193908492a51f532269ee126f3600da98b84551e2bdc1adacc7bf29ad67",
+          "format_machine_readable": true,
+          "qualifies_as_mechanism_trace": false,
+          "reason": "Five-step, ten-history-entry DefaultAgent trajectory; it contains no RetryAgent attempts, ReviewSubmission, reviewer, preselector, chooser, or best-attempt record."
+        }
+      ],
+      "repository_trace_inventory": {
+        "tracked_traj_count": 22,
+        "tracked_traj_contains_attempts_key": false,
+        "tracked_traj_contains_chooser_key": false,
+        "tracked_traj_contains_best_attempt_idx_key": false,
+        "tracked_traj_contains_review_key": false,
+        "method": "Exact-commit git grep over tracked *.traj blobs; no candidate code was run."
+      }
+    }
+  ]
+}
