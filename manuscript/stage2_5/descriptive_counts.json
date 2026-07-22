@@ -1,0 +1,550 @@
+{
+  "schema_version": "stage2.5-descriptive-count-audit/v2",
+  "status": "complete",
+  "inputs": [
+    {
+      "logical_path": "historical:runs/pairs/taskA_e0_control.jsonl",
+      "bytes": 80354,
+      "sha256": "50aa772a6a3acac6d1e14cba263c3e7d0ac30730a86dd3db7b7212cc7c7c7f18"
+    },
+    {
+      "logical_path": "historical:runs/pairs/taskA_e0_identity_ctrl.jsonl",
+      "bytes": 998792,
+      "sha256": "9b076a2b531944eaeea1fa4bfdcd161de911e03f5fb3d6111175aad92a26ee40"
+    },
+    {
+      "logical_path": "historical:runs/pairs/taskB_e0.jsonl",
+      "bytes": 169759,
+      "sha256": "6c78a6b9ef4b239070634757ac488d4020c59c7fa3956e4168910b9a7ddeaa8a"
+    },
+    {
+      "logical_path": "historical:runs/pairs/taskB_e0_identity_ctrl.jsonl",
+      "bytes": 252202,
+      "sha256": "44e75e99141fcd2f25d7f47a1897092429205f849d13a28ef8b37574ee25b2e5"
+    },
+    {
+      "logical_path": "historical:runs/traces/taskA_e0.jsonl",
+      "bytes": 14116036,
+      "sha256": "68411f28223eed76adef812d0749f6929149124748caa127a326295e727b7c0c"
+    },
+    {
+      "logical_path": "route_a_plus:runs/route_a_plus_v7/g1_pilot/matrix_v2/trajectories/astropy__astropy-12907_new_dependent_source_change_attempt1.json",
+      "bytes": 235151,
+      "sha256": "f75452fc9cd8e4d76c8ff7828cfb221d740cea47c373d01e2aeb8cd05eb475c0"
+    },
+    {
+      "logical_path": "route_a_plus:runs/route_a_plus_v7/g1_pilot/matrix_v2/trajectories/astropy__astropy-12907_new_no_change_attempt1.json",
+      "bytes": 76779,
+      "sha256": "3a8bc8aa5e5d80d1a1cf9fcac7e432df32951eb167a1cbe549a69b635d947580"
+    },
+    {
+      "logical_path": "route_a_plus:runs/route_a_plus_v7/g1_pilot/matrix_v2/trajectories/astropy__astropy-12907_old_attempt1.json",
+      "bytes": 294289,
+      "sha256": "0ad9f54d11f3975474e52fd6255daa3f0f57352d323a279a6e0576fb87ece603"
+    },
+    {
+      "logical_path": "route_a_plus:runs/route_a_plus_v7/g1_pilot/matrix_v2/trajectories/matplotlib__matplotlib-18869_new_dependent_source_change_attempt1.json",
+      "bytes": 94716,
+      "sha256": "6e34142781a176254c51fe85d7a744cc4fa359fd3d90160aa61a4e2da614997e"
+    },
+    {
+      "logical_path": "route_a_plus:runs/route_a_plus_v7/g1_pilot/matrix_v2/trajectories/matplotlib__matplotlib-18869_new_no_change_attempt1.json",
+      "bytes": 96222,
+      "sha256": "b2f092b3edc26ecc3c50930b2f44025514316714f9f054b49a9f74fe7e9c462a"
+    },
+    {
+      "logical_path": "route_a_plus:runs/route_a_plus_v7/g1_pilot/matrix_v2/trajectories/matplotlib__matplotlib-18869_old_attempt1.json",
+      "bytes": 61652,
+      "sha256": "2916912d5e472b34fa301abdf3efa38f4dbe6d8dbe4b5e5c2c096c09b424a050"
+    },
+    {
+      "logical_path": "route_a_plus:runs/route_a_plus_v7/g1_pilot/matrix_v2/trajectories/pallets__flask-4045_new_dependent_source_change_attempt1.json",
+      "bytes": 92626,
+      "sha256": "15085263b810c67f861b19bf339b106ebafcca0a3d83a2d42fd96460f4d50d55"
+    },
+    {
+      "logical_path": "route_a_plus:runs/route_a_plus_v7/g1_pilot/matrix_v2/trajectories/pallets__flask-4045_new_no_change_attempt1.json",
+      "bytes": 104859,
+      "sha256": "1456f60d4f288b34e0a3cf08d6d7136696c00a9cba29113f4bce463abdd36bde"
+    },
+    {
+      "logical_path": "route_a_plus:runs/route_a_plus_v7/g1_pilot/matrix_v2/trajectories/pallets__flask-4045_old_attempt1.json",
+      "bytes": 68376,
+      "sha256": "c27a9291426e7ab85c2438f64ea288eceab70051e10b8aae3ad68acff5f3d0fc"
+    },
+    {
+      "logical_path": "route_a_plus:runs/route_a_plus_v7/g1_pilot/matrix_v2/trajectories/pydata__xarray-3364_new_dependent_source_change_attempt1.json",
+      "bytes": 146410,
+      "sha256": "e96ae6cc8911f89b1cfad9231caa51cd6deb45ed8dd84db01814805bb813b1a2"
+    },
+    {
+      "logical_path": "route_a_plus:runs/route_a_plus_v7/g1_pilot/matrix_v2/trajectories/pydata__xarray-3364_new_no_change_attempt1.json",
+      "bytes": 68839,
+      "sha256": "64ce71befada288d90065ace8fec91ced03e131b82b0c061ba1413b3841b1db8"
+    },
+    {
+      "logical_path": "route_a_plus:runs/route_a_plus_v7/g1_pilot/matrix_v2/trajectories/pydata__xarray-3364_old_attempt1.json",
+      "bytes": 155400,
+      "sha256": "42e7e546180f3a5d270750d638ae71b6786cdec97ac5f6593f17c333540c80fd"
+    },
+    {
+      "logical_path": "route_a_plus:runs/route_a_plus_v7/g1_pilot/matrix_v2/trajectories/pytest-dev__pytest-11143_new_dependent_source_change_attempt1.json",
+      "bytes": 143754,
+      "sha256": "c7c1778a1552b2a8287bfcc2c57421209bd8cec60017381e92e05aa99cb95245"
+    },
+    {
+      "logical_path": "route_a_plus:runs/route_a_plus_v7/g1_pilot/matrix_v2/trajectories/pytest-dev__pytest-11143_new_no_change_attempt1.json",
+      "bytes": 102286,
+      "sha256": "01fa4211ac58e822f0d0e70880932c9068dcf504064afc86a9f2ec9a8bb3d783"
+    },
+    {
+      "logical_path": "route_a_plus:runs/route_a_plus_v7/g1_pilot/matrix_v2/trajectories/pytest-dev__pytest-11143_old_attempt1.json",
+      "bytes": 134299,
+      "sha256": "150c463f7d738be9e1e8ab56b65887e2ffd151814732d34bfea1ce167fa86fde"
+    },
+    {
+      "logical_path": "route_a_plus:runs/route_a_plus_v7/g1_pilot/matrix_v2/trajectories/sphinx-doc__sphinx-10325_new_dependent_source_change_attempt1.json",
+      "bytes": 212751,
+      "sha256": "211eb46e295d9bce756e860a2f17f2318eae18fa48eca0618d1f1ba583c2b29c"
+    },
+    {
+      "logical_path": "route_a_plus:runs/route_a_plus_v7/g1_pilot/matrix_v2/trajectories/sphinx-doc__sphinx-10325_new_no_change_attempt1.json",
+      "bytes": 184639,
+      "sha256": "e664d1ee619feeca8ccd7a7e970e593dc51e9360d6a051a53a9f209b30b6c7e0"
+    },
+    {
+      "logical_path": "route_a_plus:runs/route_a_plus_v7/g1_pilot/matrix_v2/trajectories/sphinx-doc__sphinx-10325_old_attempt1.json",
+      "bytes": 152453,
+      "sha256": "33e4386c8df66160d4888d004b885dd0e7370f704dfb49af23c20ef79faffe16"
+    }
+  ],
+  "table_1": {
+    "diff_proxy": {
+      "expected_frozen_runs": 18,
+      "observed_frozen_runs": 18,
+      "candidate_events": 8,
+      "dotdot_parent_mtime_only": 8,
+      "next_command_disagreements": 4,
+      "next_assistant_response_disagreements": 6,
+      "suffix_disagreements": 8,
+      "exit_status_disagreements": 4,
+      "full_invocation_matches": 0,
+      "next_assistant_response_definition": "next assistant content differs",
+      "full_invocation_definition": "byte identity of the complete prompt prefix for the next assistant turn after removing production-only extra metadata",
+      "event_rows": [
+        {
+          "task": "astropy__astropy-12907",
+          "stratum": "no_change",
+          "turn": 1,
+          "dotdot_parent_mtime_only": true,
+          "next_command_same": true,
+          "next_assistant_same": true,
+          "suffix_same": false,
+          "full_invocation_same": false,
+          "exit_status_same": false
+        },
+        {
+          "task": "astropy__astropy-12907",
+          "stratum": "dependent_source_change",
+          "turn": 1,
+          "dotdot_parent_mtime_only": true,
+          "next_command_same": true,
+          "next_assistant_same": true,
+          "suffix_same": false,
+          "full_invocation_same": false,
+          "exit_status_same": true
+        },
+        {
+          "task": "matplotlib__matplotlib-18869",
+          "stratum": "no_change",
+          "turn": 1,
+          "dotdot_parent_mtime_only": true,
+          "next_command_same": false,
+          "next_assistant_same": false,
+          "suffix_same": false,
+          "full_invocation_same": false,
+          "exit_status_same": false
+        },
+        {
+          "task": "matplotlib__matplotlib-18869",
+          "stratum": "dependent_source_change",
+          "turn": 1,
+          "dotdot_parent_mtime_only": true,
+          "next_command_same": false,
+          "next_assistant_same": false,
+          "suffix_same": false,
+          "full_invocation_same": false,
+          "exit_status_same": true
+        },
+        {
+          "task": "pydata__xarray-3364",
+          "stratum": "no_change",
+          "turn": 1,
+          "dotdot_parent_mtime_only": true,
+          "next_command_same": true,
+          "next_assistant_same": false,
+          "suffix_same": false,
+          "full_invocation_same": false,
+          "exit_status_same": false
+        },
+        {
+          "task": "pydata__xarray-3364",
+          "stratum": "dependent_source_change",
+          "turn": 1,
+          "dotdot_parent_mtime_only": true,
+          "next_command_same": true,
+          "next_assistant_same": false,
+          "suffix_same": false,
+          "full_invocation_same": false,
+          "exit_status_same": true
+        },
+        {
+          "task": "sphinx-doc__sphinx-10325",
+          "stratum": "no_change",
+          "turn": 1,
+          "dotdot_parent_mtime_only": true,
+          "next_command_same": false,
+          "next_assistant_same": false,
+          "suffix_same": false,
+          "full_invocation_same": false,
+          "exit_status_same": false
+        },
+        {
+          "task": "sphinx-doc__sphinx-10325",
+          "stratum": "dependent_source_change",
+          "turn": 1,
+          "dotdot_parent_mtime_only": true,
+          "next_command_same": false,
+          "next_assistant_same": false,
+          "suffix_same": false,
+          "full_invocation_same": false,
+          "exit_status_same": true
+        }
+      ]
+    },
+    "sentence_proxy": {
+      "frozen_traces": 100,
+      "registered_non_system_block_agent_incidences": 4968,
+      "registered_population_includes_retriever_cite_doc_incidences": true,
+      "substring_zero_fraction_raw": 0.980877616747182,
+      "substring_zero_fraction_display_percent": 98.09,
+      "jaccard_zero_fraction_raw": 0.9569243156199678,
+      "jaccard_zero_fraction_display_percent": 95.69,
+      "substring_median": 0.0,
+      "substring_p90": 0.0,
+      "jaccard_median": 0.0,
+      "jaccard_p90": 0.0,
+      "generation_aligned_downstream_sensitivity": {
+        "definition": "sensitivity analysis excluding retriever-side cite/document incidences; this does not replace the frozen registered population",
+        "excluded_retriever_incidences": {
+          "cite": 100,
+          "doc": 992
+        },
+        "included_by_class": {
+          "cite": 300,
+          "doc": 2976,
+          "evid": 200,
+          "plan": 300,
+          "verify": 100
+        },
+        "non_system_downstream_incidences": 3876,
+        "substring": {
+          "zero_count": 3787,
+          "zero_fraction_raw": 0.9770381836945304,
+          "zero_fraction_display_percent": 97.7,
+          "median": 0.0,
+          "p90": 0.0
+        },
+        "jaccard": {
+          "zero_count": 3671,
+          "zero_fraction_raw": 0.9471104231166151,
+          "zero_fraction_display_percent": 94.71,
+          "median": 0.0,
+          "p90": 0.0
+        }
+      }
+    },
+    "citation_proxy": {
+      "estimand": "document perturbation pair with reader/verifier/writer receiver",
+      "all_pair_rows": 1000,
+      "block_type_pair_counts": {
+        "cite": 81,
+        "doc": 763,
+        "evid": 46,
+        "plan": 33,
+        "sys": 77
+      },
+      "block_type_real_flip_counts": {
+        "cite": 4,
+        "doc": 36,
+        "evid": 2,
+        "plan": 1,
+        "sys": 5
+      },
+      "document_pairs": 763,
+      "non_document_pairs_excluded": 237,
+      "title_mentioned": {
+        "pairs": 61,
+        "real_flips": 0,
+        "identity_flips": 0,
+        "real_flip_rate": 0.0,
+        "identity_flip_rate": 0.0
+      },
+      "title_unmentioned": {
+        "pairs": 702,
+        "real_flips": 36,
+        "identity_flips": 35,
+        "real_flip_rate": 0.05128205128205128,
+        "identity_flip_rate": 0.04985754985754986
+      },
+      "parser_correction": {
+        "legacy_regex": "^Document \\(([^)]+)\\):",
+        "corrected_parser": "balanced-parenthesis scan after 'Document (' followed by ':'",
+        "legacy_failures_among_document_pairs": 105,
+        "pairs_reclassified_as_title_mentioned": 8,
+        "reclassified_pair_ids": [
+          "taskA-t0030-doc-7d1719e1d026-retriever-reader",
+          "taskA-t0093-doc-f7504d87d565-retriever-reader",
+          "taskA-t0089-doc-aabad304d170-retriever-verifier",
+          "taskA-t0056-doc-ca0b522482b0-retriever-verifier",
+          "taskA-t0053-doc-d6aaf03e67c9-retriever-writer",
+          "taskA-t0054-doc-22f7b3f3bec1-retriever-reader",
+          "taskA-t0012-doc-0039266f60ea-retriever-reader",
+          "taskA-t0061-doc-3268d17fa171-retriever-writer"
+        ]
+      },
+      "legacy_reproduction": {
+        "scope": "all pair rows; non-document rows and failed document-title parses were assigned to not_cited",
+        "cited_pairs": 53,
+        "cited_real_flips": 0,
+        "not_cited_pairs": 947,
+        "not_cited_real_flips": 48
+      },
+      "measurement_status": "INVALID_TEXT_PROXY_UNCHANGED",
+      "all_pair_identity_control_repair_flips": 47,
+      "all_pair_identity_control_pairs": 1000,
+      "all_pair_identity_control_repair_rate_raw": 0.047
+    }
+  },
+  "c3_recomputed": {
+    "meta": {
+      "protocol": "gates/C3/v2/protocol.md",
+      "correction": "gates/C3/v2_1/analysis_correction.md",
+      "input_root": "historical:runs/pairs",
+      "formula": "Δ/C_full = s - v - rho(s + RB)",
+      "C_full": 1.0,
+      "v_semantics": "verifier_cost_fraction_of_full_run",
+      "economic_metric": "net_saving_fraction_of_full_run",
+      "RB": 0.01,
+      "v_grid": [
+        0.001,
+        0.01,
+        0.1
+      ]
+    },
+    "taskA": {
+      "baseline_acc": 0.04,
+      "data_quality": "EM degenerate (truncated answers); rho_outcome not interpretable; excluded from economics",
+      "reuse": {
+        "n": 100,
+        "acc": 0.01,
+        "rho_outcome": 0.99,
+        "rho_outcome_CI": [
+          0.97,
+          1.0
+        ],
+        "rho_blame": 0.04,
+        "rho_blame_CI": [
+          0.01,
+          0.08
+        ],
+        "rescue": 0.01,
+        "recompute_still_wrong": 0.95
+      },
+      "repair": {
+        "n": 100,
+        "acc": 0.01,
+        "rho_outcome": 0.99,
+        "rho_outcome_CI": [
+          0.97,
+          1.0
+        ],
+        "rho_blame": 0.04,
+        "rho_blame_CI": [
+          0.01,
+          0.08
+        ],
+        "rescue": 0.01,
+        "recompute_still_wrong": 0.95
+      }
+    },
+    "taskB": {
+      "baseline_acc": 0.6341463414634146,
+      "verifier_executable_rate": 1.0,
+      "sanity_identity_pass_eq_orig_frac": 0.926829268292683,
+      "reuse": {
+        "n": 164,
+        "acc": 0.6036585365853658,
+        "rho_outcome": 0.39634146341463417,
+        "rho_outcome_CI": [
+          0.323170731707317,
+          0.4695121951219512
+        ],
+        "rho_blame": 0.042682926829268296,
+        "rho_blame_CI": [
+          0.012195121951219513,
+          0.07926829268292683
+        ],
+        "rescue": 0.012195121951219513,
+        "recompute_still_wrong": 0.35365853658536583
+      },
+      "repair": {
+        "n": 164,
+        "acc": 0.6097560975609756,
+        "rho_outcome": 0.3902439024390244,
+        "rho_outcome_CI": [
+          0.31707317073170727,
+          0.46341463414634143
+        ],
+        "rho_blame": 0.042682926829268296,
+        "rho_blame_CI": [
+          0.012195121951219513,
+          0.07926829268292683
+        ],
+        "rescue": 0.018292682926829267,
+        "recompute_still_wrong": 0.3475609756097561
+      },
+      "cost": {
+        "flops_reuse_mean": 0.8560049369421016,
+        "flops_repair_mean": 0.8776041964007872,
+        "s_reuse": 0.14399506305789844,
+        "s_repair": 0.12239580359921276
+      }
+    },
+    "economics": {
+      "taskB_reuse": {
+        "rho_outcome": {
+          "rho": 0.39634146341463417,
+          "s": 0.14399506305789844,
+          "metric": "net_saving_fraction_of_full_run",
+          "per_v": {
+            "0.001": {
+              "delta_over_full": 0.0819604344069021,
+              "breakeven_rho": 0.9285691386361894,
+              "positive": true
+            },
+            "0.01": {
+              "delta_over_full": 0.07296043440690209,
+              "breakeven_rho": 0.8701257066112535,
+              "positive": true
+            },
+            "0.1": {
+              "delta_over_full": -0.017039565593097904,
+              "breakeven_rho": 0.2856913863618949,
+              "positive": false
+            }
+          }
+        },
+        "rho_blame": {
+          "rho": 0.042682926829268296,
+          "s": 0.14399506305789844,
+          "metric": "net_saving_fraction_of_full_run",
+          "per_v": {
+            "0.001": {
+              "delta_over_full": 0.1364221030493296,
+              "breakeven_rho": 0.9285691386361894,
+              "positive": true
+            },
+            "0.01": {
+              "delta_over_full": 0.1274221030493296,
+              "breakeven_rho": 0.8701257066112535,
+              "positive": true
+            },
+            "0.1": {
+              "delta_over_full": 0.0374221030493296,
+              "breakeven_rho": 0.2856913863618949,
+              "positive": true
+            }
+          }
+        }
+      },
+      "taskB_repair": {
+        "rho_outcome": {
+          "rho": 0.3902439024390244,
+          "s": 0.12239580359921276,
+          "metric": "net_saving_fraction_of_full_run",
+          "per_v": {
+            "0.001": {
+              "delta_over_full": 0.06972914853610535,
+              "breakeven_rho": 0.916915795659966,
+              "positive": true
+            },
+            "0.01": {
+              "delta_over_full": 0.060729148536105344,
+              "breakeven_rho": 0.8489378102908473,
+              "positive": true
+            },
+            "0.1": {
+              "delta_over_full": -0.029270851463894666,
+              "breakeven_rho": 0.1691579565996601,
+              "positive": false
+            }
+          }
+        },
+        "rho_blame": {
+          "rho": 0.042682926829268296,
+          "s": 0.12239580359921276,
+          "metric": "net_saving_fraction_of_full_run",
+          "per_v": {
+            "0.001": {
+              "delta_over_full": 0.11574476320168539,
+              "breakeven_rho": 0.916915795659966,
+              "positive": true
+            },
+            "0.01": {
+              "delta_over_full": 0.10674476320168538,
+              "breakeven_rho": 0.8489378102908473,
+              "positive": true
+            },
+            "0.1": {
+              "delta_over_full": 0.01674476320168538,
+              "breakeven_rho": 0.1691579565996601,
+              "positive": true
+            }
+          }
+        }
+      }
+    },
+    "verdict_inputs": {
+      "overall": "NEED_NEW_VERIFIER",
+      "GO_NAIVE": false,
+      "GO_CONDITIONAL": true,
+      "a_verifier_executable": true,
+      "c_cases_present": true,
+      "note": "GO_CONDITIONAL 的条件性:rho_blame 依赖 baseline 标签,运行时定向 verifier 当前不存在(NEG-11)"
+    }
+  },
+  "d0_recomputed": {
+    "ok": true,
+    "errors": [],
+    "source_root": "historical:repository-root",
+    "source_hashes_checked": 11,
+    "budget": {
+      "condition_cells": 1968,
+      "hypothetical_two_stage_no_hit_calls": 3936,
+      "optimistic_identity_response_hits_saved_calls": 656,
+      "optimistic_two_stage_executed_calls": 3280,
+      "separate_warmup_calls": 328,
+      "optimistic_two_stage_with_separate_warmup_calls": 3608,
+      "native_four_node_no_hit_calls": 7872
+    },
+    "verdict": "INELIGIBLE_AS_PROPOSED"
+  },
+  "paper_bindings": {
+    "18_frozen_agent_runs": 18,
+    "4968_registered_non_system_block_agent_incidences": 4968,
+    "763_document_perturbation_pairs": 763,
+    "table_1_all_cells_recomputed": true,
+    "table_1_semantic_corrections_applied": true
+  }
+}

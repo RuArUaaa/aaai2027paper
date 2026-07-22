@@ -1,0 +1,23 @@
+{
+  "schema_version": "citation-audit-trace/v1",
+  "date": "2026-07-22",
+  "review_mode": "zero-context independent review plus coordinator primary-source spot check",
+  "cross_model_mcp_available": false,
+  "inputs": {
+    "main_tex_sha256": "dd8b79666af0830aa5a6f3c76b8104235d411949f8583fdc2bf3f71a6b74fb0b",
+    "references_bib_sha256": "537f7cd416d31a1183c4d6f9fe9c38fd0fb7f2d310068f2ffdca42d255e6122d"
+  },
+  "inventory": {
+    "contexts": 16,
+    "unique_keys": 21,
+    "primary_records_checked": 21
+  },
+  "initial_findings": {
+    "keep": 13,
+    "fix": 4,
+    "rewrite": 2,
+    "remove": 0,
+    "new_repository_bindings": 2
+  },
+  "final": "PASS_AFTER_CORRECTION"
+}

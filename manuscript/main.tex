@@ -99,8 +99,9 @@ of a new model experiment.
 Agent reuse spans several layers. Plan reuse retrieves prior plans before a
 new run \cite{agentreuse2024}; Tool Cache Agent caches tool-call results and
 models expiration and inter-tool invalidation \cite{toolcacheagent2026}; and
-Agent Workflow Memory retrieves procedural workflows rather than completed
-computation artifacts \cite{agentWorkflowMemory2025}. At the serving layer,
+Agent Workflow Memory induces reusable textual workflows from past action
+trajectories and selectively provides them to guide later generations
+\cite{agentWorkflowMemory2025}. At the serving layer,
 Prompt Cache and KVFlow reuse prompt-prefix computation
 \cite{promptcache2024,kvflow2025}, while editable KV-cache work studies
 composable intermediate representations \cite{prefillnotes2026}. These works
@@ -108,8 +109,8 @@ show that caching and reuse are established mechanism spaces. We instead ask
 what evidence is sufficient for claims made \emph{about} a reuse execution.
 
 \paragraph{Speculation and verification.}
-Sherlock combines selective verification, background speculation, and
-rollback for agentic workflows \cite{sherlock2025}. Speculative Actions
+Sherlock combines within-run selective verification, background speculation,
+and rollback for agentic workflows \cite{sherlock2025}. Speculative Actions
 executes predicted future actions and validates them against an authoritative
 action \cite{speculativeActions2026}; StepCache reports step-level retrieval,
 lightweight checks, and selective patching \cite{stepcache2026}. Such systems
@@ -272,15 +273,11 @@ The analyses target different estimands and are not independent replications.
 Their common result is narrower: the observed proxy did not validate the
 claim for which it had been used.
 
-The first is a post-hoc diagnostic of 18 frozen agent runs. It examines eight
-events admitted only by an uncalibrated diff cutoff and follows each event at
-progressively stricter units: next action, complete invocation, suffix, and
-exit status. The second uses 100 frozen multi-stage traces. Its unit is one of
-4,968 non-system artifact--consumer edges; ``use'' is either verbatim
-substring overlap or 3-gram Jaccard overlap of at least $0.5$. The third uses
-1,000 document-perturbation/consumer pairs and marks use when the output cites
-the document title. It compares this mark with a downstream repair flip. None
-of these designs instruments what the consumer actually received or read.
+The first follows eight diff-cutoff events in 18 frozen agent runs. The second
+measures substring or 3-gram Jaccard overlap on 4,968 registered non-system
+block--agent incidences in 100 traces. The third restricts a 1,000-row
+all-block sample to 763 document--consumer pairs and parses nested titles
+before testing mention against repair flips. None instruments actual access.
 
 \begin{table*}[t]
 \centering
@@ -290,9 +287,9 @@ of these designs instruments what the consumer actually received or read.
 \toprule
 \textbf{Target claim} & \textbf{Observed proxy} & \textbf{Observed behavior} & \textbf{Admissible conclusion} \\
 \midrule
-Safe equivalence of adjacent invocations & uncalibrated output diff and command similarity & All 8 candidate events came from parent-directory mtime artifacts; 6/8 disagreed at the next step, 8/8 over the suffix, and 4/8 differed in exit status (patch correctness was unavailable). Requiring full-invocation identity reduced the signal to zero. & The tested cutoff did not identify safe invocation equivalence. This does not show that exact reuse never occurs. \\
-Downstream use of a sentence region & substring and $0.5$-threshold Jaccard overlap & Across 4,968 producer--consumer edges, the zero-use fraction was 98.09\% for substring and 95.69\% for Jaccard; both median and 90th percentile were zero. & The measure was degenerate on these traces. Zero copied text is not evidence of no access or dependence. \\
-Downstream use of a document & title/citation mention in final output & In 1,000 perturbation pairs, 53 cited pairs had 0 flips and 947 uncited pairs had a 5.07\% flip rate; the observed contrast was exploratory and underpowered in the cited stratum. & Mention was not a validated usage oracle and cannot determine the causal direction of a flip. \\
+Safe equivalence of adjacent invocations & output diff and command similarity & All 8 events were parent-directory mtime artifacts; 6/8 responses, 4/8 next commands, 8/8 suffixes, and 4/8 exits differed. Complete next-invocation matches: 0. & The cutoff did not identify safe equivalence; this does not show exact reuse never occurs. \\
+Per-agent use of a sentence region & substring and $0.5$-threshold Jaccard & On 4,968 registered incidences, zero-use was 98.09\% and 95.69\%; both medians and 90th percentiles were zero. & The measure was degenerate. Zero copied text is not evidence of no access or dependence. \\
+Downstream use of a document & title mention in final output & Of 763 document pairs, 61 mentioned pairs had 0 repair flips; 702 unmentioned pairs had 36 (5.13\%), versus 35 (4.99\%) identity-control flips. & Mention was not a validated usage oracle or causal-direction test. \\
 \bottomrule
 \end{tabular}
 \caption{Bounded proxy analyses. Each conclusion is restricted to the tested
@@ -300,6 +297,10 @@ proxy and estimand; none supports a universal claim about whether an LLM used
 text.}
 \label{tab:proxies}
 \end{table*}
+
+The registered overlap population includes 1,092 retriever-side cite/document
+incidences. Excluding them gives 3,876 downstream incidences with 97.70\% and
+94.71\% zero-use; both median and 90th percentile remain zero.
 
 The first analysis also exposed a unit-label mismatch: a predicate named for
 byte-exact reuse required node text to differ. Correcting it found no hit in
@@ -318,9 +319,9 @@ The failures have different diagnoses. The diff analysis combines a
 environmental artifact. The overlap analysis exhibits \emph{construct
 collapse}: its mass at zero makes apparent sparsity nearly automatic. The
 citation analysis has \emph{causal ambiguity}: mention is neither necessary
-nor sufficient for dependence, and its 5.07\% non-mentioned flip rate was not
-paired against the 4.7\% identity-control repair rate from the same task
-family. Grouping them as ``proxy failures'' is useful for measurement design,
+nor sufficient for dependence, and its 5.13\% unmentioned-document repair-flip
+rate was descriptively close to the 4.99\% identity-control rate on the same
+702 pairs. Grouping them as ``proxy failures'' is useful for measurement design,
 but their different causes are why we do not treat them as replications or
 pool their statistics.
 
@@ -329,8 +330,9 @@ pool their statistics.
 On July 22, 2026, we froze six prescreened systems: three audit units were
 included and three excluded with recorded reasons before deep source review or
 Q assignment. The included units were an AutoGen handoff example
-\cite{autogen2024}, a LangGraph two-consumer fixture \cite{langgraphRepo}, and
-SWE-agent RetryAgent's optional Preselector path \cite{sweagent2024}. They span
+\cite{autogen2024,autogenRepo}, a LangGraph two-consumer fixture
+\cite{langgraphRepo}, and SWE-agent RetryAgent's optional Preselector path
+\cite{sweagent2024,sweagentRepo}. They span
 native message routing, graph state flow, and a multi-attempt controller. Each
 repository was pinned to an immutable commit. We located artifact creation,
 routing or projection, consumer-input assembly, raw bypass, logging, and trace
@@ -346,7 +348,7 @@ documentation, and linked public trajectories available at freeze time.
 Systems with a single consumer, paper-only diagrams, or a requirement to add a
 reviewer or rewrite a prompt were excluded during prescreening.
 
-For each audit unit we recorded 25 fields, including the complete consumer
+For each audit unit we recorded evidence fields covering the complete consumer
 input, stable identity, projection type, raw bypass, access log, source
 locators, minimum public instance, possible outcome oracle, and integration
 cost. Two classes of count are intentionally distinct. A static source locator
@@ -416,8 +418,8 @@ test expectations corroborate source behavior but use placeholder identities
 or omit serialized task records. SWE-agent's 22 tracked trajectories provide a
 negative control: none contains the RetryAgent reviewer/chooser keys. These
 artifacts justify a completed search of the located sources, but not runtime
-coverage. For each audit unit, the coordinating reviewer independently checked
-at least two load-bearing locators spanning routing and consumer-input
+coverage. For each audit unit, we cross-checked at least two load-bearing
+locators spanning routing and consumer-input
 assembly; source interpretations were resolved against the pinned code rather
 than by voting across auditors.
 
@@ -587,8 +589,9 @@ a hit weakens the claim rather than testing exact reuse. We call the static
 audit of this structural condition design-qualification stage D0.
 
 We applied D0 to a proposed HumanEvalFix calibration before implementing it.
-The archived dataset is the 164-task Python test split of HumanEvalPack
-\cite{octopack2023}, with source, tests, and stored pass/fail labels. The
+The archived dataset starts from the 164-task Python test split of
+HumanEvalPack \cite{octopack2023}, which supplies source and tests; our paired
+archive additionally stores reconstructed pass/fail labels. The
 proposal assumed a two-stage
 single-agent loop and a response-cache $\times$ validated-tool-cache design.
 Source reconstruction instead found four LLM nodes---Planner, Coder, Reviewer,
@@ -686,8 +689,10 @@ Pinned source commits, machine-readable audit results, analysis code, focused
 fixtures, and SHA-256 manifests reproduce code paths and invariants. The clean
 clone's economics fixture is all flips plus sampled non-flips; the text-proxy
 fixture is two traces. Neither represents its population. Aggregate statistics,
-the diff-analysis JSON, and the injection bundle require external files listed
-by hash. A tracked supplement can verify, but not distribute, those inputs.
+the diff-analysis records, and the injection bundle require external files
+listed by hash. The anonymous code/data supplement contains analysis paths,
+fixtures, derived ledgers, and manifests. External hash-bound inputs remain
+unavailable for independent aggregate reproduction from the submission alone.
 
 \paragraph{Broader impact.}
 Efficiency claims can encourage deployment of replay policies whose failures
@@ -698,7 +703,13 @@ workflow content; telemetry should be minimal and pseudonymous.
 
 Agent-workflow reuse needs distinct records for consumption, skips, cost,
 outcomes, and attribution. Our analyses show that one cannot substitute for
-another; qualification should precede execution and interpretation.
+another; qualification should precede execution and interpretation. Until
+native traces bind these records, code paths and final-text diagnostics should
+be reported as qualification evidence rather than realized reuse.
+An identifiable evaluation should state the record supporting each claim and
+leave unavailable quantities unobserved. This separation keeps negative
+qualification results informative without converting them into a universal
+claim that computation reuse is impossible.
 
 \bibliography{references}
 

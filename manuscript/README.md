@@ -24,8 +24,21 @@ metadata.
 
 `ReproducibilityChecklist.tex` is the immutable official template;
 `reproducibility_checklist.tex` is the completed standalone submission copy.
-Upload the checklist separately from the single-source main-paper package.
-`BUILD_REPORT.md` records the final Stage 2 checks, and
+Upload only its compiled PDF in the separate checklist field; do not append it
+to the main paper or place either checklist source in the Code/Data Supplement.
+`CHECKLIST_SUBMISSION.md` records the official disposition.
+
+The optional anonymous Code/Data Supplement is built from an explicit
+allowlist:
+
+```bash
+python3 supplement/build_anonymous_supplement.py
+python3 supplement/test_supplement.py
+```
+
+Do not upload a repository archive. The generated ZIP excludes internal
+handoffs, Git metadata, local paths, submission metadata, and unavailable raw
+aggregate inputs. `BUILD_REPORT.md` records the final Stage 2.5 checks, and
 `FIGURE_MANIFEST.json` binds Figure 2 to its committed machine-readable input.
 
 No model, GPU, trajectory-generation, cache/replay, or mutation experiment is

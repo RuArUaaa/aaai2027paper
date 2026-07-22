@@ -1,0 +1,15 @@
+{
+  "schema_version": "paper-claim-audit-trace/v1",
+  "date": "2026-07-22",
+  "paper_sha256": "dd8b79666af0830aa5a6f3c76b8104235d411949f8583fdc2bf3f71a6b74fb0b",
+  "raw_review": "fresh zero-context independent recount",
+  "claims_checked": 10,
+  "correction_round": 1,
+  "corrections": [
+    "diff next-response versus next-command label",
+    "citation document-only denominator and nested-title parser",
+    "overlap registered-incidence unit and downstream sensitivity"
+  ],
+  "final": "PASS_AFTER_CORRECTION",
+  "scientific_verdict_changed": false
+}

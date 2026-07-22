@@ -1,0 +1,201 @@
+{
+  "schema_version": "stage2.5-citation-audit/v1",
+  "status": "PASS_AFTER_CORRECTION",
+  "audited_at": "2026-07-22",
+  "paper_sha256": "dd8b79666af0830aa5a6f3c76b8104235d411949f8583fdc2bf3f71a6b74fb0b",
+  "bibliography_sha256": "537f7cd416d31a1183c4d6f9fe9c38fd0fb7f2d310068f2ffdca42d255e6122d",
+  "auditor": {
+    "mode": "fresh zero-context read-only subagent plus coordinating-agent primary-source verification",
+    "reviewer_model": "gpt-5.6-sol",
+    "cross_model_mcp_available": false,
+    "limitation": "The prescribed cross-model review tool was unavailable; a fresh zero-context independent subagent was used instead."
+  },
+  "inventory": {
+    "cited_keys": 21,
+    "bibliography_entries": 21,
+    "missing_keys": [],
+    "uncited_entries": []
+  },
+  "initial_disposition_for_original_19": {
+    "keep": 13,
+    "fix_metadata_or_source_binding": 4,
+    "rewrite_context": 2,
+    "remove": 0
+  },
+  "final_disposition": {
+    "pass": 21,
+    "fail": 0
+  },
+  "entries": [
+    {
+      "key": "agentreuse2024",
+      "primary_url": "https://crad.ict.ac.cn/cn/article/id/bdccbab2-fa1b-416f-baec-7c87ffa392c5",
+      "status": "Journal of Computer Research and Development 61(11), 2706-2720 (2024)",
+      "context": "retrieves and reuses prior plans",
+      "correction": "Added Guoliang Chen and journal volume, issue, and pages.",
+      "verdict": "PASS"
+    },
+    {
+      "key": "toolcacheagent2026",
+      "primary_url": "https://openreview.net/forum?id=tX3YcbNa5w",
+      "status": "ICLR 2026 withdrawn submission",
+      "context": "tool-result caching with cacheability, expiration, and inter-tool invalidation",
+      "correction": null,
+      "verdict": "PASS"
+    },
+    {
+      "key": "kvflow2025",
+      "primary_url": "https://papers.neurips.cc/paper_files/paper/2025/hash/b7971d31a7d5eb0f1eed2f8f6f368195-Abstract-Conference.html",
+      "status": "NeurIPS 2025 main track, volume 38",
+      "context": "workflow-aware prefix-KV reuse",
+      "correction": null,
+      "verdict": "PASS"
+    },
+    {
+      "key": "promptcache2024",
+      "primary_url": "https://proceedings.mlsys.org/paper_files/paper/2024/hash/a66caa1703fe34705a4368c3014c1966-Abstract-Conference.html",
+      "status": "MLSys 2024, volume 6",
+      "context": "attention-state reuse for reusable prompt segments",
+      "correction": null,
+      "verdict": "PASS"
+    },
+    {
+      "key": "sherlock2025",
+      "primary_url": "https://arxiv.org/abs/2511.00330",
+      "status": "arXiv v1 preprint, submitted 2025-11-01; no official MLSys proceedings record located as of audit date",
+      "context": "within-run selective verification, background speculation, and rollback",
+      "correction": "Added 'within-run' to prevent conflation with cross-run historical-artifact caching.",
+      "scoop_check": "No public caching branch or historical completed-artifact reuse mechanism found; C3 re-review trigger not met.",
+      "verdict": "PASS"
+    },
+    {
+      "key": "speculativeActions2026",
+      "primary_url": "https://openreview.net/forum?id=P0GOk5wslg",
+      "status": "ICLR 2026 oral",
+      "context": "predicts future actions, prelaunches them, and validates against the authoritative action",
+      "correction": null,
+      "note": "The bibliography follows the official ICLR program title; a later manuscript version uses a slightly different title.",
+      "verdict": "PASS"
+    },
+    {
+      "key": "agentWorkflowMemory2025",
+      "primary_url": "https://proceedings.mlr.press/v267/wang25bx.html",
+      "status": "ICML 2025, PMLR 267:63897-63911",
+      "context": "induces reusable textual workflows from past action trajectories and selectively supplies them to later generations",
+      "correction": "Removed the unsupported contrast with completed computation artifacts.",
+      "verdict": "PASS"
+    },
+    {
+      "key": "prefillnotes2026",
+      "primary_url": "https://arxiv.org/abs/2606.17107",
+      "status": "arXiv v1 preprint, submitted 2026-06-14",
+      "context": "editable and composable KV caches",
+      "correction": null,
+      "verdict": "PASS"
+    },
+    {
+      "key": "buildsystems2018",
+      "primary_url": "https://doi.org/10.1145/3236774",
+      "status": "PACMPL 2(ICFP), article 79 (2018)",
+      "context": "dependency-aware builds and from-scratch consistency",
+      "correction": null,
+      "verdict": "PASS"
+    },
+    {
+      "key": "noria2018",
+      "primary_url": "https://www.usenix.org/conference/osdi18/presentation/gjengset",
+      "status": "OSDI 2018",
+      "context": "partially stateful dataflow, eviction, and on-demand reconstruction",
+      "correction": null,
+      "verdict": "PASS"
+    },
+    {
+      "key": "dbsp2023",
+      "primary_url": "https://www.vldb.org/pvldb/vol16/p1601-budiu.pdf",
+      "status": "PVLDB 16(7), 1601-1614 (2023)",
+      "context": "formal incremental view maintenance",
+      "correction": null,
+      "verdict": "PASS"
+    },
+    {
+      "key": "autogen2024",
+      "primary_url": "https://openreview.net/forum?id=BAakY1hNKS",
+      "status": "COLM 2024",
+      "context": "base multi-agent conversation framework",
+      "correction": "Corrected the title from plural 'Conversations' to singular 'Conversation'.",
+      "verdict": "PASS"
+    },
+    {
+      "key": "autogenRepo",
+      "primary_url": "https://github.com/microsoft/autogen/tree/027ecf0a379bcc1d09956d46d12d44a3ad9cee14",
+      "status": "official repository at immutable commit 027ecf0a379bcc1d09956d46d12d44a3ad9cee14",
+      "context": "exact AgentChat handoff implementation audited in the paper",
+      "correction": "Added because the COLM paper does not identify the audited handoff path.",
+      "verdict": "PASS"
+    },
+    {
+      "key": "langgraphRepo",
+      "primary_url": "https://github.com/langchain-ai/langgraph/tree/31f90df3e6b0268fa77fd2d118a917d420b84a68",
+      "status": "official repository at immutable commit 31f90df3e6b0268fa77fd2d118a917d420b84a68",
+      "context": "exact LangGraph fixture and runtime implementation audited in the paper",
+      "correction": "Added an explicit URL field.",
+      "verdict": "PASS"
+    },
+    {
+      "key": "sweagent2024",
+      "primary_url": "https://papers.nips.cc/paper_files/paper/2024/hash/5a7c947568c1b1328ccc5230172e1e7c-Abstract-Conference.html",
+      "status": "NeurIPS 2024",
+      "context": "base SWE-agent system",
+      "correction": null,
+      "verdict": "PASS"
+    },
+    {
+      "key": "sweagentRepo",
+      "primary_url": "https://github.com/SWE-agent/SWE-agent/tree/3ea751c087f32b16e039a2233dd6eefecef325d5",
+      "status": "official repository at immutable commit 3ea751c087f32b16e039a2233dd6eefecef325d5",
+      "context": "RetryAgent and optional Preselector path audited in the paper",
+      "correction": "Added because RetryAgent and Preselector are absent from the NeurIPS paper.",
+      "verdict": "PASS"
+    },
+    {
+      "key": "toolsandbox2025",
+      "primary_url": "https://aclanthology.org/2025.findings-naacl.65/",
+      "status": "Findings of NAACL 2025",
+      "context": "stateful executable milestone and failure-condition evaluation",
+      "correction": null,
+      "verdict": "PASS"
+    },
+    {
+      "key": "agentTraceProvenance2026",
+      "primary_url": "https://arxiv.org/abs/2606.04990",
+      "status": "arXiv v4 preprint, revised 2026-06-28",
+      "context": "systematizes agent evidence tracing and argues final answers alone are insufficient",
+      "correction": "Updated to the v4 title and full 11-author byline; fixed Mingkai Zheng and added Manqing Dong and Xuefei Yin.",
+      "verdict": "PASS"
+    },
+    {
+      "key": "provenanceGuard2026",
+      "primary_url": "https://arxiv.org/abs/2606.18037",
+      "status": "arXiv v1 preprint, submitted 2026-06-16",
+      "context": "uses MCP traces with stable tool/source identities for source-sensitive factuality checks",
+      "correction": null,
+      "verdict": "PASS"
+    },
+    {
+      "key": "stepcache2026",
+      "primary_url": "https://arxiv.org/abs/2603.28795",
+      "status": "arXiv v1 preprint, submitted 2026-03-24",
+      "context": "step retrieval, lightweight verification, and selective patching/fallback",
+      "correction": null,
+      "verdict": "PASS"
+    },
+    {
+      "key": "octopack2023",
+      "primary_url": "https://arxiv.org/abs/2308.07124",
+      "status": "arXiv preprint and official HumanEvalPack dataset source",
+      "context": "164-task Python test split supplies source and tests; project archive adds reconstructed labels",
+      "correction": "Separated upstream dataset fields from locally reconstructed pass/fail labels.",
+      "verdict": "PASS"
+    }
+  ]
+}

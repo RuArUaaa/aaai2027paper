@@ -5,6 +5,17 @@
   "source_repository_head": "ae77f91bb8baad5f77da1278abb1a20272660417",
   "source_repository_mode": "read_only_dirty_worktree_preserved",
   "clean_clone_reproduction": "Only entries marked tracked_at_source_head are available from a clean clone. Historical traces and VRAA files marked external_local_artifact require the separately preserved files at the recorded SHA-256 values.",
+  "dataset_snapshot": {
+    "repository": "bigcode/humanevalpack",
+    "revision": "9a41762f73a8cb23bb5811b73d5aab164efcf378",
+    "config": "python",
+    "split": "test",
+    "num_examples": 164,
+    "download_bytes": 191279,
+    "download_sha256": "ed5f15d789156e21222bfcd556c425a39042355c84ae1e8b058abd6a3d7f8075",
+    "arrow_sha256": "120a2a9f34d3a96b2edcaefbe576aec5cdf1ddb795ee4d5484550e1ebab09fe0",
+    "provenance": "revision recovered from the cached dataset_info download URL used by the archived run"
+  },
   "verdict": "INELIGIBLE_AS_PROPOSED",
   "files": [
     {
@@ -17,7 +28,13 @@
       "path": "pipelines/run_taskb_pilot.py",
       "sha256": "4c07431f65304263e305473b2dc02715a0e5c30db3cc36ca6ffc136174f423ce",
       "availability": "tracked_at_source_head",
-      "role": "dataset loader without pinned dataset revision"
+      "role": "dataset loader; the resolved dataset revision is pinned in dataset_snapshot"
+    },
+    {
+      "path": "pipelines/sandbox_exec.py",
+      "sha256": "7f7cbea32ad80f9d77de15acc3490886aac054ee4f3c44967a7afa7878ed921c",
+      "availability": "external_local_artifact_not_in_clean_clone",
+      "role": "host-side sandbox certificate implementation used by the D0 reconstruction"
     },
     {
       "path": "runs/traces/taskB_e0.jsonl",

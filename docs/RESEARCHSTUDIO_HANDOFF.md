@@ -1,19 +1,48 @@
 # RESEARCHSTUDIO_HANDOFF
 
-CURRENT_PHASE: Academic Pipeline Stage 2 COMPLETE;完整 AAAI-27 draft 已编译并提交仓库,等待负责人授权 mandatory Stage 2.5 integrity gate
-LAST_COMPLETED: commit 13be818 完成 main.tex、19-key bibliography、Figure 2、独立 reproducibility checklist、build report 与自动检查;7页内容+第8页纯 references
-ACTIVE_WORKERS: 主协调代理;Stage 2 architecture/citation/claim/format/reviewer 子代理均已完成并退出
+CURRENT_PHASE: Academic Pipeline Stage 2.5 COMPLETE / PASS_WITH_NOTES;已到 mandatory owner checkpoint,不得进入 Stage 3
+LAST_COMPLETED: 21-key 一手引用核验;三组描述性计数独立复算与一轮更正;匿名 Code/Data Supplement;checklist 提交处置;zero-context integrity review
+ACTIVE_WORKERS: 主协调代理;Stage 2.5 citation/raw-count/supplement/最终复审子代理均已完成并退出
 CURRENT_CANDIDATES: PRIMARY=MEASURE_BEFORE_YOU_REUSE_MEASUREMENT_PAPER;ACTUAL_SKIP_HUMANEVALFIX=INELIGIBLE_AS_PROPOSED;AutoGen handoff=Q1/CODE_ONLY;LangGraph two-consumer fixture=Q0/CODE_ONLY;RetryAgent Preselector=Q1/CODE_ONLY
-CURRENT_VERDICT: C6_STRONG_TESTBED=NOT_FOUND;C3_DIRECTED_VERIFIER_CANDIDATE=NOT_FOUND;C3_GATE_EFFECT=UNCHANGED;C6_GATE_EFFECT=UNCHANGED;PRIMARY_PAPER_ROUTE=PURE_MEASUREMENT_AND_METHODOLOGY;EXPERIMENT_AUTHORIZATION=NONE
-BLOCKERS: mandatory Stage 2.5 尚未执行;仓库外 aggregate raw files 尚未形成匿名可发布 bundle;无 TRACE_CONFIRMED Q2/Q3 正例;模型/GPU/正式实验继续 BLOCK
-LAST_COMMIT: 13be8182d89c99ee53db5224b066c3d0707796eb paper: add complete AAAI-27 Stage 2 draft
-NEXT_ACTION: 经负责人确认后启动 formal Stage 2.5 zero-context integrity review;在此之前不改实验状态、不启动模型/GPU
-DECISION_REQUIRED: 是(是否授权进入 Stage 2.5;Stage 2 已按 gate 要求停止)
+CURRENT_VERDICT: STAGE2_5=PASS_WITH_NOTES;C6_STRONG_TESTBED=NOT_FOUND;C3_DIRECTED_VERIFIER_CANDIDATE=NOT_FOUND;C3_GATE_EFFECT=UNCHANGED;C6_GATE_EFFECT=UNCHANGED;PRIMARY_PAPER_ROUTE=PURE_MEASUREMENT_AND_METHODOLOGY;EXPERIMENT_AUTHORIZATION=NONE
+BLOCKERS: 需负责人接受 Stage 2.5 checkpoint;匿名 supplement 不分发全部 aggregate raw inputs;Q rubric 尚无独立 inter-rater validation;无 TRACE_CONFIRMED Q2/Q3 正例;模型/GPU/正式实验继续 BLOCK
+LAST_COMMIT: e0f19f500407b72469b3d4052f2306445176b95c docs: record Stage 2 manuscript checkpoint
+NEXT_ACTION: 停止并等待负责人接受 Stage 2.5;接受后才可规划 Stage 3,且不会自动授权模型/GPU/正式实验
+DECISION_REQUIRED: 是(接受 Stage 2.5 PASS_WITH_NOTES 并授权进入 Stage 3,或要求第二轮定向更正)
 REPO_PATH: /Users/zijian_nong/research/aaai2027-new(远端 https://github.com/RuArUaaa/aaai2027paper)
 BRANCH: main
-HEAD: 13be8182d89c99ee53db5224b066c3d0707796eb(Stage 2 completion handoff commit 的 parent)
-GIT_STATUS: 本 handoff 更新待提交;任务前 .agents/ .claude/ .codex/ 保持未跟踪且不纳入提交
-LAST_UPDATED: 2026-07-22T17:16:44+08:00
+HEAD: e0f19f500407b72469b3d4052f2306445176b95c(Stage 2.5 package commit 的 parent)
+GIT_STATUS: Stage 2.5 修订与审计产物待提交;任务前 .agents/ .claude/ .codex/ 保持未跟踪且不纳入提交
+LAST_UPDATED: 2026-07-22T19:21:56+08:00
+
+## Stage 2.5 integrity checkpoint (2026-07-22)
+
+CURRENT_PHASE: Stage 2.5 COMPLETE / PASS_WITH_NOTES / AWAITING OWNER ACCEPTANCE
+LAST_COMPLETED: formal citation integrity, raw recount, claim audit, originality screen, anonymous supplement packaging, checklist disposition, and seven-failure-mode review;one correction round used
+CURRENT_HEAD: e0f19f500407b72469b3d4052f2306445176b95c(Stage 2.5 package commit 的 parent)
+OPENREVIEW_SUBMISSION_NUMBER: 44503
+CITATION_AUDIT: 21/21 cited keys resolved and checked against primary records;AgentTrace v4 metadata,AgentReuse journal metadata,AutoGen title/repo binding,SWE-agent repo binding,Agent Workflow Memory mechanism wording,and HumanEvalPack attribution corrected
+SHERLOCK_STATUS: arXiv:2511.00330 v1;public record remains within-run verification/speculation/rollback with no cross-run cache/history branch;C3 scoop re-review trigger NOT_MET
+DESCRIPTIVE_RECOUNT:
+- frozen trajectories=18;cutoff events=8;next assistant-response text differs=6/8;parsed next command differs=4/8;suffix differs=8/8;exit differs=4/8;full next invocation matches=0/8
+- registered C6 population=4,968 non-system block--agent incidences;substring zero=98.09%;Jaccard zero=95.69%;median/p90=0;generation-aligned sensitivity excludes 1,092 retriever-side cite/doc incidences and has n=3,876,zero=97.70%/94.71%,median/p90=0
+- corrected document-only citation estimand=763 pairs;mentioned=61 with 0 real flips;unmentioned=702 with 36 real flips(5.13%);same 702 identity-control flips=35(4.99%);legacy 53/947 stored only as diagnostic
+SCIENTIFIC_EFFECT: NONE;TEXT_USAGE_PROXY remains INVALID;C6_STRONG_TESTBED remains NOT_FOUND;C3 remains NEED_NEW_VERIFIER
+SUPPLEMENT: manuscript/supplement/aaai27_code_data_supplement.zip;32 members;76,847 bytes;sha256=d73c6fa6949e70c3f5a97c19f163247bf2190ed990b422a563f78fdbd5e3629d;deterministic build/hash/anonymity scan PASS
+SUPPLEMENT_BOUNDARY: tracked archive reproduces focused code paths,fixtures,invariants,and committed static analyses;full aggregate raw inputs remain hash-bound external artifacts and are not redistributed
+CHECKLIST: manuscript/ReproducibilityChecklist.tex=immutable official blank source(sha256 06a3459158089bf1c64b738986118f1d1566e816da4b710c6397561e33c3d5e6);manuscript/reproducibility_checklist.tex=completed 31-slot source;only completed standalone PDF is uploaded in the designated OpenReview field;neither TeX source enters supplement
+BUILD: main=8 pages(1--7 content,page 8 references only);21 citations;US Letter;embedded non-Type3 fonts;Figure 2 300ppi;title/abstract lock PASS;anonymous PDF PASS
+TESTS: C3 v2.1 6/6 PASS;C6 5/5 PASS;selective audit 6/6 PASS;D0 3/3 PASS;D0 source hashes 11/11 PASS;Stage 2.5 recount 2/2 PASS;supplement deterministic package test 1/1 PASS;JSON validation PASS;LaTeX main/checklist compile PASS;manuscript checker PASS;git diff --check PASS
+FAILURE_MODE_REVIEW: implementation bug=CLEAR_AFTER_CORRECTION;citation hallucination=CLEAR_AFTER_CORRECTION;hallucinated result=CLEAR;shortcut reliance=CLEAR;bug reframed as insight=CLEAR_AFTER_CORRECTION;methodology fabrication=CLEAR;frame lock=CLEAR
+REMAINING_NOTES: full aggregate raw data not independently reproducible from archive alone;cross-model MCP reviewer unavailable and replaced by fresh zero-context independent agents plus coordinator checks;Q rubric lacks inter-rater validation;originality screen sampled 16/~45 paragraphs and did not run author-specific self-overlap under anonymity
+EXPERIMENT_AUTHORIZATION: NONE
+MODEL_EXPERIMENT_CALLS: 0
+GPU_RUNS: 0
+NEW_AGENT_TRAJECTORIES: 0
+LARGE_EXPERIMENTS: 0
+NEXT_ACTION: mandatory stop;responsible owner accepts Stage 2.5 before any Stage 3 work
+NEXT_DECISION: accept PASS_WITH_NOTES and authorize Stage 3 writing/reviewer work,or request a bounded second correction round;neither option implicitly authorizes experiments
+LAST_UPDATED: 2026-07-22T19:21:56+08:00
 
 ## Stage 2 manuscript completion checkpoint (2026-07-22)
 

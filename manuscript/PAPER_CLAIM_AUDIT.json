@@ -1,0 +1,144 @@
+{
+  "schema_version": "stage2.5-paper-claim-audit/v1",
+  "status": "PASS_AFTER_CORRECTION",
+  "audited_at": "2026-07-22",
+  "paper_sha256": "dd8b79666af0830aa5a6f3c76b8104235d411949f8583fdc2bf3f71a6b74fb0b",
+  "review_mode": "fresh zero-context raw-evidence recount plus coordinator adjudication",
+  "source_identity_policy": "anonymous logical path plus SHA-256; local absolute paths are intentionally omitted",
+  "summary": {
+    "claims_checked": 10,
+    "pass": 10,
+    "fail": 0,
+    "semantic_corrections": 3,
+    "paper_verdict_changed": false
+  },
+  "corrections": [
+    {
+      "id": "CORR-DIFF-LABEL",
+      "finding": "The published 6/8 statistic denotes next assistant-response disagreement; parsed next-command disagreement is 4/8.",
+      "resolution": "The manuscript and recount ledger now report both units explicitly.",
+      "gate_effect": "UNCHANGED"
+    },
+    {
+      "id": "CORR-CITATION-ESTIMAND",
+      "finding": "The legacy 1,000-row citation helper mixed 237 non-document pairs into not_cited and failed on 105 nested-title document pairs.",
+      "resolution": "The manuscript uses a balanced-parentheses parser and the 763-row document-only estimand: 61 mentioned/0 real flips and 702 unmentioned/36 real flips, with 35 identity-control flips on the same unmentioned pairs.",
+      "gate_effect": "UNCHANGED_INVALID_TEXT_PROXY"
+    },
+    {
+      "id": "CORR-OVERLAP-UNIT",
+      "finding": "The frozen 4,968 population is all registered non-system block-agent incidences, not a strict downstream-only population.",
+      "resolution": "The manuscript relabels the registered unit and reports a downstream sensitivity excluding 1,092 retriever-side cite/document incidences (3,876 remaining).",
+      "gate_effect": "UNCHANGED_DEGENERATE_PROXY"
+    }
+  ],
+  "claims": [
+    {
+      "id": "CLAIM-DIFF",
+      "claim": "18 frozen runs yield 8 cutoff events; all 8 are parent-directory mtime artifacts, 6 response texts differ, 4 next commands differ, 8 suffixes differ, 4 exit statuses differ, and complete next-invocation matches are zero.",
+      "evidence": [
+        "manuscript/stage2_5/descriptive_counts.json:table_1.diff_proxy",
+        "route_a_plus:18 trajectory files enumerated and hashed in descriptive_counts.json"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "id": "CLAIM-OVERLAP",
+      "claim": "The registered 100-trace population has 4,968 non-system block-agent incidences and 98.09%/95.69% zero-use; the 3,876-incidence downstream sensitivity has 97.70%/94.71%, with median and p90 zero under both definitions.",
+      "evidence": [
+        "historical:runs/traces/taskA_e0.jsonl sha256 68411f28223eed76adef812d0749f6929149124748caa127a326295e727b7c0c",
+        "gates/C6/analyse_workflow.py sha256 6f981cb691a2d4461327e20d830cadbfd379d992ab57d144d1379e80fbee9bce",
+        "manuscript/stage2_5/descriptive_counts.json:table_1.sentence_proxy"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "id": "CLAIM-CITATION",
+      "claim": "Among 763 document pairs, 61 title-mentioned pairs have 0 real repair flips and 702 unmentioned pairs have 36; identity control has 35 flips on those same 702 pairs.",
+      "evidence": [
+        "historical:runs/traces/taskA_e0.jsonl sha256 68411f28223eed76adef812d0749f6929149124748caa127a326295e727b7c0c",
+        "historical:runs/pairs/taskA_e0_identity_ctrl.jsonl sha256 9b076a2b531944eaeea1fa4bfdcd161de911e03f5fb3d6111175aad92a26ee40",
+        "manuscript/stage2_5/descriptive_counts.json:table_1.citation_proxy"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "id": "CLAIM-NATIVE-AUDIT",
+      "claim": "The frozen universe contains six prescreened systems, three included audit units, and no qualifying machine-readable runtime instance for AutoGen, LangGraph, or SWE-agent; final levels are Q1/Q0/Q1 and code-only.",
+      "evidence": [
+        "audits/selective_consumption/candidate_universe.json",
+        "audits/selective_consumption/raw_locators.json",
+        "audits/selective_consumption/results.json sha256 e7168541ac7b523284b496ee33488879f332d069ffa52976711e5232a70b98e4",
+        "audits/selective_consumption/verdict.md"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "id": "CLAIM-ECONOMICS-COUNTS",
+      "claim": "On 164 paired code-repair records, reuse/repair damage is 7/164, both-wrong is 58/57, rescues are 2/3, and outcome rejection is 65/164 and 64/164.",
+      "evidence": [
+        "historical:runs/pairs/taskB_e0.jsonl sha256 6c78a6b9ef4b239070634757ac488d4020c59c7fa3956e4168910b9a7ddeaa8a",
+        "historical:runs/pairs/taskB_e0_identity_ctrl.jsonl sha256 44e75e99141fcd2f25d7f47a1897092429205f849d13a28ef8b37574ee25b2e5",
+        "gates/C3/v2_1/results_v2_1.json",
+        "manuscript/stage2_5/descriptive_counts.json:c3_recomputed"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "id": "CLAIM-ECONOMICS-VALUES",
+      "claim": "All s, rho, break-even, bootstrap, and v=0.01/v=0.10 net-saving values in the manuscript reproduce from the frozen pairs under Delta/C_full.",
+      "evidence": [
+        "gates/C3/v2_1/reanalyse_v2_1.py sha256 7672b6ac51111a6b63ca59ac9ac38d592cc92a2a4b6d04bfb7abb5387268b214",
+        "gates/C3/v2_1/results_v2_1.json",
+        "manuscript/stage2_5/descriptive_counts.json:c3_recomputed"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "id": "CLAIM-D0",
+      "claim": "The proposed testbed has four LLM nodes, no native interactive tool-result consumer or execution bit, 164/164 reconstructed labels, 1,968 condition cells, and an optimistic 3,280-call lower bound, so it is ineligible as proposed.",
+      "evidence": [
+        "experiments/actual_skip_calibration/d0_results.json sha256 28442b8348f6a4960acc10e9120617fc4f8cba2686a91933a8694e517135491d",
+        "experiments/actual_skip_calibration/d0_source_manifest.json",
+        "manuscript/stage2_5/descriptive_counts.json:d0_recomputed"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "id": "CLAIM-DATASET-ATTRIBUTION",
+      "claim": "HumanEvalPack supplies the 164-task Python source/test split; the archived project adds reconstructed pass/fail labels.",
+      "evidence": [
+        "official HumanEvalPack dataset card and OctoPack paper",
+        "experiments/actual_skip_calibration/d0_source_manifest.json:dataset_snapshot",
+        "historical:runs/traces/taskB_e0.jsonl sha256 b104ef381228ac1decb8cc6f744f8611a4f1c89b5edfc913b8fb9365e70cd399"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "id": "CLAIM-SUPPLEMENT",
+      "claim": "The anonymous supplement contains allowlisted analysis paths, fixtures, derived ledgers, and manifests, but does not distribute all aggregate raw inputs.",
+      "evidence": [
+        "manuscript/supplement/SUPPLEMENT_MANIFEST.json",
+        "manuscript/supplement/aaai27_code_data_supplement.zip sha256 d73c6fa6949e70c3f5a97c19f163247bf2190ed990b422a563f78fdbd5e3629d",
+        "manuscript/supplement/test_supplement.py"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "id": "CLAIM-EXPERIMENT-BOUNDARY",
+      "claim": "The manuscript reports no new model experiment and Stage 2.5 uses zero studied-system model calls, GPUs, or new trajectories; language-model review agents are part of the disclosed audit process, not the studied system.",
+      "evidence": [
+        "experiments/actual_skip_calibration/d0_results.json:authorization_and_usage",
+        "docs/RESEARCHSTUDIO_HANDOFF.md",
+        "manuscript/supplement/SUPPLEMENT_MANIFEST.json:scope"
+      ],
+      "verdict": "PASS"
+    }
+  ],
+  "remaining_limitations": [
+    "Complete aggregate reproduction still requires external files at the recorded SHA-256 values.",
+    "The 18-run diff slice and the citation/overlap analyses remain post-hoc diagnostics.",
+    "The Q rubric has no independent inter-rater validation.",
+    "No author identity was supplied to the anonymous review agent, so author-specific self-overlap screening was not performed."
+  ]
+}

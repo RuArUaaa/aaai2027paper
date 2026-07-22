@@ -1,0 +1,16 @@
+agentreuse2024 | main.tex:99-101 | prior-plan retrieval and reuse
+toolcacheagent2026 | main.tex:100-102 | tool-result caching, expiration, invalidation
+agentWorkflowMemory2025 | main.tex:102-104 | induced textual workflows guide later generations
+promptcache2024,kvflow2025 | main.tex:104-106 | prompt-prefix computation reuse
+prefillnotes2026 | main.tex:105-106 | editable and composable KV representations
+sherlock2025 | main.tex:111-113 | within-run verification, speculation, rollback
+speculativeActions2026 | main.tex:113-115 | predicted actions validated against authoritative action
+stepcache2026 | main.tex:114-116 | step retrieval, checks, and selective patching
+buildsystems2018,noria2018,dbsp2023 | main.tex:122-124 | dependencies, partial materialization, from-scratch consistency
+agentTraceProvenance2026 | main.tex:127-128 | provenance survey and final-answer insufficiency
+provenanceGuard2026 | main.tex:128-130 | stable source/tool IDs and source-aware factuality
+toolsandbox2025 | main.tex:136-139 | stateful executable outcome conditions
+autogen2024,autogenRepo | main.tex:329-337 | base framework and pinned handoff source
+langgraphRepo | main.tex:334-337 | pinned two-consumer fixture/runtime source
+sweagent2024,sweagentRepo | main.tex:335-338 | base system and pinned RetryAgent/Preselector source
+octopack2023 | main.tex:590-593 | upstream 164-task Python split, source, and tests
